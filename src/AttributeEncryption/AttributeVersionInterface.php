@@ -2,6 +2,9 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\AttributeEncryption;
 
+/**
+ * @api
+ */
 interface AttributeVersionInterface
 {
     public function getPlaintextCommitment(

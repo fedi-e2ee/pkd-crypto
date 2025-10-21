@@ -11,6 +11,7 @@ use SodiumException;
 /**
  * This is a Merkle Tree implementation that follows RFC 9162.
  * @link https://datatracker.ietf.org/doc/html/rfc9162
+ * @api
  */
 class Tree
 {

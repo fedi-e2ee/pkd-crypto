@@ -6,7 +6,11 @@ use Exception;
 use FediE2EE\PKD\Crypto\UtilTrait;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use SodiumException;
+use Override;
 
+/**
+ * @api
+ */
 class Version1 implements AttributeVersionInterface
 {
     use UtilTrait;
@@ -21,6 +25,7 @@ class Version1 implements AttributeVersionInterface
     /**
      * @throws SodiumException
      */
+    #[Override]
     public function getPlaintextCommitment(
         string $attributeName,
         string $plaintext,
@@ -45,6 +50,7 @@ class Version1 implements AttributeVersionInterface
      * @throws SodiumException
      * @throws Exception
      */
+    #[Override]
     public function encryptAttribute(
         string $attributeName,
         string $plaintext,
@@ -85,6 +91,7 @@ class Version1 implements AttributeVersionInterface
      * @throws CryptoException
      * @throws SodiumException
      */
+    #[Override]
     public function decryptAttribute(
         string $attributeName,
         string $ciphertext,
