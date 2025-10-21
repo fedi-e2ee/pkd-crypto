@@ -4,7 +4,6 @@ namespace FediE2EE\PKD\Crypto\Tests;
 
 use FediE2EE\PKD\Crypto\UtilTrait;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
-
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -26,6 +25,9 @@ class UtilTraitTest extends TestCase
         ];
     }
 
+    /**
+     * @dataProvider ctSelectProvider
+     */
     #[DataProvider("ctSelectProvider")]
     public function testConstantTimeSelect(string $left, string $right): void
     {

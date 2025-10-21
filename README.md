@@ -1,5 +1,8 @@
 # Public Key Directory - Cryptography Algorithms
 
+[![CI](https://github.com/fedi-e2ee/pkd-crypto/actions/workflows/ci.yml/badge.svg)](https://github.com/fedi-e2ee/pkd-crypto/actions/workflows/ci.yml)
+[![Psalm](https://github.com/fedi-e2ee/pkd-crypto/actions/workflows/psalm.yml/badge.svg)](https://github.com/fedi-e2ee/pkd-crypto/actions/workflows/psalm.yml)
+
 This library implements the [cryptography protocols used by the Public Key Directory specification](https://github.com/fedi-e2ee/public-key-directory-specification/blob/main/Specification.md#cryptography-protocols).
 
 ## Installation

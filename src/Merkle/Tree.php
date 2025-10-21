@@ -17,6 +17,7 @@ class Tree
     use UtilTrait;
     private array $leaves = [];
     private ?string $root = null;
+    private string $hashAlgo = 'sha256';
 
     /**
      * @param string[] $leaves Leaves to insert
@@ -24,9 +25,10 @@ class Tree
      * @throws SodiumException
      */
     public function __construct(
-        array                   $leaves = [],
-        private readonly string $hashAlgo = 'sha256'
+        array          $leaves = [],
+        string $hashAlgo = 'sha256'
     ) {
+        $this->hashAlgo = $hashAlgo;
         if (!empty($leaves)) {
             foreach ($leaves as $leaf) {
                 $this->leaves[] = $this->hashLeaf($leaf);
