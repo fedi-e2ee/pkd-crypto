@@ -6,6 +6,9 @@ use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use SensitiveParameter;
 use SodiumException;
 
+/**
+ * @api
+ */
 final class PublicKey
 {
     private string $bytes;
@@ -20,11 +23,17 @@ final class PublicKey
         $this->algo = $algo;
     }
 
+    /**
+     * @api
+     */
     public function getBytes(): string
     {
         return $this->bytes;
     }
 
+    /**
+     * @api
+     */
     public function getAlgo(): string
     {
         return $this->algo;
