@@ -9,6 +9,9 @@
   ],
   "license": "ISC",
   "autoload": {
+    "files": [
+      "vendor/paragonie/constant_time_encoding/src/Base64.php"
+    ],
     "psr-4": {
       "FediE2EE\\PKD\\Crypto\\": "src"
     }
