@@ -6,6 +6,7 @@ namespace FediE2EE\PKDServer\Tests\Crypto\Compliance;
 use Exception;
 use FediE2EE\PKD\Crypto\AttributeEncryption\Version1;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
+use FediE2EE\PKD\Crypto\SymmetricKey;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -22,7 +23,7 @@ class Version1Test extends TestCase
     {
         $v1 = new Version1();
         try {
-            $ikm = random_bytes(32);
+            $ikm = SymmetricKey::generate();
             $merkle = 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(random_bytes(32));
         } catch (Exception $ex) {
             $this->markTestIncomplete('PHP RNG failed');
@@ -59,7 +60,7 @@ class Version1Test extends TestCase
 
         $this->expectException(CryptoException::class);
         $this->expectExceptionMessage('Invalid authentication tag');
-        $v1->decryptAttribute($attribute, $encrypted, str_repeat("\xff", 32), $merkle);
+        $v1->decryptAttribute($attribute, $encrypted, new SymmetricKey(str_repeat("\xff", 32)), $merkle);
     }
 
     /**

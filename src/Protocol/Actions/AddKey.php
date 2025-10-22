@@ -32,6 +32,7 @@ class AddKey implements ProtocolMessageInterface, JsonSerializable
     /**
      * ActivityPub Actor
      *
+     * @api
      * @return string
      */
     public function getActor(): string
@@ -39,6 +40,9 @@ class AddKey implements ProtocolMessageInterface, JsonSerializable
         return $this->actor;
     }
 
+    /**
+     * @api
+     */
     public function getPublicKey(): PublicKey
     {
         return $this->publicKey;

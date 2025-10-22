@@ -2,6 +2,8 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\AttributeEncryption;
 
+use FediE2EE\PKD\Crypto\SymmetricKey;
+
 /**
  * @api
  */
@@ -17,14 +19,14 @@ interface AttributeVersionInterface
     public function encryptAttribute(
         string $attributeName,
         string $plaintext,
-        string $ikm,
+        SymmetricKey $ikm,
         string $merkleRoot
     ): string;
 
     public function decryptAttribute(
         string $attributeName,
         string $ciphertext,
-        string $ikm,
+        SymmetricKey $ikm,
         string $merkleRoot
     ): string;
 }

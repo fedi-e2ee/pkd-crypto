@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\AttributeEncryption;
 
 use Exception;
+use FediE2EE\PKD\Crypto\SymmetricKey;
 use FediE2EE\PKD\Crypto\UtilTrait;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use SodiumException;
@@ -54,19 +55,19 @@ class Version1 implements AttributeVersionInterface
     public function encryptAttribute(
         string $attributeName,
         string $plaintext,
-        string $ikm,
+        SymmetricKey $ikm,
         string $merkleRoot
     ): string {
         $h = self::VERSION;
         $r = random_bytes(32);
 
         $encInfo = self::KDF_ENCRYPT_KEY . $h . $r . self::len($attributeName) . $attributeName;
-        $encKeyNonce = hash_hkdf('sha512', $ikm, 56, $encInfo, '');
+        $encKeyNonce = hash_hkdf('sha512', $ikm->getBytes(), 56, $encInfo, '');
         $Ek = substr($encKeyNonce, 0, 32);
         $n = substr($encKeyNonce, 32, 24);
 
         $authInfo = self::KDF_AUTH_KEY . $h . $r . self::len($attributeName) . $attributeName;
-        $Ak = hash_hkdf('sha512', $ikm, 32, $authInfo, '');
+        $Ak = hash_hkdf('sha512', $ikm->getBytes(), 32, $authInfo, '');
 
         $saltInfo = self::KDF_COMMIT_SALT . $h . $r . self::len($merkleRoot) . $merkleRoot . self::len($attributeName) . $attributeName;
         $s = substr(hash('sha512', $saltInfo, true), 0, 16);
@@ -95,7 +96,7 @@ class Version1 implements AttributeVersionInterface
     public function decryptAttribute(
         string $attributeName,
         string $ciphertext,
-        string $ikm,
+        SymmetricKey $ikm,
         string $merkleRoot
     ): string {
         $h = substr($ciphertext, 0, 1);
@@ -108,7 +109,7 @@ class Version1 implements AttributeVersionInterface
         $c = substr($ciphertext, 97);
 
         $authInfo = self::KDF_AUTH_KEY . $h . $r . self::len($attributeName) . $attributeName;
-        $Ak = hash_hkdf('sha512', $ikm, 32, $authInfo, '');
+        $Ak = hash_hkdf('sha512', $ikm->getBytes(), 32, $authInfo, '');
 
         $t2 = substr(
             hash_hmac(
@@ -126,7 +127,7 @@ class Version1 implements AttributeVersionInterface
         }
 
         $encInfo = self::KDF_ENCRYPT_KEY . $h . $r . self::len($attributeName) . $attributeName;
-        $encKeyNonce = hash_hkdf('sha512', $ikm, 56, $encInfo, '');
+        $encKeyNonce = hash_hkdf('sha512', $ikm->getBytes(), 56, $encInfo, '');
         $Ek = substr($encKeyNonce, 0, 32);
         $n = substr($encKeyNonce, 32, 24);
         $p = sodium_crypto_stream_xor($c, $n, $Ek);
