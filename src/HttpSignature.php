@@ -163,7 +163,6 @@ final class HttpSignature
             throw new HttpSignatureException('Invalid signature header');
         }
 
-        $label = $matches[1];
         $coveredComponentsStr = $matches[2];
         $paramsStr = $matches[3];
 
