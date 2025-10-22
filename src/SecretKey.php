@@ -24,6 +24,23 @@ final class SecretKey
     }
 
     /**
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public static function generate(string $algo = 'ed25519'): self
+    {
+        // We're using a switch-case to make this extensible in the future
+        switch ($algo) {
+            case 'ed25519':
+                $keypair = sodium_crypto_sign_keypair();
+                $bytes = sodium_crypto_sign_secretkey($keypair);
+                return new SecretKey($bytes, $algo);
+            default:
+                throw new NotImplementedException('');
+        }
+    }
+
+    /**
      * @api
      */
     public function getBytes(): string

@@ -30,6 +30,36 @@ trait UtilTrait
         return pack($cs, ...$rightArr);
     }
 
+    /**
+     * @param array<int, string> $pieces
+     * @return string
+     */
+    public function preAuthEncode(array $pieces): string
+    {
+        $count = count($pieces);
+        $output = self::LE64($count);
+        for ($i = 0; $i < $count; ++$i) {
+            $output .= self::LE64(strlen($pieces[$i]));
+            $output .= $pieces[$i];
+        }
+        return $output;
+    }
+
+    public static function sortByKey(array &$arr): void
+    {
+        foreach ($arr as &$value) {
+            if (is_array($value)) {
+                self::sortByKey($value);
+            }
+        }
+        ksort($arr);
+    }
+
+    public static function LE64(int $n): string
+    {
+        return pack('P', $n);
+    }
+
     public function stringToByteArray(string $str): array
     {
         $values = unpack('C*', $str);
