@@ -4,69 +4,67 @@ namespace FediE2EE\PKD\Crypto\Protocol\Actions;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
-use FediE2EE\PKD\Crypto\PublicKey;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
-use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedAddKey;
+use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedBurnDown;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
+use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use JsonSerializable;
 use Override;
 
-class AddKey implements ProtocolMessageInterface, JsonSerializable
+class BurnDown implements ProtocolMessageInterface, JsonSerializable
 {
     private string $actor;
+    private string $operator;
     private DateTimeImmutable $time;
-    private PublicKey $publicKey;
+    private ?string $otp;
 
-    public function __construct(string $actor, PublicKey $publicKey, ?DateTimeInterface $time = null)
+    public function __construct(string $actor, string $operator, ?DateTimeInterface $time = null, ?string $otp = null)
     {
         $this->actor = $actor;
-        $this->publicKey = $publicKey;
+        $this->operator = $operator;
         if (is_null($time)) {
             $time = new DateTimeImmutable('NOW');
         }
         $this->time = $time;
+        $this->otp = $otp;
     }
 
     #[Override]
     public function getAction(): string
     {
-        return 'AddKey';
+        return 'BurnDown';
     }
 
-    /**
-     * ActivityPub Actor
-     *
-     * @api
-     * @return string
-     */
     public function getActor(): string
     {
         return $this->actor;
     }
 
-    /**
-     * @api
-     */
-    public function getPublicKey(): PublicKey
+    public function getOperator(): string
     {
-        return $this->publicKey;
+        return $this->operator;
+    }
+
+    public function getOtp(): ?string
+    {
+        return $this->otp;
     }
 
     #[Override]
     public function toArray(): array
     {
-        return [
+        $data = [
             'actor' => $this->actor,
-            'public-key' => $this->publicKey->toString(),
+            'operator' => $this->operator,
             'time' => $this->time->format(DateTimeInterface::ATOM),
         ];
+        if ($this->otp) {
+            $data['otp'] = $this->otp;
+        }
+        return $data;
     }
 
-    /**
-     * @return array
-     */
     #[Override]
     public function jsonSerialize(): array
     {
@@ -88,6 +86,6 @@ class AddKey implements ProtocolMessageInterface, JsonSerializable
                 $output[$key] = $value;
             }
         }
-        return new EncryptedAddKey($output);
+        return new EncryptedBurnDown($output);
     }
 }

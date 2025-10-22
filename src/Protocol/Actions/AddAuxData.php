@@ -4,25 +4,28 @@ namespace FediE2EE\PKD\Crypto\Protocol\Actions;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
-use FediE2EE\PKD\Crypto\PublicKey;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
-use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedAddKey;
+use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedAddAuxData;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
+use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use JsonSerializable;
 use Override;
 
-class AddKey implements ProtocolMessageInterface, JsonSerializable
+class AddAuxData implements ProtocolMessageInterface, JsonSerializable
 {
     private string $actor;
+    private string $auxType;
+    private string $auxData;
+    private ?string $auxId;
     private DateTimeImmutable $time;
-    private PublicKey $publicKey;
 
-    public function __construct(string $actor, PublicKey $publicKey, ?DateTimeInterface $time = null)
+    public function __construct(string $actor, string $auxType, string $auxData, ?string $auxId = null, ?DateTimeInterface $time = null)
     {
         $this->actor = $actor;
-        $this->publicKey = $publicKey;
+        $this->auxType = $auxType;
+        $this->auxData = $auxData;
+        $this->auxId = $auxId;
         if (is_null($time)) {
             $time = new DateTimeImmutable('NOW');
         }
@@ -32,41 +35,44 @@ class AddKey implements ProtocolMessageInterface, JsonSerializable
     #[Override]
     public function getAction(): string
     {
-        return 'AddKey';
+        return 'AddAuxData';
     }
 
-    /**
-     * ActivityPub Actor
-     *
-     * @api
-     * @return string
-     */
     public function getActor(): string
     {
         return $this->actor;
     }
 
-    /**
-     * @api
-     */
-    public function getPublicKey(): PublicKey
+    public function getAuxType(): string
     {
-        return $this->publicKey;
+        return $this->auxType;
+    }
+
+    public function getAuxData(): string
+    {
+        return $this->auxData;
+    }
+
+    public function getAuxId(): ?string
+    {
+        return $this->auxId;
     }
 
     #[Override]
     public function toArray(): array
     {
-        return [
+        $data = [
             'actor' => $this->actor,
-            'public-key' => $this->publicKey->toString(),
+            'aux-type' => $this->auxType,
+            'aux-data' => $this->auxData,
             'time' => $this->time->format(DateTimeInterface::ATOM),
         ];
+        if ($this->auxId) {
+            $data['aux-id'] = $this->auxId;
+        }
+        return $data;
     }
 
-    /**
-     * @return array
-     */
     #[Override]
     public function jsonSerialize(): array
     {
@@ -88,6 +94,6 @@ class AddKey implements ProtocolMessageInterface, JsonSerializable
                 $output[$key] = $value;
             }
         }
-        return new EncryptedAddKey($output);
+        return new EncryptedAddAuxData($output);
     }
 }

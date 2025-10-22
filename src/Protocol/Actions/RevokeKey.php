@@ -7,13 +7,13 @@ use DateTimeInterface;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\PublicKey;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
-use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedAddKey;
+use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedRevokeKey;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use JsonSerializable;
 use Override;
 
-class AddKey implements ProtocolMessageInterface, JsonSerializable
+class RevokeKey implements ProtocolMessageInterface, JsonSerializable
 {
     private string $actor;
     private DateTimeImmutable $time;
@@ -32,7 +32,7 @@ class AddKey implements ProtocolMessageInterface, JsonSerializable
     #[Override]
     public function getAction(): string
     {
-        return 'AddKey';
+        return 'RevokeKey';
     }
 
     /**
@@ -88,6 +88,6 @@ class AddKey implements ProtocolMessageInterface, JsonSerializable
                 $output[$key] = $value;
             }
         }
-        return new EncryptedAddKey($output);
+        return new EncryptedRevokeKey($output);
     }
 }
