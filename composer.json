@@ -19,12 +19,13 @@
     }
   },
   "require": {
-    "php": ">= 7.4",
+    "php": "^8.2",
     "ext-json": "*",
     "ext-mbstring": "*",
     "ext-sodium": "*",
     "psr/http-message": "^2",
-    "paragonie/constant_time_encoding": "^2|^3"
+    "paragonie/constant_time_encoding": "^2|^3",
+    "paragonie/hpke": "^0|^1"
   },
   "require-dev": {
     "guzzlehttp/psr7": "^2",
