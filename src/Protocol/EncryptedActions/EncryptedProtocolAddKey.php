@@ -11,6 +11,7 @@ use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\PublicKey;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use JsonSerializable;
+use Override;
 use SodiumException;
 
 class EncryptedProtocolAddKey implements EncryptedProtocolMessageInterface, JsonSerializable
@@ -22,21 +23,25 @@ class EncryptedProtocolAddKey implements EncryptedProtocolMessageInterface, Json
         $this->encrypted = $encrypted;
     }
 
+    #[Override]
     public function getAction(): string
     {
         return 'AddKey-encrypted';
     }
 
+    #[Override]
     public function toArray(): array
     {
         return $this->encrypted;
     }
 
+    #[Override]
     public function jsonSerialize(): array
     {
         return $this->toArray();
     }
 
+    #[Override]
     public function encrypt(AttributeKeyMap $keyMap): EncryptedProtocolMessageInterface
     {
         // Already encrypted
@@ -47,6 +52,7 @@ class EncryptedProtocolAddKey implements EncryptedProtocolMessageInterface, Json
      * @throws SodiumException
      * @throws Exception
      */
+    #[Override]
     public function decrypt(AttributeKeyMap $keyMap): ProtocolMessageInterface
     {
         $decrypted = [];

@@ -4,7 +4,7 @@ namespace FediE2EE\PKD\Crypto;
 
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use ParagonIE\ConstantTime\Binary;
-use RuntimeException;
+use Override;
 use SodiumException;
 
 class SymmetricKey implements \JsonSerializable
@@ -62,6 +62,7 @@ class SymmetricKey implements \JsonSerializable
         return $plaintext;
     }
 
+    #[Override]
     public function jsonSerialize(): string
     {
         return Base64UrlSafe::encodeUnpadded($this->bytes);

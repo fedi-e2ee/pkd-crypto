@@ -15,6 +15,7 @@
         </ignoreFiles>
     </projectFiles>
     <issueHandlers>
+        <PossiblyUnusedMethod errorLevel="info" />
         <UndefinedClass errorLevel="info" />
         <UnusedClass errorLevel="info" />
         <UnusedParam errorLevel="info" />
