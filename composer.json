@@ -21,9 +21,11 @@
   "require": {
     "php": ">= 7.4",
     "ext-sodium": "*",
+    "psr/http-message": "^2",
     "paragonie/constant_time_encoding": "^2|^3"
   },
   "require-dev": {
+    "guzzlehttp/psr7": "^2",
     "phpunit/phpunit": "^8|^9|^10|^11|^12"
   }
 }

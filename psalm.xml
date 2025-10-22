@@ -14,4 +14,10 @@
             <directory name="vendor" />
         </ignoreFiles>
     </projectFiles>
+    <issueHandlers>
+        <UndefinedClass errorLevel="info" />
+        <UnusedClass errorLevel="info" />
+        <UnusedParam errorLevel="info" />
+        <UnusedVariable errorLeel="info" /><!-- False positive -->
+    </issueHandlers>
 </psalm>

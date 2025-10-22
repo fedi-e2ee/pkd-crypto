@@ -6,6 +6,9 @@ use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use SensitiveParameter;
 use SodiumException;
 
+/**
+ * @api
+ */
 final class SecretKey
 {
     private string $bytes;
@@ -20,11 +23,17 @@ final class SecretKey
         $this->algo = $algo;
     }
 
+    /**
+     * @api
+     */
     public function getBytes(): string
     {
         return $this->bytes;
     }
 
+    /**
+     * @api
+     */
     public function getAlgo(): string
     {
         return $this->algo;
@@ -41,6 +50,22 @@ final class SecretKey
             case 'ed25519':
                 $pk = sodium_crypto_sign_publickey_from_secretkey($this->bytes);
                 return new PublicKey($pk, $this->algo);
+            default:
+                throw new NotImplementedException('');
+        }
+    }
+
+    /**
+     * @param string $message
+     * @return string
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function sign(string $message): string
+    {
+        switch ($this->algo) {
+            case 'ed25519':
+                return sodium_crypto_sign_detached($message, $this->bytes);
             default:
                 throw new NotImplementedException('');
         }
