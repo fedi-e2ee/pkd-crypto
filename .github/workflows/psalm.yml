@@ -26,5 +26,8 @@ jobs:
         with:
           composer-options: --no-dev
 
+      - name: Composer Update
+        run: composer update
+
       - name: Static Analysis
         run: psalm
