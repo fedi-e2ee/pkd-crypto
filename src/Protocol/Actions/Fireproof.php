@@ -4,25 +4,22 @@ namespace FediE2EE\PKD\Crypto\Protocol\Actions;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
-use FediE2EE\PKD\Crypto\PublicKey;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
-use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedAddKey;
+use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedFireproof;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
+use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use JsonSerializable;
 use Override;
 
-class AddKey implements ProtocolMessageInterface, JsonSerializable
+class Fireproof implements ProtocolMessageInterface, JsonSerializable
 {
     private string $actor;
     private DateTimeImmutable $time;
-    private PublicKey $publicKey;
 
-    public function __construct(string $actor, PublicKey $publicKey, ?DateTimeInterface $time = null)
+    public function __construct(string $actor, ?DateTimeInterface $time = null)
     {
         $this->actor = $actor;
-        $this->publicKey = $publicKey;
         if (is_null($time)) {
             $time = new DateTimeImmutable('NOW');
         }
@@ -32,26 +29,12 @@ class AddKey implements ProtocolMessageInterface, JsonSerializable
     #[Override]
     public function getAction(): string
     {
-        return 'AddKey';
+        return 'Fireproof';
     }
 
-    /**
-     * ActivityPub Actor
-     *
-     * @api
-     * @return string
-     */
     public function getActor(): string
     {
         return $this->actor;
-    }
-
-    /**
-     * @api
-     */
-    public function getPublicKey(): PublicKey
-    {
-        return $this->publicKey;
     }
 
     #[Override]
@@ -59,14 +42,10 @@ class AddKey implements ProtocolMessageInterface, JsonSerializable
     {
         return [
             'actor' => $this->actor,
-            'public-key' => $this->publicKey->toString(),
             'time' => $this->time->format(DateTimeInterface::ATOM),
         ];
     }
 
-    /**
-     * @return array
-     */
     #[Override]
     public function jsonSerialize(): array
     {
@@ -88,6 +67,6 @@ class AddKey implements ProtocolMessageInterface, JsonSerializable
                 $output[$key] = $value;
             }
         }
-        return new EncryptedAddKey($output);
+        return new EncryptedFireproof($output);
     }
 }

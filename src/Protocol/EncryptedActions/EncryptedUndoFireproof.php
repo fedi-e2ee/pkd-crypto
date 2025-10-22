@@ -5,16 +5,15 @@ namespace FediE2EE\PKD\Crypto\Protocol\EncryptedActions;
 use DateTimeImmutable;
 use Exception;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
-use FediE2EE\PKD\Crypto\Protocol\Actions\AddKey;
+use FediE2EE\PKD\Crypto\Protocol\Actions\UndoFireproof;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
-use FediE2EE\PKD\Crypto\PublicKey;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use JsonSerializable;
 use Override;
 use SodiumException;
 
-class EncryptedProtocolAddKey implements EncryptedProtocolMessageInterface, JsonSerializable
+class EncryptedUndoFireproof implements EncryptedProtocolMessageInterface, JsonSerializable
 {
     private array $encrypted;
 
@@ -26,7 +25,7 @@ class EncryptedProtocolAddKey implements EncryptedProtocolMessageInterface, Json
     #[Override]
     public function getAction(): string
     {
-        return 'AddKey-encrypted';
+        return 'UndoFireproof';
     }
 
     #[Override]
@@ -66,9 +65,8 @@ class EncryptedProtocolAddKey implements EncryptedProtocolMessageInterface, Json
                 $decrypted[$key] = $value;
             }
         }
-        return new AddKey(
+        return new UndoFireproof(
             $decrypted['actor'],
-            PublicKey::fromString($decrypted['public-key']),
             new DateTimeImmutable($decrypted['time'])
         );
     }
