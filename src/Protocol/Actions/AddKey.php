@@ -8,6 +8,11 @@ use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\PublicKey;
 use JsonSerializable;
 
+use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
+use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedProtocolAddKey;
+use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
+use ParagonIE\ConstantTime\Base64UrlSafe;
+
 class AddKey implements ProtocolMessageInterface, JsonSerializable
 {
     private string $actor;
@@ -63,5 +68,22 @@ class AddKey implements ProtocolMessageInterface, JsonSerializable
     public function jsonSerialize(): array
     {
         return $this->toArray();
+    }
+
+    public function encrypt(AttributeKeyMap $keyMap): EncryptedProtocolMessageInterface
+    {
+        $output = [];
+        $plaintext = $this->toArray();
+        foreach ($plaintext as $key => $value) {
+            $symKey = $keyMap->getKey($key);
+            if ($symKey) {
+                $output[$key] = Base64UrlSafe::encodeUnpadded(
+                    $symKey->encrypt($value)
+                );
+            } else {
+                $output[$key] = $value;
+            }
+        }
+        return new EncryptedProtocolAddKey($output);
     }
 }
