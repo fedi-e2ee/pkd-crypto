@@ -30,6 +30,8 @@ final class HttpSignature
     /**
      * @throws NotImplementedException
      * @throws SodiumException
+     *
+     * @psalm-suppress UnusedVariable
      */
     public function sign(
         SecretKey $secretKey,
