@@ -7,9 +7,9 @@ use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use FediE2EE\PKD\Crypto\PublicKey;
 use FediE2EE\PKD\Crypto\SecretKey;
-use FediE2EE\PKD\Crypto\SymmetricKey;
 use FediE2EE\PKD\Crypto\UtilTrait;
 use ParagonIE\ConstantTime\Base64UrlSafe;
+use Override;
 use SodiumException;
 
 final class SignedMessage implements \JsonSerializable
@@ -34,7 +34,7 @@ final class SignedMessage implements \JsonSerializable
 
     public function encodeForSigning(): string
     {
-        return $this->preAuthEncode([
+        return $this->preAuthEncode(array_values([
             '!pkd-context',
             self::PKD_CONTEXT,
             'action',
@@ -43,7 +43,7 @@ final class SignedMessage implements \JsonSerializable
             json_encode($this->message, JSON_UNESCAPED_SLASHES),
             'recent-merkle-root',
             $this->recentMerkleRoot
-        ]);
+        ]));
     }
 
     /**
@@ -93,6 +93,7 @@ final class SignedMessage implements \JsonSerializable
         ];
     }
 
+    #[Override]
     public function jsonSerialize(): array
     {
         return $this->toArray();

@@ -46,6 +46,9 @@ final class PublicKey
         return 'ed25519:' .  Base64UrlSafe::encodeUnpadded($this->bytes);
     }
 
+    /**
+     * @psalm-suppress UnusedVariable
+     */
     public static function fromString(string $pk): self
     {
         [$algo, $bytes] = explode(':', $pk);
