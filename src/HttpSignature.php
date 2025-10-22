@@ -13,6 +13,9 @@ use Psr\Http\Message\{
 };
 use SodiumException;
 
+/**
+ * @api
+ */
 final class HttpSignature
 {
     private string $label;
