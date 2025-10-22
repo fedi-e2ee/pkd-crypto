@@ -2,13 +2,17 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Protocol;
 
+use FediE2EE\PKD\Crypto\AttributeEncryption\Version1;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
+use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use FediE2EE\PKD\Crypto\PublicKey;
 use FediE2EE\PKD\Crypto\SecretKey;
+use FediE2EE\PKD\Crypto\SymmetricKey;
 use FediE2EE\PKD\Crypto\UtilTrait;
 use ParagonIE\ConstantTime\Base64UrlSafe;
+use SodiumException;
 
-final class SignedMessage
+final class SignedMessage implements \JsonSerializable
 {
     use UtilTrait;
 
@@ -42,6 +46,11 @@ final class SignedMessage
         ]);
     }
 
+    /**
+     * @throws NotImplementedException
+     * @throws CryptoException
+     * @throws SodiumException
+     */
     public function sign(SecretKey $key): string
     {
         $this->signature = $key->sign($this->encodeForSigning());
@@ -56,6 +65,11 @@ final class SignedMessage
         return Base64UrlSafe::encodeUnpadded($this->signature);
     }
 
+    /**
+     * @throws NotImplementedException
+     * @throws CryptoException
+     * @throws SodiumException
+     */
     public function verify(PublicKey $key, ?string $signature = null): bool
     {
         if (is_null($signature)) {
@@ -66,5 +80,21 @@ final class SignedMessage
             $this->signature = Base64UrlSafe::decodeNoPadding($signature);
         }
         return $key->verify($this->signature, $this->encodeForSigning());
+    }
+
+    public function toArray(): array
+    {
+        return [
+            '!pkd-context' => self::PKD_CONTEXT,
+            'action' => $this->message->getAction(),
+            'message' => json_encode($this->message, JSON_UNESCAPED_SLASHES),
+            'recent-merkle-root' => $this->recentMerkleRoot,
+            'signature' => $this->signature,
+        ];
+    }
+
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
     }
 }
