@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto;
 
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 use SensitiveParameter;
 use SodiumException;
 
@@ -37,6 +38,12 @@ final class PublicKey
     public function getAlgo(): string
     {
         return $this->algo;
+    }
+
+    public function toString(): string
+    {
+        // "ed25519:" || base64url_encode(pk)
+        return 'ed25519:' .  Base64UrlSafe::encodeUnpadded($this->bytes);
     }
 
     /**
