@@ -45,4 +45,20 @@ final class SecretKey
                 throw new NotImplementedException('');
         }
     }
+
+    /**
+     * @param string $message
+     * @return string
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function sign(string $message): string
+    {
+        switch ($this->algo) {
+            case 'ed25519':
+                return sodium_crypto_sign_detached($message, $this->bytes);
+            default:
+                throw new NotImplementedException('');
+        }
+    }
 }

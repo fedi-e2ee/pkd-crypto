@@ -2,7 +2,9 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto;
 
+use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use SensitiveParameter;
+use SodiumException;
 
 final class PublicKey
 {
@@ -26,5 +28,22 @@ final class PublicKey
     public function getAlgo(): string
     {
         return $this->algo;
+    }
+
+    /**
+     * @param string $signature
+     * @param string $message
+     * @return bool
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function verify(string $signature, string $message): bool
+    {
+        switch ($this->algo) {
+            case 'ed25519':
+                return sodium_crypto_sign_verify_detached($signature, $message, $this->bytes);
+            default:
+                throw new NotImplementedException('');
+        }
     }
 }
