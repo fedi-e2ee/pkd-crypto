@@ -3,6 +3,9 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto;
 
 use ParagonIE\ConstantTime\Base64UrlSafe;
+use ParagonIE\ConstantTime\Binary;
+use RuntimeException;
+use SodiumException;
 
 class SymmetricKey implements \JsonSerializable
 {
@@ -23,6 +26,40 @@ class SymmetricKey implements \JsonSerializable
     public function getBytes(): string
     {
         return $this->bytes;
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    public function encrypt(string $plaintext, string $ad = ''): string
+    {
+        $nonce = random_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_NPUBBYTES);
+        $ciphertext = sodium_crypto_aead_xchacha20poly1305_ietf_encrypt(
+            $plaintext,
+            $ad,
+            $nonce,
+            $this->bytes
+        );
+        return $nonce . $ciphertext;
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    public function decrypt(string $ciphertext, string $ad = ''): string
+    {
+        $nonce = Binary::safeSubstr($ciphertext, 0, SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_NPUBBYTES);
+        $encrypted = Binary::safeSubstr($ciphertext, SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_NPUBBYTES);
+        $plaintext = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt(
+            $encrypted,
+            $ad,
+            $nonce,
+            $this->bytes
+        );
+        if (!is_string($plaintext)) {
+            throw new SodiumException('Decryption failed');
+        }
+        return $plaintext;
     }
 
     public function jsonSerialize(): string

@@ -46,6 +46,17 @@ final class PublicKey
         return 'ed25519:' .  Base64UrlSafe::encodeUnpadded($this->bytes);
     }
 
+    public static function fromString(string $pk): self
+    {
+        [$algo, $bytes] = explode(':', $pk);
+        return new self(Base64UrlSafe::decodeNoPadding($bytes), $algo);
+    }
+
+    public function __toString(): string
+    {
+        return $this->toString();
+    }
+
     /**
      * @param string $signature
      * @param string $message
