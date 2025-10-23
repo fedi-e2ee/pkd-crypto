@@ -1,9 +1,11 @@
 <?php
 declare(strict_types=1);
-namespace FediE2EE\PKDServer\Tests\Crypto\Merkle;
+namespace FediE2EE\PKD\Crypto\Tests\Merkle;
 
-use FediE2EE\PKD\Crypto\Merkle\Tree;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
+use FediE2EE\PKD\Crypto\Merkle\ConsistencyProof;
+use FediE2EE\PKD\Crypto\Merkle\InclusionProof;
+use FediE2EE\PKD\Crypto\Merkle\Tree;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -40,9 +42,10 @@ class TreeTest extends TestCase
 
         $proof = $tree->getInclusionProof('c');
         $this->assertNotNull($proof);
+        $this->assertInstanceOf(InclusionProof::class, $proof);
 
         $this->assertTrue(
-            $tree->verifyInclusionProof($root, 'c', $proof['proof'], $proof['index'])
+            $tree->verifyInclusionProof($root, 'c', $proof)
         );
     }
 
@@ -62,13 +65,13 @@ class TreeTest extends TestCase
         $proof = $tree->getInclusionProof('e');
         $this->assertNotNull($proof);
         $this->assertTrue(
-            $tree->verifyInclusionProof($root, 'e', $proof['proof'], $proof['index'])
+            $tree->verifyInclusionProof($root, 'e', $proof)
         );
 
         $proof = $tree->getInclusionProof('d');
         $this->assertNotNull($proof);
         $this->assertTrue(
-            $tree->verifyInclusionProof($root, 'd', $proof['proof'], $proof['index'])
+            $tree->verifyInclusionProof($root, 'd', $proof)
         );
     }
 
@@ -89,6 +92,7 @@ class TreeTest extends TestCase
         $root2 = $tree2->getRoot();
 
         $proof = $tree2->getConsistencyProof(3);
+        $this->assertInstanceOf(ConsistencyProof::class, $proof);
         $this->assertTrue(
             $tree1->verifyConsistencyProof(3, 5, $root1, $root2, $proof)
         );
@@ -110,8 +114,71 @@ class TreeTest extends TestCase
         $root2 = $tree2->getRoot();
 
         $proof = $tree2->getConsistencyProof(0);
+        $this->assertInstanceOf(ConsistencyProof::class, $proof);
         $this->assertTrue(
             $tree1->verifyConsistencyProof(0, 3, $root1, $root2, $proof)
+        );
+    }
+
+    /**
+     * @throws SodiumException
+     * @dataProvider hashAlgProvider
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testEmptyTree(string $hashAlg): void
+    {
+        $tree = new Tree([], $hashAlg);
+        $this->assertNull($tree->getRoot());
+        $this->assertSame(0, $tree->getSize());
+    }
+
+    /**
+     * @throws SodiumException
+     * @dataProvider hashAlgProvider
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testSingleLeafTree(string $hashAlg): void
+    {
+        $tree = new Tree(['a'], $hashAlg);
+        $this->assertNotNull($tree->getRoot());
+        $this->assertSame(1, $tree->getSize());
+        $this->assertTrue(
+            hash_equals(
+                $tree->hashLeaf('a'),
+                $tree->getRoot()
+            )
+        );
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws SodiumException
+     */
+    public function testInclusionProofForMissingLeaf(): void
+    {
+        $this->expectException(CryptoException::class);
+        $tree = new Tree(['a', 'b', 'c']);
+        $tree->getInclusionProof('d');
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws SodiumException
+     * @dataProvider hashAlgProvider
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testVerifyInclusionProofFailure(string $hashAlg): void
+    {
+        $leaves = ['a', 'b', 'c', 'd'];
+        $tree = new Tree($leaves, $hashAlg);
+        $root = $tree->getRoot();
+        $this->assertNotNull($root);
+
+        $proof = $tree->getInclusionProof('c');
+        $this->assertNotNull($proof);
+
+        $this->assertFalse(
+            $tree->verifyInclusionProof($root, 'd', $proof)
         );
     }
 }

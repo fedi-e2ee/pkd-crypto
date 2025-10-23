@@ -62,7 +62,7 @@ class Tree
      * @throws CryptoException
      * @throws SodiumException
      */
-    public function getInclusionProof(string $leaf): array
+    public function getInclusionProof(string $leaf): InclusionProof
     {
         $leafHash = $this->hashLeaf($leaf);
         $index = array_search($leafHash, $this->leaves, true);
@@ -70,10 +70,10 @@ class Tree
             throw new CryptoException('Could not find index in leaves');
         }
 
-        return [
-            'index' => $index,
-            'proof' => $this->generateInclusionSubProof($index, 0, count($this->leaves))
-        ];
+        return new InclusionProof(
+            $index,
+            $this->generateInclusionSubProof($index, 0, count($this->leaves))
+        );
     }
 
     /**
@@ -100,17 +100,17 @@ class Tree
     /**
      * @throws SodiumException
      */
-    public function verifyInclusionProof(string $root, string $leaf, array $proof, int $index): bool
+    public function verifyInclusionProof(string $root, string $leaf, InclusionProof $proof): bool
     {
-        if ($index >= $this->getSize()) {
+        if ($proof->index >= $this->getSize()) {
             return false;
         }
 
-        $fn = $index;
+        $fn = $proof->index;
         $sn = $this->getSize() - 1;
         $r = $this->hashLeaf($leaf);
 
-        foreach ($proof as $p) {
+        foreach ($proof->proof as $p) {
             if ($sn === 0) {
                 return false;
             }
@@ -134,16 +134,18 @@ class Tree
      * @throws SodiumException
      * @api
      */
-    public function getConsistencyProof(int $oldSize): array
+    public function getConsistencyProof(int $oldSize): ConsistencyProof
     {
         $newSize = $this->getSize();
         if ($oldSize > $newSize || $oldSize <= 0) {
-            return [];
+            return new ConsistencyProof([]);
         }
         if ($oldSize === $newSize) {
-            return [];
+            return new ConsistencyProof([]);
         }
-        return $this->generateConsistencySubProof($oldSize, 0, $newSize, true);
+        return new ConsistencyProof(
+            $this->generateConsistencySubProof($oldSize, 0, $newSize, true)
+        );
     }
 
     /**
@@ -200,26 +202,27 @@ class Tree
         int $newSize,
         ?string $oldRoot,
         string $newRoot,
-        array $proof
+        ConsistencyProof $proof
     ): bool {
         if ($oldSize > $newSize || $oldSize < 0) {
             return false;
         }
         if ($oldSize === $newSize) {
-            return empty($proof) && hash_equals((string) $oldRoot, $newRoot);
+            return empty($proof->proof) && hash_equals((string) $oldRoot, $newRoot);
         }
         if ($oldSize === 0) {
-            return empty($proof);
+            return empty($proof->proof);
         }
         if ($oldRoot === null) {
             return false;
         }
-        if (empty($proof)) {
+        if (empty($proof->proof)) {
             return false;
         }
 
+        $consistencyProof = $proof->proof;
         if (($oldSize & ($oldSize - 1)) === 0) {
-            array_unshift($proof, $oldRoot);
+            array_unshift($consistencyProof, $oldRoot);
         }
 
         $fn = $oldSize - 1;
@@ -232,11 +235,11 @@ class Tree
             }
         }
 
-        $fr = $proof[0];
-        $sr = $proof[0];
+        $fr = $consistencyProof[0];
+        $sr = $consistencyProof[0];
 
-        for ($i = 1; $i < count($proof); ++$i) {
-            $c = $proof[$i];
+        for ($i = 1; $i < count($consistencyProof); ++$i) {
+            $c = $consistencyProof[$i];
             if ($sn === 0) {
                 return false;
             }
