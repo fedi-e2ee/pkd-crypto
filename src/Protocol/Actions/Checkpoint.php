@@ -5,13 +5,14 @@ namespace FediE2EE\PKD\Crypto\Protocol\Actions;
 use DateTimeImmutable;
 use DateTimeInterface;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
+use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\PublicKey;
 use JsonSerializable;
 use Override;
 
-class Checkpoint implements ProtocolMessageInterface, EncryptedProtocolMessageInterface, JsonSerializable
+class Checkpoint implements ProtocolMessageInterface, JsonSerializable
 {
     private DateTimeImmutable $time;
     private string $fromDirectory;
@@ -94,17 +95,21 @@ class Checkpoint implements ProtocolMessageInterface, EncryptedProtocolMessageIn
         return $this->toArray();
     }
 
+    /**
+     * @throws NotImplementedException
+     */
     #[Override]
     public function encrypt(AttributeKeyMap $keyMap): EncryptedProtocolMessageInterface
     {
-        // This message has no encrypted attributes.
-        return $this;
+        throw new NotImplementedException('Checkpoints are not encrypted');
     }
 
+    /**
+     * @throws NotImplementedException
+     */
     #[Override]
     public function decrypt(AttributeKeyMap $keyMap): ProtocolMessageInterface
     {
-        // This message has no encrypted attributes.
-        return $this;
+        throw new NotImplementedException('Checkpoints are not encrypted');
     }
 }
