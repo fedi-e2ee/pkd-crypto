@@ -103,13 +103,4 @@ class Checkpoint implements ProtocolMessageInterface, JsonSerializable
     {
         throw new NotImplementedException('Checkpoints are not encrypted');
     }
-
-    /**
-     * @throws NotImplementedException
-     */
-    #[Override]
-    public function decrypt(AttributeKeyMap $keyMap): ProtocolMessageInterface
-    {
-        throw new NotImplementedException('Checkpoints are not encrypted');
-    }
 }
