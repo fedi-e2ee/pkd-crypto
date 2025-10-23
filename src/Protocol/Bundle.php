@@ -4,73 +4,87 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Protocol;
 
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
+use FediE2EE\PKD\Crypto\Exceptions\BundleException;
+use FediE2EE\PKD\Crypto\Exceptions\JsonException;
 use FediE2EE\PKD\Crypto\SymmetricKey;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 
 class Bundle
 {
-    private string $pkdContext = 'https://github.com/fedi-e2ee/public-key-directory/v1';
-    private string $action;
-    private array $message;
-    private string $recentMerkleRoot;
-    private string $signature;
-    private AttributeKeyMap $symmetricKeys;
-
     public function __construct(
-        string $action,
-        array $message,
-        string $recentMerkleRoot,
-        string $signature,
-        AttributeKeyMap $symmetricKeys
-    ) {
-        $this->action = $action;
-        $this->message = $message;
-        $this->recentMerkleRoot = $recentMerkleRoot;
-        $this->signature = $signature;
-        $this->symmetricKeys = $symmetricKeys;
-    }
+        private readonly string          $action,
+        private readonly array           $message,
+        private readonly string          $recentMerkleRoot,
+        private readonly string          $signature,
+        private readonly AttributeKeyMap $symmetricKeys,
+        private readonly string          $pkdContext = 'https://github.com/fedi-e2ee/public-key-directory/v1'
+    ) {}
 
+    /**
+     * @throws BundleException
+     */
     public static function fromJson(string $json): self
     {
         if (empty($json)) {
-            throw new \Exception('Empty JSON string');
+            throw new BundleException('Empty JSON string');
         }
         $data = json_decode($json, true);
         if (is_null($data)) {
-            throw new \Exception('Invalid JSON string');
+            throw new  BundleException('Invalid JSON string');
         }
         $symmetricKeys = new AttributeKeyMap();
         foreach ($data['symmetric-keys'] as $attribute => $key) {
-            $symmetricKeys->addKey($attribute, new SymmetricKey(Base64UrlSafe::decode($key)));
+            $symmetricKeys->addKey(
+                $attribute,
+                new SymmetricKey(
+                    Base64UrlSafe::decodeNoPadding($key)
+                )
+            );
         }
 
         return new self(
             $data['action'],
             $data['message'],
-            Base64UrlSafe::decode($data['recent-merkle-root']),
-            Base64UrlSafe::decode($data['signature']),
+            Base64UrlSafe::decodeNoPadding($data['recent-merkle-root']),
+            Base64UrlSafe::decodeNoPadding($data['signature']),
             $symmetricKeys
         );
     }
 
+    /**
+     * @throws JsonException
+     */
     public function toJson(): string
     {
         $symmetricKeys = [];
         foreach ($this->symmetricKeys->getAttributes() as $attribute) {
             $key = $this->symmetricKeys->getKey($attribute);
             if ($key) {
-                $symmetricKeys[$attribute] = Base64UrlSafe::encode($key->getBytes());
+                $symmetricKeys[$attribute] = Base64UrlSafe::encodeUnpadded(
+                    $key->getBytes()
+                );
             }
         }
 
-        return json_encode([
-            '!pkd-context' => $this->pkdContext,
-            'action' => $this->action,
-            'message' => $this->message,
-            'recent-merkle-root' => Base64UrlSafe::encode($this->recentMerkleRoot),
-            'signature' => Base64UrlSafe::encode($this->signature),
-            'symmetric-keys' => $symmetricKeys,
-        ], JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '';
+        $flags = JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
+        $encoded = json_encode([
+            '!pkd-context' =>
+                $this->pkdContext,
+            'action' =>
+                $this->action,
+            'message' =>
+                $this->message,
+            'recent-merkle-root' =>
+                Base64UrlSafe::encodeUnpadded($this->recentMerkleRoot),
+            'signature' =>
+                Base64UrlSafe::encodeUnpadded($this->signature),
+            'symmetric-keys' =>
+                $symmetricKeys,
+        ], $flags);
+        if (!is_string($encoded)) {
+            throw new JsonException(json_last_error_msg(), json_last_error());
+        }
+        return $encoded;
     }
 
     public function getAction(): string

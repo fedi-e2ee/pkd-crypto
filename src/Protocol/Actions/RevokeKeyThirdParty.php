@@ -4,12 +4,13 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Protocol\Actions;
 
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
+use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
 use JsonSerializable;
 use Override;
 
-class RevokeKeyThirdParty implements ProtocolMessageInterface, EncryptedProtocolMessageInterface, JsonSerializable
+class RevokeKeyThirdParty implements ProtocolMessageInterface, JsonSerializable
 {
     private string $revocationToken;
 
@@ -43,17 +44,21 @@ class RevokeKeyThirdParty implements ProtocolMessageInterface, EncryptedProtocol
         return $this->toArray();
     }
 
+    /**
+     * @throws NotImplementedException
+     */
     #[Override]
     public function encrypt(AttributeKeyMap $keyMap): EncryptedProtocolMessageInterface
     {
-        // This message has no encrypted attributes.
-        return $this;
+        throw new NotImplementedException('RevokeKeyThirdParty messages are not encrypted');
     }
 
+    /**
+     * @throws NotImplementedException
+     */
     #[Override]
     public function decrypt(AttributeKeyMap $keyMap): ProtocolMessageInterface
     {
-        // This message has no encrypted attributes.
-        return $this;
+        throw new NotImplementedException('RevokeKeyThirdParty messages are not encrypted');
     }
 }
