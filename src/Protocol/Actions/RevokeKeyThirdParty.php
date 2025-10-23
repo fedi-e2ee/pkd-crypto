@@ -52,13 +52,4 @@ class RevokeKeyThirdParty implements ProtocolMessageInterface, JsonSerializable
     {
         throw new NotImplementedException('RevokeKeyThirdParty messages are not encrypted');
     }
-
-    /**
-     * @throws NotImplementedException
-     */
-    #[Override]
-    public function decrypt(AttributeKeyMap $keyMap): ProtocolMessageInterface
-    {
-        throw new NotImplementedException('RevokeKeyThirdParty messages are not encrypted');
-    }
 }
