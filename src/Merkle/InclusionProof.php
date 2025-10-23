@@ -2,9 +2,10 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Merkle;
 
+use JsonSerializable;
 use Override;
 
-class InclusionProof
+class InclusionProof implements JsonSerializable
 {
     /**
      * @param int $index
