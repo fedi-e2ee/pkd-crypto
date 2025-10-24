@@ -8,20 +8,22 @@ use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedMoveIdentity;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
+use FediE2EE\PKD\Crypto\UtilTrait;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use JsonSerializable;
 use Override;
 
 class MoveIdentity implements ProtocolMessageInterface, JsonSerializable
 {
+    use UtilTrait;
     private string $oldActor;
     private string $newActor;
     private DateTimeImmutable $time;
 
     public function __construct(string $oldActor, string $newActor, ?DateTimeInterface $time = null)
     {
-        $this->oldActor = $oldActor;
-        $this->newActor = $newActor;
+        $this->oldActor = $this->canonicalizeActorID($oldActor);
+        $this->newActor = $this->canonicalizeActorID($newActor);
         if (is_null($time)) {
             $time = new DateTimeImmutable('NOW');
         }
@@ -34,11 +36,17 @@ class MoveIdentity implements ProtocolMessageInterface, JsonSerializable
         return 'MoveIdentity';
     }
 
+    /**
+     * @api
+     */
     public function getOldActor(): string
     {
         return $this->oldActor;
     }
 
+    /**
+     * @api
+     */
     public function getNewActor(): string
     {
         return $this->newActor;
