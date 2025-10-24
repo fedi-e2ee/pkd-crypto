@@ -8,18 +8,20 @@ use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedUndoFireproof;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
+use FediE2EE\PKD\Crypto\UtilTrait;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use JsonSerializable;
 use Override;
 
 class UndoFireproof implements ProtocolMessageInterface, JsonSerializable
 {
+    use UtilTrait;
     private string $actor;
     private DateTimeImmutable $time;
 
     public function __construct(string $actor, ?DateTimeInterface $time = null)
     {
-        $this->actor = $actor;
+        $this->actor = $this->canonicalizeActorID($actor);
         if (is_null($time)) {
             $time = new DateTimeImmutable('NOW');
         }

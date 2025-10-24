@@ -19,7 +19,7 @@ class SignedMessageTest extends TestCase
         $pk = $sk->getPublicKey();
 
         $sm = new SignedMessage(
-            new AddKey('https://example.com/@alice', $pk),
+            new AddKey('https://mastodon.social/ap/users/115428847654719749', $pk),
             $recent
         );
         $signature = $sm->sign($sk);
@@ -40,7 +40,7 @@ class SignedMessageTest extends TestCase
             ->addKey('public-key', SymmetricKey::generate());
 
         // Plaintext vs encrypted
-        $plaintext = new AddKey('https://example.com/@alice', $pk);
+        $plaintext = new AddKey('https://mastodon.social/ap/users/115428847654719749', $pk);
         $encrypted = $plaintext->encrypt($map);
 
         $sm1 = new SignedMessage(

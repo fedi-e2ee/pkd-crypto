@@ -8,21 +8,28 @@ use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedRevokeAuxData;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
+use FediE2EE\PKD\Crypto\UtilTrait;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use JsonSerializable;
 use Override;
 
 class RevokeAuxData implements ProtocolMessageInterface, JsonSerializable
 {
+    use UtilTrait;
     private string $actor;
     private string $auxType;
     private ?string $auxData;
     private ?string $auxId;
     private DateTimeImmutable $time;
 
-    public function __construct(string $actor, string $auxType, ?string $auxData = null, ?string $auxId = null, ?DateTimeInterface $time = null)
-    {
-        $this->actor = $actor;
+    public function __construct(
+        string $actor,
+        string $auxType,
+        ?string $auxData = null,
+        ?string $auxId = null,
+        ?DateTimeInterface $time = null
+    ) {
+        $this->actor = $this->canonicalizeActorID($actor);
         $this->auxType = $auxType;
         $this->auxData = $auxData;
         $this->auxId = $auxId;

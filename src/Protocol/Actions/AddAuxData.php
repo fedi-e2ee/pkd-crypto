@@ -8,12 +8,14 @@ use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedAddAuxData;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
+use FediE2EE\PKD\Crypto\UtilTrait;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use JsonSerializable;
 use Override;
 
 class AddAuxData implements ProtocolMessageInterface, JsonSerializable
 {
+    use UtilTrait;
     private string $actor;
     private string $auxType;
     private string $auxData;
@@ -22,7 +24,7 @@ class AddAuxData implements ProtocolMessageInterface, JsonSerializable
 
     public function __construct(string $actor, string $auxType, string $auxData, ?string $auxId = null, ?DateTimeInterface $time = null)
     {
-        $this->actor = $actor;
+        $this->actor = $this->canonicalizeActorID($actor);
         $this->auxType = $auxType;
         $this->auxData = $auxData;
         $this->auxId = $auxId;

@@ -9,19 +9,21 @@ use FediE2EE\PKD\Crypto\PublicKey;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedAddKey;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
+use FediE2EE\PKD\Crypto\UtilTrait;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use JsonSerializable;
 use Override;
 
 class AddKey implements ProtocolMessageInterface, JsonSerializable
 {
+    use UtilTrait;
     private string $actor;
     private DateTimeImmutable $time;
     private PublicKey $publicKey;
 
     public function __construct(string $actor, PublicKey $publicKey, ?DateTimeInterface $time = null)
     {
-        $this->actor = $actor;
+        $this->actor = $this->canonicalizeActorID($actor);
         $this->publicKey = $publicKey;
         if (is_null($time)) {
             $time = new DateTimeImmutable('NOW');

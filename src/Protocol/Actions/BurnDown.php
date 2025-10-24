@@ -8,12 +8,14 @@ use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedBurnDown;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
+use FediE2EE\PKD\Crypto\UtilTrait;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use JsonSerializable;
 use Override;
 
 class BurnDown implements ProtocolMessageInterface, JsonSerializable
 {
+    use UtilTrait;
     private string $actor;
     private string $operator;
     private DateTimeImmutable $time;
@@ -21,7 +23,7 @@ class BurnDown implements ProtocolMessageInterface, JsonSerializable
 
     public function __construct(string $actor, string $operator, ?DateTimeInterface $time = null, ?string $otp = null)
     {
-        $this->actor = $actor;
+        $this->actor = $this->canonicalizeActorID($actor);
         $this->operator = $operator;
         if (is_null($time)) {
             $time = new DateTimeImmutable('NOW');

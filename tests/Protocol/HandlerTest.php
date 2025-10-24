@@ -24,7 +24,7 @@ class HandlerTest extends TestCase
         $keyMap->addKey('foo', new SymmetricKey(random_bytes(32)));
 
         $addKey = new AddKey(
-            'test-actor',
+            'https://mastodon.social/ap/users/115428847654719749',
             $publicKey
         );
         $encryptedAddKey = $addKey->encrypt($keyMap);
@@ -49,7 +49,7 @@ class HandlerTest extends TestCase
         $keyMap->addKey('foo', new SymmetricKey(random_bytes(32)));
 
         $addKey = new AddKey(
-            'test-actor',
+            'https://mastodon.social/ap/users/115428847654719749',
             $publicKey
         );
         $encryptedAddKey = $addKey->encrypt($keyMap);
@@ -76,7 +76,7 @@ class HandlerTest extends TestCase
         $keyMap->addKey('foo', new SymmetricKey(random_bytes(32)));
 
         $addKey = new AddKey(
-            'test-actor',
+            'https://mastodon.social/ap/users/115428847654719749',
             $publicKey
         );
         $encryptedAddKey = $addKey->encrypt($keyMap);
