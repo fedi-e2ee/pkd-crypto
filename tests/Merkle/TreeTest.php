@@ -28,6 +28,28 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testEmpty(string $hashAlg): void
+    {
+        $tree = new Tree([], $hashAlg);
+
+        $expected = match($hashAlg) {
+            'blake2b', 'sha256' =>
+                'pkd-mr-v1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+            'sha384' =>
+                'pkd-mr-v1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+            'sha512' =>
+                'pkd-mr-v1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+        };
+        $this->assertSame(
+            $expected,
+            $tree->getEncodedRoot(),
+        );
+    }
+
+    /**
      * @throws CryptoException
      * @throws SodiumException
      * @dataProvider hashAlgProvider

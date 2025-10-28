@@ -66,9 +66,10 @@ class Tree
             default => strlen(hash($this->hashAlgo, '', true)),
         };
         // Default according to spec:
-        return 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(
-            $this->root ?? str_repeat("\0", $hashLength)
-        );
+        if (is_null($this->root)) {
+            return 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(str_repeat("\0", $hashLength));
+        }
+        return 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded($this->root);
     }
 
     public function getSize(): int
@@ -200,7 +201,7 @@ class Tree
             if ($this->hashAlgo === 'blake2b') {
                 return sodium_crypto_generichash('');
             }
-            return hash('sha256', '', true);
+            return hash($this->hashAlgo, '', true);
         }
         if ($leafCount === 1) {
             return $this->leaves[$start];
