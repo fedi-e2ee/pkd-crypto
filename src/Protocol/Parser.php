@@ -111,6 +111,32 @@ class Parser
     }
 
     /**
+     * @api
+     *
+     * @throws CryptoException
+     * @throws HPKEException
+     * @throws NotImplementedException
+     * @throws ParserException
+     * @throws SodiumException
+     */
+    public function decryptAndParse(
+        string $encrypted,
+        DecapsKey $decapsKey,
+        HPKE $hpke,
+        ?PublicKey $publicKey = null,
+        string $info = '',
+        string $aad = ''
+    ): array {
+        $decrypted = $hpke->openBase(
+            $decapsKey,
+            Base64UrlSafe::decodeNoPadding($encrypted),
+            aad: $aad,
+            info: $info
+        );
+        return $this->parse($decrypted, $publicKey);
+    }
+
+    /**
      * @throws CryptoException
      * @throws ParserException
      * @throws NotImplementedException

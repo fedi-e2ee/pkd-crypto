@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
 
 class HandlerTest extends TestCase
 {
-    public function testHandler()
+    public function testHandler(): void
     {
         $secretKey = SecretKey::generate();
         $publicKey = $secretKey->getPublicKey();
@@ -41,7 +41,7 @@ class HandlerTest extends TestCase
         $this->assertEquals($keyMap, $newKeyMap);
     }
 
-    public function testHpke()
+    public function testHpke(): void
     {
         $secretKey = SecretKey::generate();
         $publicKey = $secretKey->getPublicKey();
@@ -68,7 +68,7 @@ class HandlerTest extends TestCase
         $this->assertEquals($message, $decrypted);
     }
 
-    public function testMessageFromJson()
+    public function testMessageFromJson(): void
     {
         $secretKey = SecretKey::generate();
         $publicKey = $secretKey->getPublicKey();
