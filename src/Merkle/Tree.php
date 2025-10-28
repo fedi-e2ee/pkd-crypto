@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Merkle;
 
+use ParagonIE\ConstantTime\Base64UrlSafe;
 use FediE2EE\PKD\Crypto\{
     UtilTrait,
     Exceptions\CryptoException
@@ -18,7 +19,7 @@ class Tree
     use UtilTrait;
     private array $leaves = [];
     private ?string $root = null;
-    private string $hashAlgo = 'sha256';
+    private string $hashAlgo;
 
     /**
      * @param string[] $leaves Leaves to insert
@@ -51,6 +52,23 @@ class Tree
     public function getRoot(): ?string
     {
         return $this->root;
+    }
+
+    /**
+     * @api
+     */
+    public function getEncodedRoot(): string
+    {
+        $hashLength = match($this->hashAlgo) {
+            'sha256', 'blake2b' => 32,
+            'sha384' => 48,
+            'sha512' => 64,
+            default => strlen(hash($this->hashAlgo, '', true)),
+        };
+        // Default according to spec:
+        return 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(
+            $this->root ?? str_repeat("\0", $hashLength)
+        );
     }
 
     public function getSize(): int

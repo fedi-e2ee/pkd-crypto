@@ -39,6 +39,16 @@ class TreeTest extends TestCase
         $tree = new Tree($leaves, $hashAlg);
         $root = $tree->getRoot();
         $this->assertNotNull($root);
+        $expected = match($hashAlg) {
+            'blake2b' => 'pkd-mr-v1:QhNgpgmYA7Rl3_UkbLFkwrb_rFTxfOzAT6e_4lYeGAQ',
+            'sha256' => 'pkd-mr-v1:MzdqO9Y-mZNwioTd_mworli4NQXdH-1xG9kk7FpiOfA',
+            'sha384' => 'pkd-mr-v1:RbDLKSG-nJN_-x5PqHDQN2J4DVaxwLMrgF0LqCawkV7T6znmy3iDG-TXJ32G4Ccc',
+            'sha512' => 'pkd-mr-v1:JiUhMQ_CPQlw_t3zNN__z8gNrO6d4FRjlXq5oJJFH3PKK0jF61eudNBq7px9MDWvWBHaD8nB3zt-5DmklfaErg'
+        };
+        $this->assertSame(
+            $expected,
+            $tree->getEncodedRoot(),
+        );
 
         $proof = $tree->getInclusionProof('c');
         $this->assertNotNull($proof);
@@ -61,6 +71,16 @@ class TreeTest extends TestCase
         $tree = new Tree($leaves, $hashAlg);
         $root = $tree->getRoot();
         $this->assertNotNull($root);
+        $expected = match($hashAlg) {
+            'blake2b' => 'pkd-mr-v1:V9NmIuP5ANrdMn-xCLYuKCy49lIl_yR0nfeNCRdsHQ0',
+            'sha256' => 'pkd-mr-v1:_hSlQm-9cMD6c_UjQq_tDaC9I8SDhmLM9riKMHDq2Xs',
+            'sha384' => 'pkd-mr-v1:NWgj9ZkVvEPSYjVSNgzhQ45j_NQiVmDtmIFNYn15_qp9tH4xwOm_QuqYOEBzykEz',
+            'sha512' => 'pkd-mr-v1:iE7_WlEAigFVObBrPIQew_S7Fsj9R1EWXpArLNCWfoH50X-h0e4Llvq-Z8y4wYPYKO1mTGL0A5gN_eHdMdaZfg'
+        };
+        $this->assertSame(
+            $expected,
+            $tree->getEncodedRoot(),
+        );
 
         $proof = $tree->getInclusionProof('e');
         $this->assertNotNull($proof);
