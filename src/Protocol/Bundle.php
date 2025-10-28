@@ -5,6 +5,7 @@ namespace FediE2EE\PKD\Crypto\Protocol;
 
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 use FediE2EE\PKD\Crypto\Exceptions\BundleException;
+use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\Exceptions\JsonException;
 use FediE2EE\PKD\Crypto\SymmetricKey;
 use ParagonIE\ConstantTime\Base64UrlSafe;
@@ -110,5 +111,24 @@ class Bundle
     public function getSymmetricKeys(): AttributeKeyMap
     {
         return $this->symmetricKeys;
+    }
+
+    /**
+     * @throws CryptoException
+     */
+    public function toSignedMessage(): SignedMessage
+    {
+        $parser = new Parser();
+        if (in_array($this->getAction(), Parser::UNENCRYPTED_ACTIONS, true)) {
+            $message = $parser->getUnencryptedMessage($this);
+        } else {
+            $message = $parser->getEncryptedMessage($this);
+        }
+
+        return new SignedMessage(
+            $message,
+            $this->getRecentMerkleRoot(),
+            $this->getSignature()
+        );
     }
 }
