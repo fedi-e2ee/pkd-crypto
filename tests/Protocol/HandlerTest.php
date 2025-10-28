@@ -35,7 +35,9 @@ class HandlerTest extends TestCase
         $this->assertIsString($json);
 
         $parser = new Parser();
-        [$encrypted, $newKeyMap] = $parser->parse($json, $publicKey);
+        $parsed = $parser->parse($json, $publicKey);
+        $encrypted = $parsed->getMessage();
+        $newKeyMap = $parsed->getKeyMap();
 
         $this->assertSame($addKey->getAction(), $encrypted->getAction());
         $this->assertEquals($keyMap, $newKeyMap);

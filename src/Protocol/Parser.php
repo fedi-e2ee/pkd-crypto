@@ -126,7 +126,7 @@ class Parser
         ?PublicKey $publicKey = null,
         string $info = '',
         string $aad = ''
-    ): array {
+    ): ParsedMessage {
         $decrypted = $hpke->openBase(
             $decapsKey,
             Base64UrlSafe::decodeNoPadding($encrypted),
@@ -145,7 +145,7 @@ class Parser
     public function parse(
         string $json,
         ?PublicKey $publicKey = null
-    ): array {
+    ): ParsedMessage {
         $message = static::fromJson($json);
         if (in_array($message->getAction(), self::UNENCRYPTED_ACTIONS, true)) {
             $encrypted = $this->getUnencryptedMessage($message);
@@ -161,7 +161,7 @@ class Parser
             }
         }
         $keyMap = $message->getSymmetricKeys();
-        return [$encrypted, $keyMap];
+        return new ParsedMessage($encrypted, $keyMap);
     }
 
     /**

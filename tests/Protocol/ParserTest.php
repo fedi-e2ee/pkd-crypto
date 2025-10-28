@@ -9,7 +9,12 @@ use FediE2EE\PKD\Crypto\Exceptions\{
     NotImplementedException,
     ParserException
 };
-use FediE2EE\PKD\Crypto\Protocol\{Actions\AddKey, EncryptedActions\EncryptedAddKey, Handler, Parser, SignedMessage};
+use FediE2EE\PKD\Crypto\Protocol\{Actions\AddKey,
+    EncryptedActions\EncryptedAddKey,
+    Handler,
+    ParsedMessage,
+    Parser,
+    SignedMessage};
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use FediE2EE\PKD\Crypto\{PublicKey, SecretKey, SymmetricKey};
 use ParagonIE\HPKE\{
@@ -57,11 +62,12 @@ class ParserTest extends TestCase
         $this->assertMatchesRegularExpression('#^[0-9A-Za-z-_]+$#', $wrapped);
 
         $parser = new Parser();
-        [$encrypted, $keyMap] = $parser->decryptAndParse($wrapped, $decapsKey, $hpke, $publicKey);
-        $this->assertInstanceOf(EncryptedAddKey::class, $encrypted);
-        $this->assertInstanceOf(AttributeKeyMap::class, $keyMap);
+        $decryptedMessage = $parser->decryptAndParse($wrapped, $decapsKey, $hpke, $publicKey);
+        $this->assertInstanceOf(ParsedMessage::class, $decryptedMessage);
+        $this->assertInstanceOf(EncryptedAddKey::class, $decryptedMessage->getMessage());
+        $this->assertInstanceOf(AttributeKeyMap::class, $decryptedMessage->getKeyMap());
 
-        $decrypted = $encrypted->decrypt($keyMap);
+        $decrypted = $decryptedMessage->getMessage()->decrypt($decryptedMessage->getKeyMap());
         $this->assertInstanceOf(AddKey::class, $decrypted);
     }
 }
