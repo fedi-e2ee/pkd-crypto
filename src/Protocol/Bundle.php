@@ -128,7 +128,7 @@ class Bundle
         return new SignedMessage(
             $message,
             $this->getRecentMerkleRoot(),
-            $this->getSignature()
+            Base64UrlSafe::decodeNoPadding($this->getSignature())
         );
     }
 }
