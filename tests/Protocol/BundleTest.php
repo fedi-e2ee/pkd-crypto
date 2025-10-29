@@ -27,7 +27,7 @@ class BundleTest extends TestCase
             $addKey->getAction(),
             $addKey->jsonSerialize(),
             $recent,
-            Base64UrlSafe::decodeNoPadding($signature),
+            $signature,
             new AttributeKeyMap()
         );
 
