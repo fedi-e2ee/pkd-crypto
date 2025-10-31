@@ -20,7 +20,7 @@ use ParagonIE_Sodium_Core_Util;
  */
 class Base58BtcVarTime
 {
-	protected const MU = 4519;
+    protected const MU = 4519;
     protected const SH = 18;
 
     public static function encode(string $binaryString): string
