@@ -43,28 +43,22 @@ class Base58BtcVarTime
         $size = (int)floor(($end - $begin) * $expansionFactor + 1);
         $baseValue = array_fill(0, $size, 0);
 
+        $count = $expansionFactor + 1;
         while ($begin !== $end) {
             $carry = $bytes[$begin];
-            $i = 0;
-            for (
-                $basePosition = $size - 1;
-                ($carry !== 0 || $i < $length) && ($basePosition !== -1);
-                --$basePosition, ++$i
-            ) {;
+            $stop = $size - (int)floor($count);
+            $count += $expansionFactor;
+            for ($basePosition = $size - 1; $stop <= $basePosition; --$basePosition) {
                 $carry += $baseValue[$basePosition] << 8;
                 [$div, $mod] = self::div58($carry);
-                if ($div > 255 || $mod > 255) {
-                    exit;
-                }
                 $baseValue[$basePosition] = $mod;
                 $carry = $div;
             }
 
-            $length = $i;
             ++$begin;
         }
 
-        $baseEncodingPosition = $size - $length;
+        $baseEncodingPosition = 0;
         /** @psalm-suppress InvalidArrayOffset */
         while ($baseEncodingPosition !== $size && $baseValue[$baseEncodingPosition] === 0) {
             ++$baseEncodingPosition;
@@ -100,21 +94,19 @@ class Base58BtcVarTime
         $decodedBytes = array_fill(0, $size, 0);
 
         $error = 0;
+        $count = $contractionFactor + 1;
         while ($sourceOffset < $sourceLength) {
             $carry = self::decodeByte($source[$sourceOffset]);
             $error |= $carry >> 31;
 
-            $i = 0;
-            for (
-                $byteOffset = $size - 1;
-                ($carry !== 0 || $i < $decodedLength) && ($byteOffset !== -1);
-                --$byteOffset, ++$i) {
+            $stop = $size - (int)floor($count);
+            $count += $contractionFactor;
+            for ($byteOffset = $size - 1; $stop <= $byteOffset; --$byteOffset) {
                 $carry += (58 * $decodedBytes[$byteOffset]);
                 $decodedBytes[$byteOffset] = $carry & 0xff;
                 $carry >>= 8;
             }
 
-            $decodedLength = $i;
             ++$sourceOffset;
         }
 
@@ -122,7 +114,7 @@ class Base58BtcVarTime
             throw new EncodingException("Invalid character during decoding");
         }
 
-        $decodedOffset = $size - $decodedLength;
+        $decodedOffset = 0;
         /** @psalm-suppress InvalidArrayOffset */
         while ($decodedOffset !== $size && $decodedBytes[$decodedOffset] === 0) {
             ++$decodedOffset;
