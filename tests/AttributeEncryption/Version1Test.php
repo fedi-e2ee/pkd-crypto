@@ -1,7 +1,6 @@
 <?php
 declare(strict_types=1);
-
-namespace FediE2EE\PKDServer\Tests\Crypto\Compliance;
+namespace FediE2EE\PKD\Crypto\Tests\AttributeEncryption;
 
 use Exception;
 use FediE2EE\PKD\Crypto\AttributeEncryption\Version1;
