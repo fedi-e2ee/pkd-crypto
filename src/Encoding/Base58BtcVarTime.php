@@ -26,7 +26,6 @@ class Base58BtcVarTime
     public static function encode(string $binaryString): string
     {
         $zeroes = 0;
-        $length = 0;
         $begin = 0;
         $end = strlen($binaryString);
         if ($end === 0) {
@@ -81,7 +80,6 @@ class Base58BtcVarTime
         $sourceLength = count($source);
         $sourceOffset = 0;
         $zeroes = 0;
-        $decodedLength = 0;
 
         // leading zeroes are encoded as '1' which is an ASCII char equal to 49 (0x31)
         while ($source[$sourceOffset] === 0x31) {
