@@ -20,8 +20,8 @@ use ParagonIE_Sodium_Core_Util;
  */
 class Base58BtcVarTime
 {
-    protected const MU = 18512791;
-    protected const SH = 30;
+	protected const MU = 4519;
+    protected const SH = 18;
 
     public static function encode(string $binaryString): string
     {
@@ -142,6 +142,9 @@ class Base58BtcVarTime
         $prod = self::MU * $x;
         $q    = $prod >> self::SH;
         $r    = $x - $q * 58;
+        $over = (57 - $r) >> 8;
+        $q   -= $over;
+        $r   -= $over & 58;
 
         return [$q, $r];
     }
