@@ -65,12 +65,14 @@ class Base58BtcVarTime
         }
 
         $baseEncodingPosition = $size - $length;
+        /** @psalm-suppress InvalidArrayOffset */
         while ($baseEncodingPosition !== $size && $baseValue[$baseEncodingPosition] === 0) {
             ++$baseEncodingPosition;
         }
 
         $encoded = array_fill(0, $zeroes, 0x31);
         for (; $baseEncodingPosition < $size; ++$baseEncodingPosition) {
+            /** @psalm-suppress InvalidArrayOffset */
             $encoded []= self::encodeByte($baseValue[$baseEncodingPosition]);
         }
         return ParagonIE_Sodium_Core_Util::intArrayToString($encoded);
@@ -121,6 +123,7 @@ class Base58BtcVarTime
         }
 
         $decodedOffset = $size - $decodedLength;
+        /** @psalm-suppress InvalidArrayOffset */
         while ($decodedOffset !== $size && $decodedBytes[$decodedOffset] === 0) {
             ++$decodedOffset;
         }
@@ -132,6 +135,7 @@ class Base58BtcVarTime
         );
         $j = $zeroes;
         while ($decodedOffset !== $size) {
+            /** @psalm-suppress InvalidArrayOffset */
             $finalBytes[$j++] = $decodedBytes[$decodedOffset++];
         }
         return ParagonIE_Sodium_Core_Util::intArrayToString($finalBytes);
