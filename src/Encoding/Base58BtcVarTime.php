@@ -79,14 +79,15 @@ class Base58BtcVarTime
     {
         $source = ParagonIE_Sodium_Core_Util::stringToIntArray($encoded);
         $sourceLength = count($source);
-        $sourceOffset = 0;
-        $zeroes = 0;
 
         // leading zeroes are encoded as '1' which is an ASCII char equal to 49 (0x31)
-        while ($source[$sourceOffset] === 0x31) {
-            ++$sourceOffset;
-            ++$zeroes;
+        $flag = 1;
+        $acc = 0;
+        for ($i = 0; $i < $sourceLength; ++$i) {
+            $flag = ((($source[$i] ^ 0x31) - 1) >> 8) & $flag;
+            $acc += $flag;
         }
+        $sourceOffset = $zeroes = $acc;
 
         $contractionFactor = 0.7322476243909465;
         $size = (int)floor(($sourceLength - $sourceOffset) * $contractionFactor + 1);
