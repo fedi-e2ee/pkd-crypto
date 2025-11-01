@@ -9,7 +9,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(Base58BtcVarTime::class)]
-class Base58VarTimeTest extends TestCase
+class Base58BtcVarTimeTest extends TestCase
 {
 
     /**
