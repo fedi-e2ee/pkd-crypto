@@ -2,11 +2,23 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto;
 
+use ActivityPhp\Server;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use ParagonIE_Sodium_Core_Util;
 
 trait UtilTrait
 {
+    public function canonicalizeActorID(string $handle): string
+    {
+        if (str_starts_with($handle, 'https://')) {
+            return $handle;
+        }
+        return (new Server())
+            ->actor($handle)
+            ->webfinger()
+            ->getProfileId();
+    }
+
     /**
      * @param int $select 1 -> returns left, 0 -> returns right
      *
