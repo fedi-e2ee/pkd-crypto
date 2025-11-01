@@ -25,18 +25,19 @@ class Base58BtcVarTime
 
     public static function encode(string $binaryString): string
     {
-        $zeroes = 0;
-        $begin = 0;
         $end = strlen($binaryString);
         if ($end === 0) {
             return '';
         }
 
         $bytes = ParagonIE_Sodium_Core_Util::stringToIntArray($binaryString);
-        while ($begin !== $end && $bytes[$begin] === 0) {
-            ++$begin;
-            ++$zeroes;
+        $flag = 1;
+        $acc = 0;
+        for ($i = 0; $i < $end; ++$i) {
+            $flag = (($bytes[$i] - 1) >> 8) & $flag;
+            $acc += $flag;
         }
+        $begin = $zeroes = $acc;
 
         $expansionFactor = 1.365658237309761;
         $size = (int)floor(($end - $begin) * $expansionFactor + 1);
