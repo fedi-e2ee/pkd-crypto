@@ -16,6 +16,11 @@ use ParagonIE_Sodium_Core_Util;
  * 2. Division-based timing leaks (via Barrett Reduction).
  * 3. Cache-timing leaks (via replacing the table look-up with bit-twiddling).
  *
+ * Despite taking pains to perform the initial leading-zero stripping in constant-time,
+ * the number of leading zeroes is leaked by the iteration count of the subsequent loop.
+ * When this is fully constant-time, we can remove VarTime from the class name. Until then,
+ * we'll continue to be explicit about its weakened security.
+ *
  * @link https://datatracker.ietf.org/doc/html/draft-msporny-base58-03
  */
 class Base58BtcVarTime
@@ -30,6 +35,7 @@ class Base58BtcVarTime
             return '';
         }
 
+        // Avoid leaking the values of the leading bytes via cache-timing and branching:
         $bytes = ParagonIE_Sodium_Core_Util::stringToIntArray($binaryString);
         $flag = 1;
         $acc = 0;
@@ -44,6 +50,9 @@ class Base58BtcVarTime
         $baseValue = array_fill(0, $size, 0);
 
         $count = $expansionFactor + 1;
+        // This leaks the number of leading zeroes through loop iterations, but this doesn't
+        // reveal the actual values of the leading nonzero bytes like it would if we didn't
+        // take care to plug the leak in the previous loop.
         while ($begin !== $end) {
             $carry = $bytes[$begin];
             $stop = $size - (int)floor($count);
@@ -58,12 +67,14 @@ class Base58BtcVarTime
             ++$begin;
         }
 
+        // This leaks some information about $baseValue at each position evaluated
         $baseEncodingPosition = 0;
         /** @psalm-suppress InvalidArrayOffset */
         while ($baseEncodingPosition !== $size && $baseValue[$baseEncodingPosition] === 0) {
             ++$baseEncodingPosition;
         }
 
+        // 0x31 is the encoded representation of zero
         $encoded = array_fill(0, $zeroes, 0x31);
         for (; $baseEncodingPosition < $size; ++$baseEncodingPosition) {
             /** @psalm-suppress InvalidArrayOffset */
