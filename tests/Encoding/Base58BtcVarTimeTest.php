@@ -18,7 +18,6 @@ class Base58BtcVarTimeTest extends TestCase
      */
     public function testDiv58(): void
     {
-        $this->markTestSkipped('test');
         for ($x = 0; $x < 32768; ++$x) {
             $expectedDiv = intdiv($x, 58);
             $expectedMod = $x % 58;
@@ -58,7 +57,6 @@ class Base58BtcVarTimeTest extends TestCase
 
     public function testEncodeDecodeByte(): void
     {
-        $this->markTestSkipped('test');
         $alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
         $input = range(0, 57);
         $str = '';
@@ -75,7 +73,6 @@ class Base58BtcVarTimeTest extends TestCase
     }
     public function testEncodeDecode(): void
     {
-        $this->markTestSkipped('test');
         for ($i = 1; $i < 100; ++$i) {
             $random = random_bytes($i);
             $encoded = Base58BtcVarTime::encode($random);
