@@ -67,11 +67,12 @@ class Base58BtcVarTime
             ++$begin;
         }
 
-        // This leaks some information about $baseValue at each position evaluated
         $baseEncodingPosition = 0;
-        /** @psalm-suppress InvalidArrayOffset */
-        while ($baseEncodingPosition !== $size && $baseValue[$baseEncodingPosition] === 0) {
-            ++$baseEncodingPosition;
+        $flag = 1;
+        for ($i = 0; $i < $size; ++$i) {
+            /** @psalm-suppress InvalidArrayOffset */
+            $flag = (($baseValue[$i] - 1) >> 8) & $flag;
+            $baseEncodingPosition += $flag;
         }
 
         // 0x31 is the encoded representation of zero
@@ -95,6 +96,7 @@ class Base58BtcVarTime
         $flag = 1;
         $acc = 0;
         for ($i = 0; $i < $sourceLength; ++$i) {
+            // $flag &= (int)($flag === 0x31); without bool-to-int leakage
             $flag = ((($source[$i] ^ 0x31) - 1) >> 8) & $flag;
             $acc += $flag;
         }
@@ -126,9 +128,11 @@ class Base58BtcVarTime
         }
 
         $decodedOffset = 0;
-        /** @psalm-suppress InvalidArrayOffset */
-        while ($decodedOffset !== $size && $decodedBytes[$decodedOffset] === 0) {
-            ++$decodedOffset;
+        $flag = 1;
+        for ($i = 0; $i < $size; ++$i) {
+            /** @psalm-suppress InvalidArrayOffset */
+            $flag = (($decodedBytes[$i] - 1) >> 8) & $flag;
+            $decodedOffset += $flag;
         }
 
         $finalBytes = array_fill(
