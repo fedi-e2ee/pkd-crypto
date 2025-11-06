@@ -50,21 +50,21 @@ class Base58BtcVarTime
         $baseValue = array_fill(0, $size, 0);
 
         $count = $expansionFactor + 1;
-        // This leaks the number of leading zeroes through loop iterations, but this doesn't
-        // reveal the actual values of the leading nonzero bytes like it would if we didn't
-        // take care to plug the leak in the previous loop.
-        while ($begin !== $end) {
-            $carry = $bytes[$begin];
+        for ($i = 0; $i < $end; ++$i) {
+            // $mask = $i >= $begin ? 0xFF : 0;
+            $mask = (($begin - $i - 1) >> 8) & 0xff;
+
+            $carry = $bytes[$i];
             $stop = $size - (int)floor($count);
-            $count += $expansionFactor;
-            for ($basePosition = $size - 1; $stop <= $basePosition; --$basePosition) {
-                $carry += $baseValue[$basePosition] << 8;
+            // $count only increases if $mask is 0xFF
+            $count += ($expansionFactor * ($mask & 1));
+            for ($b = $size - 1; $stop <= $b; --$b) {
+                $carry += ($baseValue[$b] << 8);
                 [$div, $mod] = self::div58($carry);
-                $baseValue[$basePosition] = $mod;
+                // Only update if $mask is 0xFF
+                $baseValue[$b] ^= (($baseValue[$b] ^ $mod) & $mask);
                 $carry = $div;
             }
-
-            ++$begin;
         }
 
         $baseEncodingPosition = 0;
@@ -108,19 +108,19 @@ class Base58BtcVarTime
 
         $error = 0;
         $count = $contractionFactor + 1;
-        while ($sourceOffset < $sourceLength) {
-            $carry = self::decodeByte($source[$sourceOffset]);
-            $error |= $carry >> 31;
+        for ($i = 0; $i < $sourceLength; ++$i) {
+            // $mask = $i >= $sourceOffset ? 0xFF : 0;
+            $mask = (($sourceOffset - $i - 1) >> 8) & 0xff;
 
+            $carry = self::decodeByte($source[$i]);
+            $error |= ($carry >> 31) & $mask;
             $stop = $size - (int)floor($count);
-            $count += $contractionFactor;
-            for ($byteOffset = $size - 1; $stop <= $byteOffset; --$byteOffset) {
-                $carry += (58 * $decodedBytes[$byteOffset]);
-                $decodedBytes[$byteOffset] = $carry & 0xff;
+            $count += ($contractionFactor * ($mask & 1));
+            for ($b = $size - 1; $stop <= $b; --$b) {
+                $carry += (58 * $decodedBytes[$b]);
+                $decodedBytes[$b] ^= ($decodedBytes[$b] ^ $carry) & $mask;
                 $carry >>= 8;
             }
-
-            ++$sourceOffset;
         }
 
         if ($error !== 0) {
