@@ -32,6 +32,10 @@ class Base58BtcVarTimeTest extends TestCase
     public static function vectorProvider(): array
     {
         return [
+            ["\x00\x00\x00\x00\x00\x00\x00\x00", '11111111'],
+            [str_repeat("\x00", 256), str_repeat('1', 256)],
+            [str_repeat("\x00", 2048), str_repeat('1', 2048)],
+            [str_repeat("\x00", 16384), str_repeat('1', 16384)],
             ["\x00\x00\x00\x00\x28\x7f\xb4\xcd", '1111233QC4'],
             ["\x01", '2'],
             ["\x3A", '21'],
@@ -54,7 +58,7 @@ class Base58BtcVarTimeTest extends TestCase
     {
         $encoded = Base58BtcVarTime::encode($input);
         $decoded = Base58BtcVarTime::decode($expected);
-        $this->assertSame($expected, $encoded, 'encoding: ' . $input);
+        $this->assertSame($expected, $encoded, 'encoding ' . strlen($input) . ': ' . $input);
         $this->assertSame($input, $decoded, 'decoding: ' . $expected);
     }
 
