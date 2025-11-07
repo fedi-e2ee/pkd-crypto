@@ -75,12 +75,31 @@ class Base58BtcVarTime
             $baseEncodingPosition += $flag;
         }
 
-        // 0x31 is the encoded representation of zero
-        $encoded = array_fill(0, $zeroes, 0x31);
-        for (; $baseEncodingPosition < $size; ++$baseEncodingPosition) {
-            /** @psalm-suppress InvalidArrayOffset */
-            $encoded []= self::encodeByte($baseValue[$baseEncodingPosition]);
+        $finalSize = $zeroes + ($size - $baseEncodingPosition);
+        // We allocate one more byte than we need to, and then use the 0 index as a dummy value
+        $encoded = array_fill(0, $finalSize + 1, 0);
+
+        // constant-time fill of leading zeroes and the rest with 0
+        for ($i = 0; $i < $finalSize; ++$i) {
+            $mask = (($i - $zeroes) >> 8); // -1 if $i < $zeroes, 0 otherwise
+            $encoded[$i + 1] = (0x31 & $mask);
         }
+
+        $j = $zeroes;
+        for ($i = 0; $i < $size; ++$i) {
+            $mask = (($baseEncodingPosition - $i - 1) >> 8); // -1 if $i >= $baseEncodingPosition, 0 otherwise
+            $gte = $mask & 1;
+            $j += $gte;
+
+            /** @psalm-suppress InvalidArrayOffset */
+            $encodedValue = self::encodeByte($baseValue[$i]);
+
+            // We want to write to $encoded[$j] if $mask is -1.
+            // We want to write to $encoded[0] if $mask is 0.
+            // The index should be ($j & $mask) | (0 & ~$mask) which is $j & $mask.
+            $encoded[$j & $mask] = $encodedValue;
+        }
+        unset($encoded[0]);
         return ParagonIE_Sodium_Core_Util::intArrayToString($encoded);
     }
 
