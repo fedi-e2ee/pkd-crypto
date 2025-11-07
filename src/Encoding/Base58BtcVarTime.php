@@ -46,13 +46,14 @@ class Base58BtcVarTime
         $zeroes = $begin;
 
         $expansionFactor = 1.365658237309761;
-        $size = (int)floor(($end - $begin) * $expansionFactor + 1);
+        $size = (int)floor($end * $expansionFactor + 1);
         $baseValue = array_fill(0, $size, 0);
 
+        $shift = (PHP_INT_SIZE << 3) - 1;
         $count = $expansionFactor + 1;
         for ($i = 0; $i < $end; ++$i) {
             // $mask = $i >= $begin ? 0xFF : 0;
-            $mask = (($begin - $i - 1) >> 8) & 0xff;
+            $mask = (($begin - $i - 1) >> $shift) & 0xff;
 
             $carry = $bytes[$i];
             $stop = $size - (int)floor($count);
@@ -81,13 +82,13 @@ class Base58BtcVarTime
 
         // constant-time fill of leading zeroes and the rest with 0
         for ($i = 0; $i < $finalSize; ++$i) {
-            $mask = (($i - $zeroes) >> 8); // -1 if $i < $zeroes, 0 otherwise
+            $mask = (($i - $zeroes) >> $shift); // -1 if $i < $zeroes, 0 otherwise
             $encoded[$i + 1] = (0x31 & $mask);
         }
 
         $j = $zeroes;
         for ($i = 0; $i < $size; ++$i) {
-            $mask = (($baseEncodingPosition - $i - 1) >> 8); // -1 if $i >= $baseEncodingPosition, 0 otherwise
+            $mask = (($baseEncodingPosition - $i - 1) >> $shift); // -1 if $i >= $baseEncodingPosition, 0 otherwise
             $gte = $mask & 1;
             $j += $gte;
 
@@ -122,14 +123,14 @@ class Base58BtcVarTime
         $sourceOffset = $zeroes = $acc;
 
         $contractionFactor = 0.7322476243909465;
-        $size = (int)floor(($sourceLength - $sourceOffset) * $contractionFactor + 1);
+        $size = (int)floor(($sourceLength  * $contractionFactor) + 1);
         $decodedBytes = array_fill(0, $size, 0);
 
+        $shift = (PHP_INT_SIZE << 3) - 1;
         $error = 0;
         $count = $contractionFactor + 1;
         for ($i = 0; $i < $sourceLength; ++$i) {
-            // $mask = $i >= $sourceOffset ? 0xFF : 0;
-            $mask = (($sourceOffset - $i - 1) >> 8) & 0xff;
+            $mask = (($sourceOffset - $i - 1) >> $shift) & 0xff;
 
             $carry = self::decodeByte($source[$i]);
             $error |= ($carry >> 31) & $mask;
