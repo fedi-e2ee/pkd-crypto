@@ -3,12 +3,12 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests\Encoding;
 
 use FediE2EE\PKD\Crypto\Encoding\Base58BtcVarTime;
-use FediE2EE\PKD\Crypto\Exceptions\EncodingException;
 use ParagonIE\ConstantTime\Hex;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\{
+    CoversClass,
+    DataProvider
+};
 use PHPUnit\Framework\TestCase;
-use Throwable;
 
 #[CoversClass(Base58BtcVarTime::class)]
 class Base58BtcVarTimeTest extends TestCase
