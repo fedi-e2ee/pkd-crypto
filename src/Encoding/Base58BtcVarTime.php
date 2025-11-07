@@ -38,12 +38,12 @@ class Base58BtcVarTime
         // Avoid leaking the values of the leading bytes via cache-timing and branching:
         $bytes = ParagonIE_Sodium_Core_Util::stringToIntArray($binaryString);
         $flag = 1;
-        $acc = 0;
+        $begin = 0;
         for ($i = 0; $i < $end; ++$i) {
             $flag = (($bytes[$i] - 1) >> 8) & $flag;
-            $acc += $flag;
+            $begin += $flag;
         }
-        $begin = $zeroes = $acc;
+        $zeroes = $begin;
 
         $expansionFactor = 1.365658237309761;
         $size = (int)floor(($end - $begin) * $expansionFactor + 1);
@@ -75,12 +75,31 @@ class Base58BtcVarTime
             $baseEncodingPosition += $flag;
         }
 
-        // 0x31 is the encoded representation of zero
-        $encoded = array_fill(0, $zeroes, 0x31);
-        for (; $baseEncodingPosition < $size; ++$baseEncodingPosition) {
-            /** @psalm-suppress InvalidArrayOffset */
-            $encoded []= self::encodeByte($baseValue[$baseEncodingPosition]);
+        $finalSize = $zeroes + ($size - $baseEncodingPosition);
+        // We allocate one more byte than we need to, and then use the 0 index as a dummy value
+        $encoded = array_fill(0, $finalSize + 1, 0);
+
+        // constant-time fill of leading zeroes and the rest with 0
+        for ($i = 0; $i < $finalSize; ++$i) {
+            $mask = (($i - $zeroes) >> 8); // -1 if $i < $zeroes, 0 otherwise
+            $encoded[$i + 1] = (0x31 & $mask);
         }
+
+        $j = $zeroes;
+        for ($i = 0; $i < $size; ++$i) {
+            $mask = (($baseEncodingPosition - $i - 1) >> 8); // -1 if $i >= $baseEncodingPosition, 0 otherwise
+            $gte = $mask & 1;
+            $j += $gte;
+
+            /** @psalm-suppress InvalidArrayOffset */
+            $encodedValue = self::encodeByte($baseValue[$i]);
+
+            // We want to write to $encoded[$j] if $mask is -1.
+            // We want to write to $encoded[0] if $mask is 0.
+            // The index should be ($j & $mask) | (0 & ~$mask) which is $j & $mask.
+            $encoded[$j & $mask] = $encodedValue;
+        }
+        unset($encoded[0]);
         return ParagonIE_Sodium_Core_Util::intArrayToString($encoded);
     }
 
@@ -135,16 +154,24 @@ class Base58BtcVarTime
             $decodedOffset += $flag;
         }
 
+        // We allocate one more byte than we need to, and then use the 0 index as a dummy value
         $finalBytes = array_fill(
             0,
-            $zeroes + ($size - $decodedOffset),
+            $zeroes + ($size - $decodedOffset) + 1,
             0
         );
         $j = $zeroes;
-        while ($decodedOffset !== $size) {
+        // Iterate over the full length again, writing to [0] if outside the range of $decodedOffset..$size.
+        // And then writing to [$j] (and incrementing $j) when the value is in range.
+        for ($i = 0; $i < $size; ++$i) {
+            $mask = (($decodedOffset - $i - 1) >> 8); // $i >= $decodedOffset ? -1 : 0
+            $gte = $mask & 1;
+            $j += $gte;
             /** @psalm-suppress InvalidArrayOffset */
-            $finalBytes[$j++] = $decodedBytes[$decodedOffset++];
+            $finalBytes[$j & $mask] = $decodedBytes[$i];
         }
+        // delete dummy value
+        unset($finalBytes[0]);
         return ParagonIE_Sodium_Core_Util::intArrayToString($finalBytes);
     }
 
@@ -214,7 +241,7 @@ class Base58BtcVarTime
         // 'a'-'k' → 0x61-0x6B → 33-43
         $ret += (((0x60 - $input) & ($input - 0x6C)) >> 8) & ($input - 0x3F);
 
-        // 'l'-'z' → 0x6D-0x7A → 44-57
+        // 'm'-'z' → 0x6D-0x7A → 44-57
         $ret += (((0x6C - $input) & ($input - 0x7B)) >> 8) & ($input - 0x40);
 
         return $ret;
