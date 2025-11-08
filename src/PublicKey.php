@@ -2,7 +2,9 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto;
 
+use FediE2EE\PKD\Crypto\Encoding\Multibase;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
+use FediE2EE\PKD\Crypto\Exceptions\EncodingException;
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use ParagonIE\ConstantTime\Base64;
 use ParagonIE\ConstantTime\Base64UrlSafe;
@@ -37,6 +39,29 @@ final class PublicKey
         return "-----BEGIN PUBLIC KEY-----\n" .
             self::dos2unix(chunk_split($encoded, 64)).
             "-----END PUBLIC KEY-----";
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws EncodingException
+     */
+    public static function fromMultibase(string $encoded): PublicKey
+    {
+        $decoded = Multibase::decode($encoded);
+        if (strlen($decoded) !== 34) {
+            throw new CryptoException('Invalid public key');
+        }
+        $expectedPrefix = "\xed\x01";
+        $actualPrefix = substr($decoded, 0, 2);
+        if (!hash_equals($actualPrefix, $expectedPrefix)) {
+            throw new CryptoException('Incorrect public key type');
+        }
+        return new PublicKey(substr($decoded, 2));
+    }
+
+    public function toMultibase(bool $useUnsafe = false): string
+    {
+        return Multibase::encode("\xed\x01" . $this->bytes, $useUnsafe);
     }
 
     /**
