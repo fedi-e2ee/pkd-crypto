@@ -14,4 +14,9 @@ trait ToStringTrait
             JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
         );
     }
+
+    public function __toString(): string
+    {
+        return $this->toString();
+    }
 }

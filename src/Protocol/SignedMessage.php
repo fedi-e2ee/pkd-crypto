@@ -14,6 +14,7 @@ use SodiumException;
 
 final class SignedMessage implements \JsonSerializable
 {
+    use ToStringTrait;
     use UtilTrait;
 
     public const PKD_CONTEXT = 'https://github.com/fedi-e2ee/public-key-directory/v1';
