@@ -17,8 +17,8 @@ use SodiumException;
 class Tree
 {
     use UtilTrait;
-    private array $leaves = [];
-    private ?string $root = null;
+    protected array $leaves = [];
+    protected ?string $root = null;
     private string $hashAlgo;
 
     /**

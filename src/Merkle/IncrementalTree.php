@@ -78,12 +78,18 @@ class IncrementalTree extends Tree
      * @throws SodiumException
      */
     #[Override]
+    public function updateRoot(): void
+    {
+        $this->root = $this->getRootForSubtree(0, $this->size);
+    }
+
+    #[Override]
     public function getRoot(): ?string
     {
         if ($this->size === 0) {
             return null;
         }
-        return $this->getRootForSubtree(0, $this->size);
+        return $this->root;
     }
 
     #[Override]
@@ -156,6 +162,7 @@ class IncrementalTree extends Tree
         foreach ($state['nodes'] as $key => $hash) {
             $tree->nodes[$key] = Base64UrlSafe::decode($hash);
         }
+        $tree->updateRoot();
         return $tree;
     }
 
