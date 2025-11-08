@@ -63,8 +63,8 @@ class Handler
     ): string {
         return Base64UrlSafe::encodeUnpadded(
             $hpke->sealBase(
-                $encapsKey,
-                $bundle->toJson(),
+                pk: $encapsKey,
+                plaintext: $bundle->toJson(),
                 aad: $aad,
                 info: $info
             )
