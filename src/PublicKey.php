@@ -2,7 +2,9 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto;
 
+use FediE2EE\PKD\Crypto\Encoding\Multibase;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
+use FediE2EE\PKD\Crypto\Exceptions\EncodingException;
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use ParagonIE\ConstantTime\Base64;
 use ParagonIE\ConstantTime\Base64UrlSafe;
@@ -17,6 +19,7 @@ final class PublicKey
 {
     use UtilTrait;
     private const PEM_PREFIX_ED25519 = '302a300506032b6570032100';
+    private const MB_PREFIX_ED25519 = "\xed\x01";
     private string $bytes;
     private string $algo;
 
@@ -37,6 +40,36 @@ final class PublicKey
         return "-----BEGIN PUBLIC KEY-----\n" .
             self::dos2unix(chunk_split($encoded, 64)).
             "-----END PUBLIC KEY-----";
+    }
+
+    /**
+     * @link https://www.w3.org/TR/cid-1.0/#example-multikey-encoding-of-a-ed25519-public-key
+     *
+     * @throws CryptoException
+     * @throws EncodingException
+     */
+    public static function fromMultibase(string $encoded): PublicKey
+    {
+        $decoded = Multibase::decode($encoded);
+        if (strlen($decoded) !== 34) {
+            throw new CryptoException('Invalid public key');
+        }
+        $actualPrefix = substr($decoded, 0, 2);
+        if (!hash_equals(self::MB_PREFIX_ED25519, $actualPrefix)) {
+            throw new CryptoException('Incorrect public key type');
+        }
+        return new PublicKey(substr($decoded, 2));
+    }
+
+    /**
+     * @link https://www.w3.org/TR/cid-1.0/#example-multikey-encoding-of-a-ed25519-public-key
+     *
+     * @param bool $useUnsafe
+     * @return string
+     */
+    public function toMultibase(bool $useUnsafe = false): string
+    {
+        return Multibase::encode(self::MB_PREFIX_ED25519 . $this->bytes, $useUnsafe);
     }
 
     /**
