@@ -9,15 +9,25 @@ use FediE2EE\PKD\Crypto\Exceptions\{
     NotImplementedException,
     ParserException
 };
-use FediE2EE\PKD\Crypto\Protocol\{Actions\AddKey,
+use FediE2EE\PKD\Crypto\Protocol\{
+    Actions\AddKey,
     EncryptedActions\EncryptedAddKey,
     Handler,
     ParsedMessage,
     Parser,
-    SignedMessage};
+};
 use ParagonIE\ConstantTime\Base64UrlSafe;
-use FediE2EE\PKD\Crypto\{PublicKey, SecretKey, SymmetricKey};
-use ParagonIE\HPKE\{Factory, HPKEException, KEM\DHKEM\Curve, KEM\DHKEM\DecapsKey};
+use FediE2EE\PKD\Crypto\{
+    PublicKey,
+    SecretKey,
+    SymmetricKey
+};
+use ParagonIE\HPKE\{
+    Factory,
+    HPKEException,
+    KEM\DHKEM\Curve,
+    KEM\DHKEM\DecapsKey
+};
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use SodiumException;
@@ -56,10 +66,10 @@ class ParserTest extends TestCase
         $message = $handler->handle($encryptedAddKey, $secretKey, $keyMap, $recent);
         $wrapped = $handler->hpkeEncrypt($message, $encapsKey, $hpke);
         $this->assertIsString($wrapped);
-        $this->assertMatchesRegularExpression('#^[0-9A-Za-z-_]+$#', $wrapped);
+        $this->assertMatchesRegularExpression('#^hpke:[0-9A-Za-z-_]+$#', $wrapped);
 
         $parser = new Parser();
-        $decryptedMessage = $parser->decryptAndParse($wrapped, $decapsKey, $hpke, $publicKey);
+        $decryptedMessage = $parser->decryptAndParse($wrapped, $decapsKey, $encapsKey, $hpke, $publicKey);
         $this->assertInstanceOf(ParsedMessage::class, $decryptedMessage);
         $this->assertInstanceOf(EncryptedAddKey::class, $decryptedMessage->getMessage());
         $this->assertInstanceOf(AttributeKeyMap::class, $decryptedMessage->getKeyMap());
@@ -102,7 +112,7 @@ class ParserTest extends TestCase
         $encrypted = $handler->hpkeEncrypt($bundle, $encapsKey, $hpke);
 
         $parser = new Parser();
-        $parsed = $parser->decryptAndParse($encrypted, $decapsKey, $hpke, $publicKey);
+        $parsed = $parser->decryptAndParse($encrypted, $decapsKey, $encapsKey, $hpke, $publicKey);
         $this->assertInstanceOf(ParsedMessage::class, $parsed);
     }
 }

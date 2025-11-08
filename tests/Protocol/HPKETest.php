@@ -17,19 +17,20 @@ use FediE2EE\PKD\Crypto\Exceptions\{
 use FediE2EE\PKD\Crypto\Protocol\{Actions\AddKey,
     EncryptedProtocolMessageInterface,
     Handler,
+    HPKEAdapter,
     Parser,
     ProtocolMessageInterface};
-use ParagonIE\HPKE\{
-    Factory,
+use ParagonIE\HPKE\{Factory,
     HPKE,
     HPKEException,
     Interfaces\DecapsKeyInterface,
-    Interfaces\EncapsKeyInterface
-};
+    Interfaces\EncapsKeyInterface,
+    KEM\DHKEM\DecapsKey};
 use PHPUnit\Framework\Attributes\{
     CoversClass,
     DataProvider
 };
+use ParagonIE\ConstantTime\Base64UrlSafe;
 use PHPUnit\Framework\TestCase;
 use SodiumException;
 
@@ -43,6 +44,18 @@ class HPKETest extends TestCase
             [Factory::dhkem_x25519sha256_hkdf_sha256_chacha20poly1305()],
             [Factory::dhkem_x25519sha256_hkdf_sha256_aes128gcm()],
         ];
+    }
+
+    #[DataProvider("ciphersuites")]
+    public function testKeyID(HPKE $ciphersuite): void
+    {
+        $sk = new DecapsKey($ciphersuite->kem->curve, hash('sha256', 'test', true));
+        $pk = $sk->getEncapsKey();
+        $adapter = new HPKEAdapter($ciphersuite);
+        $this->assertSame(
+            '0eUvFqsTCHdJi7EGyqA5kB1cMXHX97Lui2uYOGN-R9A',
+            Base64UrlSafe::encodeUnpadded($adapter->keyId($pk))
+        );
     }
 
     /**
@@ -81,7 +94,7 @@ class HPKETest extends TestCase
 
         // HPKE decryption!
         $parser = new Parser();
-        $decrypted = $parser->hpkeDecrypt($encrypted, $decapsKey, $ciphersuite);
+        $decrypted = $parser->hpkeDecrypt($encrypted, $decapsKey, $encapsKey, $ciphersuite);
         $this->assertSame($bundle->getAction(), $decrypted->getAction());
         $this->assertSame($bundle->toString(), $decrypted->toString());
 

@@ -37,8 +37,9 @@ class Handler
         AttributeKeyMap $keyMap,
         string $recentMerkleRoot = ''
     ): Bundle {
-        if ($message instanceof ProtocolMessageInterface) {
+        if (!($message instanceof EncryptedProtocolMessageInterface)) {
             if (!$keyMap->isEmpty()) {
+                // We assume the intention was to be encrypted, so we encrypt it.
                 $message = $message->encrypt($keyMap);
             }
         }
@@ -55,7 +56,6 @@ class Handler
     }
 
     /**
-     * @throws HPKEException
      * @throws JsonException
      * @api
      */
@@ -63,16 +63,10 @@ class Handler
         Bundle    $bundle,
         EncapsKey $encapsKey,
         HPKE      $hpke,
-        string    $info = '',
-        string    $aad = ''
     ): string {
-        return Base64UrlSafe::encodeUnpadded(
-            $hpke->sealBase(
-                pk: $encapsKey,
-                plaintext: $bundle->toJson(),
-                aad: $aad,
-                info: $info
-            )
+        return (new HPKEAdapter($hpke))->seal(
+            encapsKey: $encapsKey,
+            plaintext: $bundle->toJson(),
         );
     }
 }
