@@ -58,7 +58,6 @@ class IncrementalTree extends Tree
                 // Sibling doesn't exist, so we can't calculate the parent yet.
                 // In a complete binary tree, this means we are at the edge for this level.
                 // The parent will be calculated when the sibling is added.
-                $this->updateRoot();
                 break;
             }
 
@@ -72,6 +71,7 @@ class IncrementalTree extends Tree
             $this->nodes["{$level}-{$currentIndex}"] = $parentHash;
             $leafHash = $parentHash; // The new "leaf" for the next level up.
         }
+        $this->updateRoot();
     }
 
     /**
