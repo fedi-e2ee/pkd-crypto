@@ -209,6 +209,9 @@ class Tree
             return hash($this->hashAlgo, '', true);
         }
         if ($leafCount === 1) {
+            if (!array_key_exists($start, $this->leaves)) {
+                throw new \Exception('what');
+            }
             return $this->leaves[$start];
         }
 

@@ -2,6 +2,8 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests\Merkle;
 
+use FediE2EE\PKD\Crypto\Merkle\ConsistencyProof;
+use FediE2EE\PKD\Crypto\Merkle\InclusionProof;
 use FediE2EE\PKD\Crypto\Merkle\IncrementalTree;
 use FediE2EE\PKD\Crypto\Merkle\Tree;
 use ParagonIE\ConstantTime\Hex;
@@ -63,6 +65,21 @@ class IncrementalTreeTest extends TestCase
         $this->assertEquals($baseTree->getSize(), $incrementalTree->getSize());
 
         $baseProof = $baseTree->getInclusionProof('c');
+
+        // Ensure JSON encoding/decoding works
+        $toJson = json_encode($baseProof);
+        $this->assertIsString($toJson);
+        $fromJson = InclusionProof::fromString($toJson);
+        $this->assertSame($fromJson->index, $baseProof->index);
+        $this->assertSame($fromJson->proof, $baseProof->proof);
+
+        // Handle consistency proofs
+        $proof1 = $baseTree->getConsistencyProof(3);
+        $conJson = json_encode($proof1);
+        $this->assertIsString($conJson);
+        $proof2 = ConsistencyProof::fromString($conJson);
+        $this->assertSame($proof1->proof, $proof2->proof);
+
         $incrementalProof = $incrementalTree->getInclusionProof('c');
 
         $this->assertEquals($baseProof, $incrementalProof);

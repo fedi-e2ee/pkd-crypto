@@ -4,6 +4,7 @@ namespace FediE2EE\PKD\Crypto\Merkle;
 
 use JsonSerializable;
 use Override;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 
 class ConsistencyProof implements JsonSerializable
 {
@@ -14,9 +15,26 @@ class ConsistencyProof implements JsonSerializable
         public readonly array $proof
     ) {}
 
+    public static function fromString(string $json): ConsistencyProof
+    {
+        $decoded = json_decode($json);
+        $proof = [];
+        foreach ($decoded as $p) {
+            $proof []= Base64UrlSafe::decodeNoPadding($p);
+        }
+
+        return new static(
+            $proof
+        );
+    }
+
     #[Override]
     public function jsonSerialize(): array
     {
-        return $this->proof;
+        $proof = [];
+        foreach ($this->proof as $p) {
+            $proof []= Base64UrlSafe::encodeUnpadded($p);
+        }
+        return $proof;
     }
 }
