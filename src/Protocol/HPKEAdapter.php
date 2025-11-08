@@ -13,7 +13,7 @@ class HPKEAdapter
 {
     public const HPKE_PREFIX = 'hpke:';
     public const DEFAULT_INFO = 'fedi-e2ee/public-key-directory:v1:protocol-message';
-    public const KEY_ID_DOMAIN = 'fedi-e2ee/public-key-directory:v1:';
+    public const KEY_ID_DOMAIN = 'fedi-e2ee/public-key-directory:v1:key-id';
 
     public function __construct(
         private readonly HPKE $hpke,
