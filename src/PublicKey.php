@@ -19,6 +19,7 @@ final class PublicKey
 {
     use UtilTrait;
     private const PEM_PREFIX_ED25519 = '302a300506032b6570032100';
+    private const MB_PREFIX_ED25519 = "\xed\x01";
     private string $bytes;
     private string $algo;
 
@@ -51,9 +52,8 @@ final class PublicKey
         if (strlen($decoded) !== 34) {
             throw new CryptoException('Invalid public key');
         }
-        $expectedPrefix = "\xed\x01";
         $actualPrefix = substr($decoded, 0, 2);
-        if (!hash_equals($actualPrefix, $expectedPrefix)) {
+        if (!hash_equals(self::MB_PREFIX_ED25519, $actualPrefix)) {
             throw new CryptoException('Incorrect public key type');
         }
         return new PublicKey(substr($decoded, 2));
@@ -61,7 +61,7 @@ final class PublicKey
 
     public function toMultibase(bool $useUnsafe = false): string
     {
-        return Multibase::encode("\xed\x01" . $this->bytes, $useUnsafe);
+        return Multibase::encode(self::MB_PREFIX_ED25519 . $this->bytes, $useUnsafe);
     }
 
     /**
