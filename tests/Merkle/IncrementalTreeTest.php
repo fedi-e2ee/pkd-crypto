@@ -26,11 +26,13 @@ class IncrementalTreeTest extends TestCase
     public function testIncrementalFromZero(string $hashAlg): void
     {
         $dummy = random_bytes(32);
-        $tree = new IncrementalTree();
+        $tree = new IncrementalTree([], $hashAlg);
         $this->assertSame('pkd-mr-v1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', $tree->getEncodedRoot());
         $tree->addLeaf($dummy);
-        $tree->getRoot();
         $this->assertNotSame('pkd-mr-v1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', $tree->getEncodedRoot());
+
+        $non = new Tree([$dummy], $hashAlg);
+        $this->assertSame($non->getEncodedRoot(), $tree->getEncodedRoot());
     }
 
     #[DataProvider("hashAlgProvider")]
