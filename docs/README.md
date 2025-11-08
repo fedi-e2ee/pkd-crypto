@@ -69,3 +69,29 @@ Next, it takes the signed attributes and symmetric keys, and serializes it as a 
 
 Finally, it uses an HPKE library to encrypt the bundle into a Base64url-encoded binary blob. You can toss this blob
 at the server and it will be decrypted.
+
+## Easy Mode - Protocol Parser
+
+To decrypt and parse an encrypted message, you will need the `DecapsKey` that corresponds to the `EncapsKey` that was
+used to encrypt the message.
+
+```php
+<?php
+use FediE2EE\PKD\Crypto\Protocol\Parser;
+use ParagonIE\HPKE\HPKE;
+use ParagonIE\HPKE\Interfaces\DecapsKeyInterface;
+use FediE2EE\PKD\Crypto\PublicKey;
+
+$parser = new Parser();
+/**
+ * @var HPKE $hpke                     HPKE container object; defines a ciphersuite
+ * @var DecapsKeyInterface $decapsKey  Decapsulation Key; used to decrypt messages
+ * @var PublicKey $publicKey           Public key used to verify the protocol message.
+ */
+
+$parsed = $parser->decryptAndParse($encrypted, $decapsKey, $hpke, $publicKey);
+
+// You can now use these
+$keyMap = $parsed->getKeyMap();
+$message = $parsed->getMessage();
+```
