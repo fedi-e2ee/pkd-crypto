@@ -6,6 +6,7 @@ use DateTimeImmutable;
 use Exception;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 use FediE2EE\PKD\Crypto\Protocol\Actions\RevokeKey;
+use FediE2EE\PKD\Crypto\Protocol\ToStringTrait;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\PublicKey;
@@ -16,6 +17,8 @@ use SodiumException;
 
 class EncryptedRevokeKey implements EncryptedProtocolMessageInterface, JsonSerializable
 {
+    use ToStringTrait;
+
     private array $encrypted;
 
     public function __construct(array $encrypted)

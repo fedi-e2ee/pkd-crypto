@@ -5,6 +5,7 @@ namespace FediE2EE\PKD\Crypto\Protocol\Actions;
 use DateTimeImmutable;
 use DateTimeInterface;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
+use FediE2EE\PKD\Crypto\Protocol\ToStringTrait;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedMoveIdentity;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
@@ -14,6 +15,8 @@ use Override;
 
 class MoveIdentity implements ProtocolMessageInterface, JsonSerializable
 {
+    use ToStringTrait;
+
     private string $oldActor;
     private string $newActor;
     private DateTimeImmutable $time;

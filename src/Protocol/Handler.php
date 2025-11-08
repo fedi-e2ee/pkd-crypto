@@ -37,6 +37,11 @@ class Handler
         AttributeKeyMap $keyMap,
         string $recentMerkleRoot = ''
     ): Bundle {
+        if ($message instanceof ProtocolMessageInterface) {
+            if (!$keyMap->isEmpty()) {
+                $message = $message->encrypt($keyMap);
+            }
+        }
         $signedMessage = new SignedMessage($message, $recentMerkleRoot);
         $signature = $signedMessage->sign($secretKey);
 
@@ -63,8 +68,8 @@ class Handler
     ): string {
         return Base64UrlSafe::encodeUnpadded(
             $hpke->sealBase(
-                $encapsKey,
-                $bundle->toJson(),
+                pk: $encapsKey,
+                plaintext: $bundle->toJson(),
                 aad: $aad,
                 info: $info
             )

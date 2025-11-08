@@ -128,8 +128,8 @@ class Parser
         string $aad = ''
     ): ParsedMessage {
         $decrypted = $hpke->openBase(
-            $decapsKey,
-            Base64UrlSafe::decodeNoPadding($encrypted),
+            sk: $decapsKey,
+            ciphertext: Base64UrlSafe::decodeNoPadding($encrypted),
             aad: $aad,
             info: $info
         );

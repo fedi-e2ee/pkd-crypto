@@ -131,4 +131,20 @@ class Bundle
             Base64UrlSafe::decodeNoPadding($this->getSignature())
         );
     }
+
+    /**
+     * @throws JsonException
+     */
+    public function toString(): string
+    {
+        return $this->toJson();
+    }
+
+    /**
+     * @throws JsonException
+     */
+    public function __toString(): string
+    {
+        return $this->toJson();
+    }
 }

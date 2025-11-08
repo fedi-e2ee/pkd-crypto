@@ -6,6 +6,7 @@ use DateTimeImmutable;
 use Exception;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 use FediE2EE\PKD\Crypto\Protocol\Actions\MoveIdentity;
+use FediE2EE\PKD\Crypto\Protocol\ToStringTrait;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
 use ParagonIE\ConstantTime\Base64UrlSafe;
@@ -15,6 +16,9 @@ use SodiumException;
 
 class EncryptedMoveIdentity implements EncryptedProtocolMessageInterface, JsonSerializable
 {
+
+    use ToStringTrait;
+
     private array $encrypted;
 
     public function __construct(array $encrypted)

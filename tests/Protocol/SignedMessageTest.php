@@ -43,15 +43,9 @@ class SignedMessageTest extends TestCase
         $plaintext = new AddKey('https://example.com/@alice', $pk);
         $encrypted = $plaintext->encrypt($map);
 
-        $sm1 = new SignedMessage(
-            $plaintext,
-            $recent
-        );
-        $sm2 = new SignedMessage(
-            $encrypted,
-            $recent
-        );
+        $sm1 = SignedMessage::init($plaintext, $recent, $sk);
+        $sm2 = SignedMessage::init($encrypted, $recent, $sk);
         $this->assertNotSame($sm1->jsonSerialize(), $sm2->jsonSerialize());
-        // TODO better test
+        $this->assertNotSame($sm1->getSignature(), $sm2->getSignature());
     }
 }
