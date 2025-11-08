@@ -99,6 +99,11 @@ final class SignedMessage implements \JsonSerializable
         return $this->getSignature();
     }
 
+    public function getRecentMerkleRoot(): string
+    {
+        return Base64UrlSafe::encodeUnpadded($this->recentMerkleRoot);
+    }
+
     public function getSignature(): string
     {
         if (is_null($this->signature)) {
@@ -130,7 +135,7 @@ final class SignedMessage implements \JsonSerializable
             '!pkd-context' => self::PKD_CONTEXT,
             'action' => $this->message->getAction(),
             'message' => $this->message->toArray(),
-            'recent-merkle-root' => $this->recentMerkleRoot,
+            'recent-merkle-root' => $this->getRecentMerkleRoot(),
             'signature' => $this->getSignature(),
         ];
     }
