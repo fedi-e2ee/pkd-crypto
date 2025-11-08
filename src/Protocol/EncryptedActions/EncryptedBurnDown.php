@@ -6,6 +6,7 @@ use DateTimeImmutable;
 use Exception;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 use FediE2EE\PKD\Crypto\Protocol\Actions\BurnDown;
+use FediE2EE\PKD\Crypto\Protocol\ActionTrait;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
 use ParagonIE\ConstantTime\Base64UrlSafe;
@@ -15,6 +16,7 @@ use SodiumException;
 
 class EncryptedBurnDown implements EncryptedProtocolMessageInterface, JsonSerializable
 {
+    use ActionTrait;
     private array $encrypted;
 
     public function __construct(array $encrypted)

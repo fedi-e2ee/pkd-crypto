@@ -5,6 +5,7 @@ namespace FediE2EE\PKD\Crypto\Protocol\Actions;
 
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
+use FediE2EE\PKD\Crypto\Protocol\ActionTrait;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
 use JsonSerializable;
@@ -12,6 +13,8 @@ use Override;
 
 class RevokeKeyThirdParty implements ProtocolMessageInterface, JsonSerializable
 {
+    use ActionTrait;
+
     private string $revocationToken;
 
     public function __construct(string $revocationToken)

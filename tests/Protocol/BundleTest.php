@@ -20,6 +20,7 @@ class BundleTest extends TestCase
         $recent = 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(random_bytes(32));
 
         $addKey = new AddKey('https://example.com/@alice', $pk);
+        $this->assertIsString($addKey->toString());
         $signed = new SignedMessage($addKey, $recent);
         $signature = $signed->sign($sk);
 

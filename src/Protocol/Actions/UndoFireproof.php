@@ -5,6 +5,7 @@ namespace FediE2EE\PKD\Crypto\Protocol\Actions;
 use DateTimeImmutable;
 use DateTimeInterface;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
+use FediE2EE\PKD\Crypto\Protocol\ActionTrait;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedUndoFireproof;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
@@ -14,6 +15,8 @@ use Override;
 
 class UndoFireproof implements ProtocolMessageInterface, JsonSerializable
 {
+    use ActionTrait;
+
     private string $actor;
     private DateTimeImmutable $time;
 
