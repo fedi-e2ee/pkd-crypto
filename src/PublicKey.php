@@ -43,6 +43,8 @@ final class PublicKey
     }
 
     /**
+     * @link https://www.w3.org/TR/cid-1.0/#example-multikey-encoding-of-a-ed25519-public-key
+     *
      * @throws CryptoException
      * @throws EncodingException
      */
@@ -59,6 +61,12 @@ final class PublicKey
         return new PublicKey(substr($decoded, 2));
     }
 
+    /**
+     * @link https://www.w3.org/TR/cid-1.0/#example-multikey-encoding-of-a-ed25519-public-key
+     *
+     * @param bool $useUnsafe
+     * @return string
+     */
     public function toMultibase(bool $useUnsafe = false): string
     {
         return Multibase::encode(self::MB_PREFIX_ED25519 . $this->bytes, $useUnsafe);
