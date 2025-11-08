@@ -58,7 +58,6 @@ class IncrementalTree extends Tree
                 // Sibling doesn't exist, so we can't calculate the parent yet.
                 // In a complete binary tree, this means we are at the edge for this level.
                 // The parent will be calculated when the sibling is added.
-                $this->updateRoot();
                 break;
             }
 
@@ -72,18 +71,25 @@ class IncrementalTree extends Tree
             $this->nodes["{$level}-{$currentIndex}"] = $parentHash;
             $leafHash = $parentHash; // The new "leaf" for the next level up.
         }
+        $this->updateRoot();
     }
 
     /**
      * @throws SodiumException
      */
     #[Override]
+    public function updateRoot(): void
+    {
+        $this->root = $this->getRootForSubtree(0, $this->size);
+    }
+
+    #[Override]
     public function getRoot(): ?string
     {
         if ($this->size === 0) {
             return null;
         }
-        return $this->getRootForSubtree(0, $this->size);
+        return $this->root;
     }
 
     #[Override]
@@ -156,6 +162,7 @@ class IncrementalTree extends Tree
         foreach ($state['nodes'] as $key => $hash) {
             $tree->nodes[$key] = Base64UrlSafe::decode($hash);
         }
+        $tree->updateRoot();
         return $tree;
     }
 

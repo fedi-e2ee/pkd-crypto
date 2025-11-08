@@ -25,12 +25,30 @@ class IncrementalTreeTest extends TestCase
     #[DataProvider("hashAlgProvider")]
     public function testIncrementalFromZero(string $hashAlg): void
     {
+        $empty = (new Tree([], $hashAlg))->getEncodedRoot();
         $dummy = random_bytes(32);
-        $tree = new IncrementalTree();
-        $this->assertSame('pkd-mr-v1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', $tree->getEncodedRoot());
+
+        // Let's see if adding more leaves coaxes the two into a compatible state:
+        $pieces = [$dummy];
+        for ($i = 1; $i < 16; ++$i) {
+            $pieces []= random_bytes(32);
+            $treeA = new IncrementalTree([], $hashAlg);
+            foreach ($pieces as $p) {
+                $treeA->addLeaf($p);
+            }
+            $treeB = new Tree($pieces, $hashAlg);
+            $this->assertSame($treeB->getEncodedRoot(), $treeA->getEncodedRoot(), 'extra leaves = ' . $i);
+        }
+
+        // Original test:
+        $tree = new IncrementalTree([], $hashAlg);
+        $this->assertSame($empty, $tree->getEncodedRoot());
         $tree->addLeaf($dummy);
-        $tree->getRoot();
-        $this->assertNotSame('pkd-mr-v1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', $tree->getEncodedRoot());
+        $this->assertNotSame($empty, $tree->getEncodedRoot());
+
+        $non = new Tree([$dummy], $hashAlg);
+        $this->assertSame($non->getEncodedRoot(), $tree->getEncodedRoot());
+
     }
 
     #[DataProvider("hashAlgProvider")]
