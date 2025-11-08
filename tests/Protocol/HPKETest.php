@@ -53,7 +53,7 @@ class HPKETest extends TestCase
         $pk = $sk->getEncapsKey();
         $adapter = new HPKEAdapter($ciphersuite);
         $this->assertSame(
-            'uzoXf1pGGIae4d8z21ioeNT6yRS1EsU7Vm9tEk_6PWU',
+            '0eUvFqsTCHdJi7EGyqA5kB1cMXHX97Lui2uYOGN-R9A',
             Base64UrlSafe::encodeUnpadded($adapter->keyId($pk))
         );
     }
