@@ -24,4 +24,14 @@ class AttributeKeyMap
     {
         return array_keys($this->keys);
     }
+
+    public function hasKey(string $attribute): bool
+    {
+        return array_key_exists($attribute, $this->keys);
+    }
+
+    public function isEmpty(): bool
+    {
+        return count($this->keys) !== 0;
+    }
 }

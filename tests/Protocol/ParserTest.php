@@ -17,10 +17,7 @@ use FediE2EE\PKD\Crypto\Protocol\{Actions\AddKey,
     SignedMessage};
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use FediE2EE\PKD\Crypto\{PublicKey, SecretKey, SymmetricKey};
-use ParagonIE\HPKE\{
-    Factory,
-    HPKEException
-};
+use ParagonIE\HPKE\{Factory, HPKEException, KEM\DHKEM\Curve, KEM\DHKEM\DecapsKey};
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use SodiumException;
@@ -69,5 +66,43 @@ class ParserTest extends TestCase
 
         $decrypted = $decryptedMessage->getMessage()->decrypt($decryptedMessage->getKeyMap());
         $this->assertInstanceOf(AddKey::class, $decrypted);
+    }
+
+
+    public function testAdditionalParse(): void
+    {
+        // Generate a keypair
+        $secretKey = SecretKey::generate();
+        $publicKey = $secretKey->getPublicKey();
+
+        // Create an inaugural AddKey message
+        $message = new AddKey(
+            actor: "https://example.com/@actor",
+            publicKey: $publicKey
+        );
+
+        // Map attributes to randomly-generated keys:
+        $keyMap = (new AttributeKeyMap())
+            ->addKey('actor', SymmetricKey::generate())
+            ->addKey('public-key', SymmetricKey::generate());
+
+        $merkleRoot = random_bytes(32);
+
+        $handler = new Handler();
+        $bundle = $handler->handle($message, $secretKey, $keyMap, $merkleRoot);
+
+        // HPKE encryption
+        $hpke = Factory::init('DHKEM(X25519, HKDF-SHA256), HKDF-SHA256, ChaCha20Poly1305');
+        $decapsKey = new DecapsKey(
+            Curve::X25519,
+            random_bytes(32)
+        );
+        $encapsKey = $decapsKey->getEncapsKey();
+
+        $encrypted = $handler->hpkeEncrypt($bundle, $encapsKey, $hpke);
+
+        $parser = new Parser();
+        $parsed = $parser->decryptAndParse($encrypted, $decapsKey, $hpke, $publicKey);
+        $this->assertInstanceOf(ParsedMessage::class, $parsed);
     }
 }

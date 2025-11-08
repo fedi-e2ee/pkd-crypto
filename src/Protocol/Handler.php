@@ -37,6 +37,11 @@ class Handler
         AttributeKeyMap $keyMap,
         string $recentMerkleRoot = ''
     ): Bundle {
+        if ($message instanceof ProtocolMessageInterface) {
+            if (!$keyMap->isEmpty()) {
+                $message = $message->encrypt($keyMap);
+            }
+        }
         $signedMessage = new SignedMessage($message, $recentMerkleRoot);
         $signature = $signedMessage->sign($secretKey);
 

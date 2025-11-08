@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Protocol;
 
+use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 use FediE2EE\PKD\Crypto\AttributeEncryption\Version1;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
@@ -33,6 +34,16 @@ final class SignedMessage implements \JsonSerializable
         $this->signature = $signature;
     }
 
+    public static function init(
+        ProtocolMessageInterface $message,
+        string $recentMerkleRoot,
+        SecretKey $sk
+    ): SignedMessage {
+        $self = new static($message, $recentMerkleRoot);
+        $self->sign($sk);
+        return $self;
+    }
+
     public function encodeForSigning(): string
     {
         return $this->preAuthEncode([
@@ -45,6 +56,36 @@ final class SignedMessage implements \JsonSerializable
             'recent-merkle-root',
             $this->recentMerkleRoot
         ]);
+    }
+
+    /**
+     * @throws CryptoException
+     */
+    public function encrypt(AttributeKeyMap $keyMap): ProtocolMessageInterface
+    {
+        if ($this->message instanceof EncryptedProtocolMessageInterface) {
+            throw new CryptoException('message is already encrypted');
+        }
+        return $this->message->encrypt($keyMap);
+    }
+
+    /**
+     * @throws CryptoException
+     */
+    public function decrypt(AttributeKeyMap $keyMap): ProtocolMessageInterface
+    {
+        if (!($this->message instanceof EncryptedProtocolMessageInterface)) {
+            throw new CryptoException('message is not encrypted');
+        }
+        return $this->message->decrypt($keyMap);
+    }
+
+    /**
+     * @api
+     */
+    public function getInnerMessage(): ProtocolMessageInterface
+    {
+        return $this->message;
     }
 
     /**
@@ -90,7 +131,7 @@ final class SignedMessage implements \JsonSerializable
             'action' => $this->message->getAction(),
             'message' => json_encode($this->message, JSON_UNESCAPED_SLASHES),
             'recent-merkle-root' => $this->recentMerkleRoot,
-            'signature' => $this->signature,
+            'signature' => $this->getSignature(),
         ];
     }
 
