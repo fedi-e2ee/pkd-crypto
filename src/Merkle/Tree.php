@@ -49,6 +49,11 @@ class Tree
         $this->root = $this->getRootForSubtree(0, count($this->leaves));
     }
 
+    public function updateRoot(): void
+    {
+        $this->root = $this->getRootForSubtree(0, count($this->leaves));
+    }
+
     public function getRoot(): ?string
     {
         return $this->root;

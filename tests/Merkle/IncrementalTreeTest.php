@@ -4,6 +4,7 @@ namespace FediE2EE\PKD\Crypto\Tests\Merkle;
 
 use FediE2EE\PKD\Crypto\Merkle\IncrementalTree;
 use FediE2EE\PKD\Crypto\Merkle\Tree;
+use ParagonIE\ConstantTime\Hex;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -19,6 +20,17 @@ class IncrementalTreeTest extends TestCase
             ['sha384'],
             ['sha512'],
         ];
+    }
+
+    #[DataProvider("hashAlgProvider")]
+    public function testIncrementalFromZero(string $hashAlg): void
+    {
+        $dummy = random_bytes(32);
+        $tree = new IncrementalTree();
+        $this->assertSame('pkd-mr-v1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', $tree->getEncodedRoot());
+        $tree->addLeaf($dummy);
+        $tree->getRoot();
+        $this->assertNotSame('pkd-mr-v1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', $tree->getEncodedRoot());
     }
 
     #[DataProvider("hashAlgProvider")]
