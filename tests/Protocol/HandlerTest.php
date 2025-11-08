@@ -74,7 +74,7 @@ class HandlerTest extends TestCase
         $encrypted = $bundler->hpkeEncrypt($message, $pkR, $hpke);
 
         $parser = new Parser();
-        $decrypted = $parser->hpkeDecrypt($encrypted, $skR, $hpke);
+        $decrypted = $parser->hpkeDecrypt($encrypted, $skR, $pkR, $hpke);
         $this->assertEquals($message, $decrypted);
     }
 

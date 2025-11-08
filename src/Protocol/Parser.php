@@ -29,11 +29,7 @@ use FediE2EE\PKD\Crypto\{
     UtilTrait
 };
 use ParagonIE\ConstantTime\Base64UrlSafe;
-use ParagonIE\HPKE\{
-    HPKE,
-    HPKEException,
-    KEM\DHKEM\DecapsKey
-};
+use ParagonIE\HPKE\{HPKE, HPKEException, KEM\DHKEM\DecapsKey, KEM\DHKEM\EncapsKey};
 use SodiumException;
 
 class Parser
@@ -122,16 +118,14 @@ class Parser
     public function decryptAndParse(
         string $encrypted,
         DecapsKey $decapsKey,
+        EncapsKey $encapsKey,
         HPKE $hpke,
-        ?PublicKey $publicKey = null,
-        string $info = '',
-        string $aad = ''
+        ?PublicKey $publicKey = null
     ): ParsedMessage {
-        $decrypted = $hpke->openBase(
-            sk: $decapsKey,
-            ciphertext: Base64UrlSafe::decodeNoPadding($encrypted),
-            aad: $aad,
-            info: $info
+        $decrypted = (new HPKEAdapter($hpke))->open(
+            decapsKey: $decapsKey,
+            encapsKey: $encapsKey,
+            payload: $encrypted,
         );
         return $this->parse($decrypted, $publicKey);
     }
@@ -171,16 +165,14 @@ class Parser
     public function hpkeDecrypt(
         string $encrypted,
         DecapsKey $decapsKey,
-        HPKE $hpke,
-        string $info = '',
-        string $aad = ''
+        EncapsKey $encapsKey,
+        HPKE $hpke
     ): Bundle {
         return static::fromJson(
-            $hpke->openBase(
-                $decapsKey,
-                Base64UrlSafe::decodeNoPadding($encrypted),
-                aad: $aad,
-                info: $info
+            (new HPKEAdapter($hpke))->open(
+                decapsKey: $decapsKey,
+                encapsKey: $encapsKey,
+                payload: $encrypted,
             )
         );
     }
