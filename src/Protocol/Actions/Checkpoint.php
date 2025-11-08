@@ -6,7 +6,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
-use FediE2EE\PKD\Crypto\Protocol\ActionTrait;
+use FediE2EE\PKD\Crypto\Protocol\ToStringTrait;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\PublicKey;
@@ -15,7 +15,7 @@ use Override;
 
 class Checkpoint implements ProtocolMessageInterface, JsonSerializable
 {
-    use ActionTrait;
+    use ToStringTrait;
 
     private DateTimeImmutable $time;
     private string $fromDirectory;

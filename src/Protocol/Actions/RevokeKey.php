@@ -4,7 +4,7 @@ namespace FediE2EE\PKD\Crypto\Protocol\Actions;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use FediE2EE\PKD\Crypto\Protocol\ActionTrait;
+use FediE2EE\PKD\Crypto\Protocol\ToStringTrait;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\PublicKey;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
@@ -16,7 +16,7 @@ use Override;
 
 class RevokeKey implements ProtocolMessageInterface, JsonSerializable
 {
-    use ActionTrait;
+    use ToStringTrait;
 
     private string $actor;
     private DateTimeImmutable $time;

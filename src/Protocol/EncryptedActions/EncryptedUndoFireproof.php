@@ -6,7 +6,7 @@ use DateTimeImmutable;
 use Exception;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 use FediE2EE\PKD\Crypto\Protocol\Actions\UndoFireproof;
-use FediE2EE\PKD\Crypto\Protocol\ActionTrait;
+use FediE2EE\PKD\Crypto\Protocol\ToStringTrait;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
 use ParagonIE\ConstantTime\Base64UrlSafe;
@@ -16,7 +16,7 @@ use SodiumException;
 
 class EncryptedUndoFireproof implements EncryptedProtocolMessageInterface, JsonSerializable
 {
-    use ActionTrait;
+    use ToStringTrait;
 
     private array $encrypted;
 

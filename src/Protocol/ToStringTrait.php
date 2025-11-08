@@ -5,7 +5,7 @@ namespace FediE2EE\PKD\Crypto\Protocol;
 /**
  * @method toArray(): array
  */
-trait ActionTrait
+trait ToStringTrait
 {
     public function toString(): string
     {
