@@ -1,4 +1,6 @@
 /.idea
+/cache/*
+!/cache/.gitkeep
 /composer.lock
 /composer.json
 /.phpunit.result.cache
