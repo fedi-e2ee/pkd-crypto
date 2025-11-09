@@ -25,7 +25,7 @@
     "ext-sodium": "*",
     "guzzlehttp/guzzle": "^7",
     "psr/http-message": "^2",
-    "paragonie/certainty": "^^2|3",
+    "paragonie/certainty": "^2|^3",
     "paragonie/constant_time_encoding": "^2|^3",
     "paragonie/hpke": "^0|^1"
   },
