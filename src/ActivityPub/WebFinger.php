@@ -13,6 +13,8 @@ class WebFinger
 {
     protected Client $http;
 
+    protected array $webFingerCache = [];
+
     public function __construct(?Client $client = null, ?Fetch $caCertFetcher = null)
     {
         if (is_null($client)) {
@@ -34,9 +36,13 @@ class WebFinger
     /**
      * @throws NetworkException
      * @throws GuzzleException
+     * @throws JsonException
      */
     public function canonicalize(string $actorUsernameOrUrl): string
     {
+        if (array_key_exists($actorUsernameOrUrl, $this->webFingerCache)) {
+            return $this->webFingerCache[$actorUsernameOrUrl];
+        }
         // Is this already canonicalized?
         if (preg_match('#^https?://#i', $actorUsernameOrUrl)) {
             $url = filter_var($actorUsernameOrUrl, FILTER_VALIDATE_URL);
@@ -86,8 +92,14 @@ class WebFinger
             if (!filter_var($link->href, FILTER_VALIDATE_URL)) {
                 continue;
             }
+            $this->webFingerCache[$actorUsernameOrUrl] = $link->href;
             return $link->href;
         }
         throw new NetworkException('No canonical URL found for ' . $actorUsernameOrUrl);
+    }
+
+    public function clearWebFingerCache(): void
+    {
+        $this->webFingerCache = [];
     }
 }

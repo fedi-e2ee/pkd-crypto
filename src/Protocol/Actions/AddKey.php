@@ -4,6 +4,7 @@ namespace FediE2EE\PKD\Crypto\Protocol\Actions;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use FediE2EE\PKD\Crypto\Protocol\Handler;
 use FediE2EE\PKD\Crypto\Protocol\ToStringTrait;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\PublicKey;
@@ -24,7 +25,7 @@ class AddKey implements ProtocolMessageInterface, JsonSerializable
 
     public function __construct(string $actor, PublicKey $publicKey, ?DateTimeInterface $time = null)
     {
-        $this->actor = $actor;
+        $this->actor = Handler::getWebFinger()->canonicalize($actor);
         $this->publicKey = $publicKey;
         if (is_null($time)) {
             $time = new DateTimeImmutable('NOW');

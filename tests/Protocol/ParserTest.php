@@ -57,7 +57,7 @@ class ParserTest extends TestCase
         $keyMap->addKey('foo', new SymmetricKey(random_bytes(32)));
 
         $addKey = new AddKey(
-            'test-actor',
+            'fedie2ee@mastodon.social',
             $publicKey
         );
         $encryptedAddKey = $addKey->encrypt($keyMap);
@@ -87,7 +87,7 @@ class ParserTest extends TestCase
 
         // Create an inaugural AddKey message
         $message = new AddKey(
-            actor: "https://example.com/@actor",
+            actor: "fedie2ee@mastodon.social",
             publicKey: $publicKey
         );
 
