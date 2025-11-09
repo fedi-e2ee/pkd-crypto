@@ -11,7 +11,7 @@ use ParagonIE\Certainty\RemoteFetch;
 
 class WebFinger
 {
-    private Client $http;
+    protected Client $http;
 
     public function __construct(?Client $client = null, ?Fetch $caCertFetcher = null)
     {
