@@ -5,6 +5,7 @@ namespace FediE2EE\PKD\Crypto\Protocol\Actions;
 use DateTimeImmutable;
 use DateTimeInterface;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
+use FediE2EE\PKD\Crypto\Protocol\Handler;
 use FediE2EE\PKD\Crypto\Protocol\ToStringTrait;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedAddAuxData;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
@@ -23,9 +24,14 @@ class AddAuxData implements ProtocolMessageInterface, JsonSerializable
     private ?string $auxId;
     private DateTimeImmutable $time;
 
-    public function __construct(string $actor, string $auxType, string $auxData, ?string $auxId = null, ?DateTimeInterface $time = null)
-    {
-        $this->actor = $actor;
+    public function __construct(
+        string $actor,
+        string $auxType,
+        string $auxData,
+        ?string $auxId = null,
+        ?DateTimeInterface $time = null
+    ) {
+        $this->actor = Handler::getWebFinger()->canonicalize($actor);
         $this->auxType = $auxType;
         $this->auxData = $auxData;
         $this->auxId = $auxId;

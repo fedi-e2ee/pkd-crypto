@@ -5,6 +5,7 @@ namespace FediE2EE\PKD\Crypto\Protocol\Actions;
 use DateTimeImmutable;
 use DateTimeInterface;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
+use FediE2EE\PKD\Crypto\Protocol\Handler;
 use FediE2EE\PKD\Crypto\Protocol\ToStringTrait;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedRevokeAuxData;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
@@ -25,7 +26,7 @@ class RevokeAuxData implements ProtocolMessageInterface, JsonSerializable
 
     public function __construct(string $actor, string $auxType, ?string $auxData = null, ?string $auxId = null, ?DateTimeInterface $time = null)
     {
-        $this->actor = $actor;
+        $this->actor = Handler::getWebFinger()->canonicalize($actor);
         $this->auxType = $auxType;
         $this->auxData = $auxData;
         $this->auxId = $auxId;

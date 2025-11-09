@@ -5,6 +5,7 @@ namespace FediE2EE\PKD\Crypto\Protocol\Actions;
 use DateTimeImmutable;
 use DateTimeInterface;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
+use FediE2EE\PKD\Crypto\Protocol\Handler;
 use FediE2EE\PKD\Crypto\Protocol\ToStringTrait;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedMoveIdentity;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
@@ -23,8 +24,8 @@ class MoveIdentity implements ProtocolMessageInterface, JsonSerializable
 
     public function __construct(string $oldActor, string $newActor, ?DateTimeInterface $time = null)
     {
-        $this->oldActor = $oldActor;
-        $this->newActor = $newActor;
+        $this->oldActor = Handler::getWebFinger()->canonicalize($oldActor);
+        $this->newActor = Handler::getWebFinger()->canonicalize($newActor);
         if (is_null($time)) {
             $time = new DateTimeImmutable('NOW');
         }

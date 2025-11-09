@@ -5,6 +5,7 @@ namespace FediE2EE\PKD\Crypto\Protocol\Actions;
 use DateTimeImmutable;
 use DateTimeInterface;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
+use FediE2EE\PKD\Crypto\Protocol\Handler;
 use FediE2EE\PKD\Crypto\Protocol\ToStringTrait;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedUndoFireproof;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
@@ -22,7 +23,7 @@ class UndoFireproof implements ProtocolMessageInterface, JsonSerializable
 
     public function __construct(string $actor, ?DateTimeInterface $time = null)
     {
-        $this->actor = $actor;
+        $this->actor = Handler::getWebFinger()->canonicalize($actor);
         if (is_null($time)) {
             $time = new DateTimeImmutable('NOW');
         }

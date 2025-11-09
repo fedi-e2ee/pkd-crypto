@@ -9,10 +9,7 @@ use FediE2EE\PKD\Crypto\Exceptions\{
     JsonException,
     NotImplementedException
 };
-use FediE2EE\PKD\Crypto\{
-    SecretKey,
-    UtilTrait
-};
+use FediE2EE\PKD\Crypto\{ActivityPub\WebFinger, SecretKey, UtilTrait};
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use ParagonIE\HPKE\{
     HPKE,
@@ -24,6 +21,15 @@ use SodiumException;
 class Handler
 {
     use UtilTrait;
+    public static ?WebFinger $wf = null;
+
+    public static function getWebFinger(): WebFinger
+    {
+        if (is_null(self::$wf)) {
+            self::$wf = new WebFinger();
+        }
+        return self::$wf;
+    }
 
     /**
      * @throws CryptoException
