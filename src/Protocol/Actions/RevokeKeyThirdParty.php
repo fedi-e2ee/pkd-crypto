@@ -8,6 +8,7 @@ use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use FediE2EE\PKD\Crypto\Protocol\ToStringTrait;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
+use FediE2EE\PKD\Crypto\SecretKey;
 use JsonSerializable;
 use Override;
 
@@ -26,6 +27,11 @@ class RevokeKeyThirdParty implements ProtocolMessageInterface, JsonSerializable
     public function getAction(): string
     {
         return 'RevokeKeyThirdParty';
+    }
+
+    public static function forSecretKey(SecretKey $sk): static
+    {
+        return new static($sk->getRevocationToken());
     }
 
     public function getRevocationToken(): string

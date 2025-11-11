@@ -5,6 +5,7 @@ namespace FediE2EE\PKD\Crypto;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use ParagonIE\ConstantTime\Base64;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 use ParagonIE\ConstantTime\Hex;
 use SensitiveParameter;
 use SodiumException;
@@ -115,6 +116,11 @@ final class SecretKey
             default:
                 throw new NotImplementedException('');
         }
+    }
+
+    public function getRevocationToken(): string
+    {
+        return (new Revocation())->revokeThirdParty($this);
     }
 
     /**
