@@ -22,6 +22,7 @@ final class PublicKey
     private const MB_PREFIX_ED25519 = "\xed\x01";
     private string $bytes;
     private string $algo;
+    private array $metadata = [];
 
     public function __construct(
         #[SensitiveParameter]
@@ -136,6 +137,23 @@ final class PublicKey
     public function __toString(): string
     {
         return $this->toString();
+    }
+
+    /**
+     * @api
+     */
+    public function setMetadata(array $metadata): static
+    {
+        $this->metadata = $metadata;
+        return $this;
+    }
+
+    /**
+     * @api
+     */
+    public function getMetadata(): array
+    {
+        return $this->metadata;
     }
 
     /**
