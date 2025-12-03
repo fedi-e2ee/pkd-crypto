@@ -14,18 +14,21 @@ use FediE2EE\PKD\Crypto\Exceptions\{
     JsonException,
     NotImplementedException
 };
-use FediE2EE\PKD\Crypto\Protocol\{Actions\AddKey,
+use FediE2EE\PKD\Crypto\Protocol\{
+    Actions\AddKey,
     EncryptedProtocolMessageInterface,
     Handler,
     HPKEAdapter,
-    Parser,
-    ProtocolMessageInterface};
-use ParagonIE\HPKE\{Factory,
+    Parser
+};
+use ParagonIE\HPKE\{
+    Factory,
     HPKE,
     HPKEException,
     Interfaces\DecapsKeyInterface,
     Interfaces\EncapsKeyInterface,
-    KEM\DHKEM\DecapsKey};
+    KEM\DHKEM\DecapsKey
+};
 use PHPUnit\Framework\Attributes\{
     CoversClass,
     DataProvider
@@ -91,6 +94,7 @@ class HPKETest extends TestCase
         $bundle = $handler->handle($dummy->encrypt($keyMap), $sk, $keyMap, $root);
         $encrypted = $handler->hpkeEncrypt($bundle, $encapsKey, $ciphersuite);
         $this->assertIsString($encrypted);
+        $this->assertTrue((new HPKEAdapter($ciphersuite))->isHpkeCiphertext($encrypted));
 
         // HPKE decryption!
         $parser = new Parser();
