@@ -21,6 +21,21 @@ class HPKEAdapter
     ) {}
 
     /**
+     * @api
+     */
+    public function isHpkeCiphertext(string $message): bool
+    {
+        if (strlen($message) < 5) {
+            return false;
+        }
+        $header = substr($message, 0, 5);
+        if (!hash_equals($header, self::HPKE_PREFIX)) {
+            return false;
+        }
+        return preg_match('#^[A-Za-z0-9-_]+$#', substr($message, 5)) === 1;
+    }
+
+    /**
      * @throws HPKEException
      */
     public function open(
