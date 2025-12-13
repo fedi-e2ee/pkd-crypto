@@ -63,7 +63,7 @@ class WebFinger
 
         // Optional: Support internationalized domain names
         if (extension_loaded('intl')) {
-            $domain = idn_to_ascii($domain, IDNA_DEFAULT) ?? $domain;
+            $domain = idn_to_ascii($domain) ?? $domain;
         }
         $url = 'https://' . $domain . '/.well-known/webfinger?' . http_build_query([
             'resource' => 'acct:' . $username . '@' . $domain
