@@ -46,7 +46,7 @@ trait UtilTrait
      * @param array<int, string> $pieces
      * @return string
      */
-    public function preAuthEncode(array $pieces): string
+    public static function preAuthEncode(array $pieces): string
     {
         $count = count($pieces);
         $output = self::LE64($count);
