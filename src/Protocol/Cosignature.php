@@ -57,7 +57,10 @@ class Cosignature
             ])
         );
         $payload['signature'] = Base64UrlSafe::encodeUnpadded($signature);
-        return json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        return json_encode(
+            $payload,
+            JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+        );
     }
 
     /**

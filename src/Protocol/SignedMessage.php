@@ -52,7 +52,10 @@ final class SignedMessage implements \JsonSerializable
             'action',
             $this->message->getAction(),
             'message',
-            (string) json_encode($this->message, JSON_UNESCAPED_SLASHES),
+            (string) json_encode(
+                $this->message,
+                JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+            ),
             'recent-merkle-root',
             $this->recentMerkleRoot
         ]);
