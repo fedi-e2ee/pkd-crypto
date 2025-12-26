@@ -15,6 +15,12 @@ class AttributeKeyMap
         return $this;
     }
 
+    public function addRandomKey(string $attribute): self
+    {
+        $this->keys[$attribute] = SymmetricKey::generate();
+        return $this;
+    }
+
     public function getKey(string $attribute): ?SymmetricKey
     {
         return $this->keys[$attribute] ?? null;
