@@ -175,7 +175,7 @@ class Tree
     /**
      * @throws SodiumException
      */
-    private function generateConsistencySubProof(int $m, int $start, int $end, bool $isRoot): array
+    protected function generateConsistencySubProof(int $m, int $start, int $end, bool $isRoot): array
     {
         $n = $end - $start;
         if ($m === $n) {
@@ -199,7 +199,7 @@ class Tree
     /**
      * @throws SodiumException
      */
-    private function getRootForSubtree(int $start, int $end): string
+    protected function getRootForSubtree(int $start, int $end): string
     {
         $leafCount = $end - $start;
         if ($leafCount < 1) {

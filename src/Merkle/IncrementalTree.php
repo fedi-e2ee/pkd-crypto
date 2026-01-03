@@ -101,7 +101,8 @@ class IncrementalTree extends Tree
     /**
      * @throws SodiumException
      */
-    private function getRootForSubtree(int $start, int $end): string
+    #[Override]
+    protected function getRootForSubtree(int $start, int $end): string
     {
         $leafCount = $end - $start;
         if ($leafCount === 0) {
@@ -154,6 +155,9 @@ class IncrementalTree extends Tree
         );
     }
 
+    /**
+     * @throws SodiumException
+     */
     public static function fromJson(string $json): static
     {
         $state = json_decode($json, true);
@@ -212,5 +216,23 @@ class IncrementalTree extends Tree
         $proof = $this->generateInclusionSubProof($index, $mid, $end);
         $proof[] = $this->getRootForSubtree($start, $mid);
         return $proof;
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[Override]
+    public function getConsistencyProof(int $oldSize): ConsistencyProof
+    {
+        $newSize = $this->getSize();
+        if ($oldSize > $newSize || $oldSize <= 0) {
+            return new ConsistencyProof([]);
+        }
+        if ($oldSize === $newSize) {
+            return new ConsistencyProof([]);
+        }
+        return new ConsistencyProof(
+            $this->generateConsistencySubProof($oldSize, 0, $newSize, true)
+        );
     }
 }
