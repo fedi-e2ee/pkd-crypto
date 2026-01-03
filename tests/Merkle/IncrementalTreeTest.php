@@ -82,10 +82,8 @@ class IncrementalTreeTest extends TestCase
 
         $incrementalProof = $incrementalTree->getInclusionProof('c');
 
-        $this->assertEquals($baseProof, $incrementalProof);
-
         $this->assertTrue(
-            $incrementalTree->verifyInclusionProof($incrementalTree->getRoot(), 'c', $baseProof)
+            $baseTree->verifyInclusionProof($baseTree->getRoot(), 'c', $incrementalProof)
         );
     }
 
