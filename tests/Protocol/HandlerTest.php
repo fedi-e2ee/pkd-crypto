@@ -7,6 +7,7 @@ use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\Exceptions\JsonException;
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
+use FediE2EE\PKD\Crypto\Merkle\Tree;
 use FediE2EE\PKD\Crypto\Protocol\Actions\AddKey;
 use FediE2EE\PKD\Crypto\Protocol\Handler;
 use FediE2EE\PKD\Crypto\Protocol\Bundle;
@@ -117,7 +118,7 @@ class HandlerTest extends TestCase
             ->addKey('actor', SymmetricKey::generate())
             ->addKey('public-key', SymmetricKey::generate());
 
-        $merkleRoot = random_bytes(32);
+        $merkleRoot = (new Tree([random_bytes(32)]))->getEncodedRoot();
 
         $handler = new Handler();
         $bundle = $handler->handle($message, $secretKey, $keyMap, $merkleRoot);
@@ -150,7 +151,7 @@ class HandlerTest extends TestCase
             ->addKey('actor', SymmetricKey::generate())
             ->addKey('public-key', SymmetricKey::generate());
 
-        $merkleRoot = random_bytes(32);
+        $merkleRoot = (new Tree([random_bytes(32)]))->getEncodedRoot();
 
         $handler = new Handler();
         $bundle = $handler->handle($message, $secretKey, $keyMap, $merkleRoot);
