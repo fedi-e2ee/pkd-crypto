@@ -17,11 +17,7 @@ use FediE2EE\PKD\Crypto\Protocol\{
     Parser,
 };
 use ParagonIE\ConstantTime\Base64UrlSafe;
-use FediE2EE\PKD\Crypto\{
-    PublicKey,
-    SecretKey,
-    SymmetricKey
-};
+use FediE2EE\PKD\Crypto\{Merkle\Tree, PublicKey, SecretKey, SymmetricKey};
 use ParagonIE\HPKE\{
     Factory,
     HPKEException,
@@ -96,7 +92,7 @@ class ParserTest extends TestCase
             ->addKey('actor', SymmetricKey::generate())
             ->addKey('public-key', SymmetricKey::generate());
 
-        $merkleRoot = random_bytes(32);
+        $merkleRoot = (new Tree([random_bytes(32)]))->getEncodedRoot();
 
         $handler = new Handler();
         $bundle = $handler->handle($message, $secretKey, $keyMap, $merkleRoot);

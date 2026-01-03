@@ -46,7 +46,7 @@ class Bundle
         return new self(
             $data['action'],
             $data['message'],
-            Base64UrlSafe::decodeNoPadding($data['recent-merkle-root']),
+            $data['recent-merkle-root'],
             Base64UrlSafe::decodeNoPadding($data['signature']),
             $symmetricKeys
         );
@@ -76,7 +76,7 @@ class Bundle
             'message' =>
                 $this->message,
             'recent-merkle-root' =>
-                Base64UrlSafe::encodeUnpadded($this->recentMerkleRoot),
+                $this->recentMerkleRoot,
             'signature' =>
                 Base64UrlSafe::encodeUnpadded($this->signature),
             'symmetric-keys' =>
