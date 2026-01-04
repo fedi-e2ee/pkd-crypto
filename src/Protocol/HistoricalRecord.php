@@ -39,11 +39,11 @@ class HistoricalRecord
     {
         return $this->preAuthEncode([
             // contentHash
-            hash('sha256', $this->encryptedMessage),
+            hash('sha256', $this->encryptedMessage, true),
             // signature
             Base64UrlSafe::decodeNoPadding($this->signature),
             // publicKeyHash
-            $this->pkHash,
+            sodium_hex2bin($this->pkHash),
         ]);
     }
 }
