@@ -27,7 +27,7 @@ class CosignatureTest extends TestCase
         $tree = new IncrementalTree();
         $cosignature = new Cosignature($tree);
 
-        $expected = "pkd-mr-v1:Hy3Qtg_8f0iccceOFaO9qlT8sY5cH0OociI3ZUtXgjg";
+        $expected = "pkd-mr-v1:OonfFFdPSEr0q5ELC_fjzdxRSiPyblb1SXBK2GFzLBw";
         $record = HistoricalRecord::fromArray([
             'encrypted-message' =>
                 '{"!pkd-context":"https://github.com/fedi-e2ee/public-key-directory/v1","action":"AddKey","message":{"actor":"0ZQvDXvULF_S-2rDeHTXUV77R9cCBTS6dRoeYt0v-Mq3zAlrzn1kcynY6ZWT_tVYRoO-zv2vgsVFB7rnFwGm25baXAxMvph7nK8F0Zr1QQQ-WLdE7ys_QBcywAFUyw","public-key":"-V_2U-9A5sjpk2eBTtZH8JCCBq2bQsU_iV4yQRwqrlEoYV9ArlHuRpBmx8SrXYzVTOQjTvNaizcwEn_v9p8kutHRhruzpSzUIrBYCKiWl4zc-fLKO4gasD-W4w","time":"2025-12-13T19:06:44+00:00"},"recent-merkle-root":"cGtkLW1yLXYxOkFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE","signature":"S3lPUDQ3Zy1adFA1WmhoUHg3N2JEd3RRRTl3NzBwMzI5LU5WRS1EMEVWZGQ3SE5vNTYxZXVaWDBYRkd5RmZaV2NlcmRGOWFaLUZrVmhhWVVMbzliQ3c"}',
