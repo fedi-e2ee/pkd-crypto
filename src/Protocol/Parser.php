@@ -9,6 +9,7 @@ use FediE2EE\PKD\Crypto\Exceptions\{
     ParserException
 };
 use FediE2EE\PKD\Crypto\Protocol\Actions\{
+    BurnDown,
     Checkpoint,
     RevokeKeyThirdParty
 };
@@ -16,7 +17,6 @@ use DateTimeImmutable;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\{
     EncryptedAddAuxData,
     EncryptedAddKey,
-    EncryptedBurnDown,
     EncryptedFireproof,
     EncryptedMoveIdentity,
     EncryptedRevokeAuxData,
@@ -28,15 +28,19 @@ use FediE2EE\PKD\Crypto\{
     PublicKey,
     UtilTrait
 };
-use ParagonIE\ConstantTime\Base64UrlSafe;
-use ParagonIE\HPKE\{HPKE, HPKEException, KEM\DHKEM\DecapsKey, KEM\DHKEM\EncapsKey};
+use ParagonIE\HPKE\{
+    HPKE,
+    HPKEException,
+    KEM\DHKEM\DecapsKey,
+    KEM\DHKEM\EncapsKey
+};
 use SodiumException;
 
 class Parser
 {
     use UtilTrait;
 
-    const UNENCRYPTED_ACTIONS = ['Checkpoint', 'RevokeKeyThirdParty'];
+    const UNENCRYPTED_ACTIONS = ['BurnDown', 'Checkpoint', 'RevokeKeyThirdParty'];
 
     /**
      * @throws CryptoException
@@ -48,8 +52,6 @@ class Parser
                 new EncryptedAddKey($message->getMessage()),
             'AddAuxData' =>
                 new EncryptedAddAuxData($message->getMessage()),
-            'BurnDown' =>
-                new EncryptedBurnDown($message->getMessage()),
             'Fireproof' =>
                 new EncryptedFireproof($message->getMessage()),
             'MoveIdentity' =>
@@ -80,6 +82,13 @@ class Parser
             $time = new DateTimeImmutable($components['time'] );
         }
         return match ($bundle->getAction()) {
+            'BurnDown' =>
+                new BurnDown(
+                    $components['actor'],
+                    $components['operator'],
+                    $time,
+                    $components['otp'],
+                ),
             'Checkpoint' =>
                 new Checkpoint(
                     $components['from-directory'] ?? '',
@@ -156,6 +165,25 @@ class Parser
         }
         $keyMap = $message->getSymmetricKeys();
         return new ParsedMessage($encrypted, $keyMap);
+    }
+
+    /**
+     * @api
+     *
+     * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws ParserException
+     * @throws SodiumException
+     */
+    public function parseForActivityPub(
+        string $json,
+        ?PublicKey $publicKey = null
+    ): ParsedMessage {
+        $parsed = $this->parse($json, $publicKey);
+        if ($parsed->getMessage()->getAction() === 'BurnDown') {
+            throw new ParserException('BurnDown must not be sent over ActivityPub');
+        }
+        return $parsed;
     }
 
     /**
