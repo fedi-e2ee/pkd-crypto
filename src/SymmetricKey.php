@@ -62,6 +62,11 @@ class SymmetricKey implements \JsonSerializable
         return $plaintext;
     }
 
+    /**
+     * Please take care not to dump the string to an unauthorized user:
+     *
+     * @return string
+     */
     #[Override]
     public function jsonSerialize(): string
     {

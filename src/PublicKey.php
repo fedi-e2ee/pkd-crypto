@@ -127,9 +127,13 @@ final class PublicKey
 
     /**
      * @psalm-suppress UnusedVariable
+     * @throws CryptoException
      */
     public static function fromString(string $pk): self
     {
+        if (!str_contains($pk, ':')) {
+            throw new CryptoException('Invalid public key: algorithm prefix required');
+        }
         [$algo, $bytes] = explode(':', $pk);
         return new self(Base64UrlSafe::decodeNoPadding($bytes), $algo);
     }
