@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests;
 
+use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\PublicKey;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -24,5 +25,12 @@ class PublicKeyTest extends TestCase
         $pk = PublicKey::fromMultibase($input);
         $this->assertSame($expected, $pk->toString());
         $this->assertSame($input, $pk->toMultibase($input[0] === 'z'));
+    }
+
+    public function testFromStringInvalid(): void
+    {
+        $this->expectException(CryptoException::class);
+        $this->expectExceptionMessage('Invalid public key: algorithm prefix required');
+        PublicKey::fromString('foo');
     }
 }
