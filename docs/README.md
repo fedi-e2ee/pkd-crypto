@@ -95,3 +95,18 @@ $parsed = $parser->decryptAndParse($encrypted, $decapsKey, $hpke, $publicKey);
 $keyMap = $parsed->getKeyMap();
 $message = $parsed->getMessage();
 ```
+
+## Sharp Edges
+
+This library was designed to be used for the Public Key Directory and is not a general purpose cryptography library.
+The API contains multiple sharp edges that developers need to be aware of to use safely.
+
+### Attribute Encryption is Optional
+
+If a field was omitted from `AttributeKeyMap`, calling `encrypt()` on any protocol action results in plaintext being
+silently transmitted. This is because attribute encryption is **optional** and only intended to enable crypto-shredding
+as part of "not making GDPR compliance logically impossible".
+
+### HTTP Signature Verification Doesn't Distinguish Cause
+
+The verify() method just returns `false` instead of throwing a specific Exception.

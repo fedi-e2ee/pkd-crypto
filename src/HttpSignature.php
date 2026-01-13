@@ -2,10 +2,7 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto;
 
-use FediE2EE\PKD\Crypto\Exceptions\{
-    HttpSignatureException,
-    NotImplementedException
-};
+use FediE2EE\PKD\Crypto\Exceptions\{CryptoException, HttpSignatureException, NotImplementedException};
 use ParagonIE\ConstantTime\Base64;
 use Psr\Http\Message\{
     MessageInterface,
@@ -21,8 +18,14 @@ final class HttpSignature
     private string $label;
     private int $timeoutWindow;
 
+    /**
+     * @throws HttpSignatureException
+     */
     public function __construct(string $label = 'sig1', int $timeoutWindow = 300)
     {
+        if ($timeoutWindow < 2 || $timeoutWindow > 86400) {
+            throw new HttpSignatureException('Invalid timeout window size: ' . $timeoutWindow);
+        }
         $this->label = $label;
         $this->timeoutWindow = $timeoutWindow;
     }

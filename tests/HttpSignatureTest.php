@@ -2,12 +2,14 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests;
 
+use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\Exceptions\HttpSignatureException;
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use FediE2EE\PKD\Crypto\HttpSignature;
 use FediE2EE\PKD\Crypto\SecretKey;
 use GuzzleHttp\Psr7\Request;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use SodiumException;
 
@@ -15,6 +17,7 @@ use SodiumException;
 class HttpSignatureTest extends TestCase
 {
     /**
+     * @throws CryptoException
      * @throws HttpSignatureException
      * @throws NotImplementedException
      * @throws SodiumException
@@ -44,5 +47,25 @@ class HttpSignatureTest extends TestCase
 
 
         $this->assertTrue($httpSignature->verify($pk, $signedRequest));
+    }
+
+    public static function invalidTimeoutsProvider(): array
+    {
+        return [
+            [PHP_INT_MIN],
+            [-1],
+            [0],
+            [1],
+            [86401],
+            [PHP_INT_MAX],
+        ];
+    }
+
+    #[DataProvider("invalidTimeoutsProvider")]
+    public function testInvalidTimeouts(int $timeoutWindow): void
+    {
+        $this->expectException(HttpSignatureException::class);
+        $this->expectExceptionMessage('Invalid timeout window size: ' . $timeoutWindow);
+        new HttpSignature('sig1', $timeoutWindow);
     }
 }
