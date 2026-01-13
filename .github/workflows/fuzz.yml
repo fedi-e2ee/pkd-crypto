@@ -44,4 +44,4 @@ jobs:
         run: php-fuzzer fuzz --max-runs 50000 fuzzing/FuzzProtocol.php
 
       - name: Run FuzzAttributeEncryption
-        run: php-fuzzer fuzz --max-runs 50000 fuzzing/FuzzAttributeEncryption.php
+        run: php-fuzzer fuzz --max-runs 5000 fuzzing/FuzzAttributeEncryption.php

@@ -3,5 +3,6 @@
 !/cache/.gitkeep
 /composer.lock
 /composer.json
+/composer.phar
 /.phpunit.result.cache
 /vendor
