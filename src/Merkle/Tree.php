@@ -30,6 +30,9 @@ class Tree
         array          $leaves = [],
         string $hashAlgo = 'sha256'
     ) {
+        if (!static::isHashFunctionAllowed($hashAlgo)) {
+            throw new CryptoException('This hash function is not permitted: ' . $hashAlgo);
+        }
         $this->hashAlgo = $hashAlgo;
         if (!empty($leaves)) {
             foreach ($leaves as $leaf) {
@@ -327,5 +330,39 @@ class Tree
             $k <<= 1;
         }
         return $k >> 1;
+    }
+
+    /**
+     * Is this hash function allowed?
+     *
+     * You may override this in your child clases, but you take full responsibility if something stupid happens.
+     *
+     * @param string $hashAlgo
+     * @return bool
+     */
+    public static function isHashFunctionAllowed(string $hashAlgo): bool
+    {
+        if ($hashAlgo === 'blake2b') {
+            return true; // maps to sodium_crypto_generichash
+        }
+        if (!in_array($hashAlgo, hash_algos(), true)) {
+            // Unknown hash algorithm
+            return false;
+        }
+        return in_array(
+            $hashAlgo,
+            [
+                'blake2b', // maps to sodium_crypto_generichash
+                'sha256',
+                'sha384',
+                'sha512',
+                'sha512/224',
+                'sha512/256',
+                'sha3-256',
+                'sha3-384',
+                'sha3-512',
+            ],
+            true
+        );
     }
 }

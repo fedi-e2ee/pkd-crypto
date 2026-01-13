@@ -26,6 +26,19 @@ class TreeTest extends TestCase
             ['sha512'],
         ];
     }
+    public static function insecureHashAlgProvider(): array
+    {
+        return [
+            ['adler32'],
+            ['crc32'],
+            ['nonsense-hash-func'],
+            ['md2'],
+            ['md4'],
+            ['md5'],
+            ['sha1'],
+            ['sha224'],
+        ];
+    }
 
     /**
      * @throws SodiumException
@@ -222,5 +235,17 @@ class TreeTest extends TestCase
         $this->assertFalse(
             $tree->verifyInclusionProof($root, 'd', $proof)
         );
+    }
+
+
+    #[DataProvider("insecureHashAlgProvider")]
+    /**
+     * @throws SodiumException
+     */
+    public function testRejectInsecure(string $hashAlg): void
+    {
+        $this->expectException(CryptoException::class);
+        $this->expectExceptionMessage('This hash function is not permitted: ' . $hashAlg);
+        new Tree([], $hashAlg);
     }
 }
