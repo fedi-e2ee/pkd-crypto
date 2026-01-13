@@ -30,6 +30,7 @@
     "paragonie/hpke": "^0|^1"
   },
   "require-dev": {
+    "giorgiosironi/eris": "^1",
     "guzzlehttp/psr7": "^2",
     "phpunit/phpunit": "^8|^9|^10|^11|^12",
     "vimeo/psalm": "^6"
