@@ -5,7 +5,15 @@
             "src"
         ]
     },
+    "phpUnit": {
+        "configDir": "."
+    },
     "mutators": {
         "@default": true
+    }
+    "threads": "max",
+    "minCoveredMsi": 80,
+    "logs": {
+        "text": "infection.log"
     }
 }
