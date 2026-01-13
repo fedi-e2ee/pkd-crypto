@@ -10,7 +10,7 @@
     },
     "mutators": {
         "@default": true
-    }
+    },
     "threads": "max",
     "minCoveredMsi": 80,
     "logs": {
