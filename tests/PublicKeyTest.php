@@ -33,4 +33,25 @@ class PublicKeyTest extends TestCase
         $this->expectExceptionMessage('Invalid public key: algorithm prefix required');
         PublicKey::fromString('foo');
     }
+
+    public function testTooShort(): void
+    {
+        $this->expectException(CryptoException::class);
+        $this->expectExceptionMessage('Public key must be 32 bytes');
+        PublicKey::fromString('ed25519:foo');
+    }
+
+    public function testTooLong(): void
+    {
+        $this->expectException(CryptoException::class);
+        $this->expectExceptionMessage('Public key must be 32 bytes');
+        PublicKey::fromString('ed25519:' . str_repeat('A', 100));
+    }
+
+    public function testWrongAlgorithm(): void
+    {
+        $this->expectException(CryptoException::class);
+        $this->expectExceptionMessage('Unknown algorithm: ed448');
+        PublicKey::fromString('ed448:foo');
+    }
 }

@@ -66,4 +66,25 @@ class SecretKeyTest extends TestCase
         $this->expectException(CryptoException::class);
         PublicKey::importPem("-----BEGIN PUBLIC KEY-----\nMCpwBQYDK2VwAyEA895bv6cvVy1h85m+bt0CG2sjvHpwHb9EyTWXmEZeAKg=\n-----END PUBLIC KEY-----");
     }
+
+    public function testTooShort(): void
+    {
+        $this->expectException(CryptoException::class);
+        $this->expectExceptionMessage('Secret key must be 64 bytes');
+        new SecretKey(random_bytes(32));
+    }
+
+    public function testTooLong(): void
+    {
+        $this->expectException(CryptoException::class);
+        $this->expectExceptionMessage('Secret key must be 64 bytes');
+        new SecretKey(random_bytes(65));
+    }
+
+    public function testWrongAlgorithm(): void
+    {
+        $this->expectException(CryptoException::class);
+        $this->expectExceptionMessage('Unknown algorithm: ed448');
+        new SecretKey('foo', 'ed448');
+    }
 }

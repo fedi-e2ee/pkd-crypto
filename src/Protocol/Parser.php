@@ -147,7 +147,7 @@ class Parser
      */
     public function parse(
         string $json,
-        ?PublicKey $publicKey = null
+        PublicKey $publicKey
     ): ParsedMessage {
         $message = static::fromJson($json);
         if (in_array($message->getAction(), self::UNENCRYPTED_ACTIONS, true)) {
@@ -170,6 +170,25 @@ class Parser
     /**
      * @api
      *
+     * @throws BundleException
+     * @throws CryptoException
+     */
+    public function parseUnverified(string $json): ParsedMessage
+    {
+        $message = static::fromJson($json);
+        if (in_array($message->getAction(), self::UNENCRYPTED_ACTIONS, true)) {
+            $encrypted = $this->getUnencryptedMessage($message);
+        } else {
+            // These fields have encryption
+            $encrypted = $this->getEncryptedMessage($message);
+        }
+        $keyMap = $message->getSymmetricKeys();
+        return new ParsedMessage($encrypted, $keyMap);
+    }
+
+    /**
+     * @api
+     *
      * @throws CryptoException
      * @throws NotImplementedException
      * @throws ParserException
@@ -177,9 +196,25 @@ class Parser
      */
     public function parseForActivityPub(
         string $json,
-        ?PublicKey $publicKey = null
+        PublicKey $publicKey
     ): ParsedMessage {
         $parsed = $this->parse($json, $publicKey);
+        if ($parsed->getMessage()->getAction() === 'BurnDown') {
+            throw new ParserException('BurnDown must not be sent over ActivityPub');
+        }
+        return $parsed;
+    }
+
+    /**
+     * @api
+     *
+     * @throws BundleException
+     * @throws CryptoException
+     * @throws ParserException
+     */
+    public function parseUnverifiedForActivityPub(string $json): ParsedMessage
+    {
+        $parsed = $this->parseUnverified($json);
         if ($parsed->getMessage()->getAction() === 'BurnDown') {
             throw new ParserException('BurnDown must not be sent over ActivityPub');
         }

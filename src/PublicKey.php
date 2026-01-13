@@ -24,11 +24,21 @@ final class PublicKey
     private string $algo;
     private array $metadata = [];
 
+    /**
+     * @throws CryptoException
+     */
     public function __construct(
         #[SensitiveParameter]
         string $bytes,
         string $algo = 'ed25519'
     ) {
+        $expectedLength = match($algo) {
+            'ed25519' => 32,
+            default => throw new CryptoException('Unknown algorithm: ' . $algo)
+        };
+        if (strlen($bytes) !== $expectedLength) {
+            throw new CryptoException('Public key must be ' . $expectedLength . ' bytes');
+        }
         $this->bytes = $bytes;
         $this->algo = $algo;
     }
