@@ -47,6 +47,7 @@ class HttpSignatureTest extends TestCase
 
 
         $this->assertTrue($httpSignature->verify($pk, $signedRequest));
+        $this->assertTrue($httpSignature->verifyThrow($pk, $signedRequest));
     }
 
     public static function invalidTimeoutsProvider(): array

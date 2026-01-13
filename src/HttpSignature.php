@@ -69,20 +69,70 @@ final class HttpSignature
         PublicKey $publicKey,
         MessageInterface $message
     ): bool {
-        if (!$message->hasHeader('Signature-Input') || !$message->hasHeader('Signature')) {
+        return $this->verifyInternal($publicKey, $message);
+    }
+
+    /**
+     * @api
+     *
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function verifyThrow(
+        PublicKey $publicKey,
+        MessageInterface $message
+    ): bool {
+        return $this->verifyInternal($publicKey, $message, true);
+    }
+
+    /**
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    protected function verifyInternal(
+        PublicKey $publicKey,
+        MessageInterface $message,
+        bool $throwIfInvalid = false
+    ): bool {
+        if (!$message->hasHeader('Signature-Input')) {
+            if ($throwIfInvalid) {
+                throw new HttpSignatureException('HTTP header missing: Signature-Input');
+            }
+            return false;
+        }
+        if (!$message->hasHeader('Signature')) {
+            if ($throwIfInvalid) {
+                throw new HttpSignatureException('HTTP header missing: Signature');
+            }
             return false;
         }
         $signatureInput = $message->getHeaderLine('Signature-Input');
         $signatureHeader = $message->getHeaderLine('Signature');
         ['coveredComponents' => $headersToSign, 'params' => $params] = $this->parseSignatureInput($signatureInput);
-
-        if (!isset($params['alg']) || $params['alg'] !== '"ed25519"') {
+        if (!isset($params['alg'])) {
+            if ($throwIfInvalid) {
+                throw new HttpSignatureException('No algorithm specified');
+            }
+            return false;
+        }
+        if ($params['alg'] !== '"ed25519"') {
+            if ($throwIfInvalid) {
+                throw new HttpSignatureException('Unsupported algorithm: ' . $params['alg']);
+            }
             return false;
         }
         if (!isset($params['created']) || !is_numeric($params['created'])) {
+            if ($throwIfInvalid) {
+                throw new HttpSignatureException('Invalid or missing "created" parameter');
+            }
             return false;
         }
         if (abs(time() - (int) $params['created']) > $this->timeoutWindow) {
+            if ($throwIfInvalid) {
+                throw new HttpSignatureException('Timeout window exceeded');
+            }
             return false;
         }
 
@@ -90,6 +140,11 @@ final class HttpSignature
         $label = preg_quote($this->label, '/');
         preg_match('/' . $label . '=:([^:]+):/', $signatureHeader, $matches);
         if (!isset($matches[1])) {
+            if ($throwIfInvalid) {
+                throw new HttpSignatureException(
+                    'Signature extraction failed (regular expression found no signature string)'
+                );
+            }
             return false;
         }
         $signature = Base64::decode($matches[1]);

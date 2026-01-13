@@ -110,3 +110,5 @@ as part of "not making GDPR compliance logically impossible".
 ### HTTP Signature Verification Doesn't Distinguish Cause
 
 The verify() method just returns `false` instead of throwing a specific Exception.
+
+If you want an exception to be thrown if inputs are invalid before signature verification, use verifyThrow().
