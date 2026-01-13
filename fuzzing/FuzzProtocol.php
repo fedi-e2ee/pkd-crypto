@@ -68,7 +68,7 @@ $config->setTarget(function (string $input): void {
     // Test parseForActivityPub (should reject BurnDown)
     try {
         $parser = new Parser();
-        $parser->parseForActivityPub($input);
+        $parser->parseUnverifiedForActivityPub($input);
     } catch (TypeError|BundleException|CryptoException|NotImplementedException|ParserException|SodiumException) {
         // Expected - most inputs will fail
     }
