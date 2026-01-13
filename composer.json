@@ -32,7 +32,13 @@
   "require-dev": {
     "giorgiosironi/eris": "^1",
     "guzzlehttp/psr7": "^2",
+    "nikic/php-fuzzer": "^6",
     "phpunit/phpunit": "^8|^9|^10|^11|^12",
     "vimeo/psalm": "^6"
+  },
+  "config": {
+    "allow-plugins": {
+      "infection/extension-installer": true
+    }
   }
 }
