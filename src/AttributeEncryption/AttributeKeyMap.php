@@ -38,6 +38,6 @@ class AttributeKeyMap
 
     public function isEmpty(): bool
     {
-        return count($this->keys) !== 0;
+        return count($this->keys) === 0;
     }
 }

@@ -1,0 +1,49 @@
+name: Mutation Testing
+
+on:
+  pull_request:
+  push:
+    tags:
+      - v*
+  schedule:
+    - cron: '17 14 * * 1'  # Run mutation tests every Monday at 14:17 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  infection:
+    name: Infection on PHP ${{ matrix.php-versions }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-versions: ['8.4']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955  # v4.3.0
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1  # 2.36.0
+        with:
+          php-version: ${{ matrix.php-versions }}
+          extensions: mbstring, sodium
+          coverage: pcov
+
+      - name: Install dependencies
+        uses: ramsey/composer-install@3cf229dc2919194e9e36783941438d17239e8520  # v3.1.1
+
+      - name: Add Infection as dependency
+        run: composer require --dev infection/infection
+
+      - name: Update dependencies
+        run: composer update
+
+      - name: Mutation Tests
+        run: vendor/bin/infection --threads=4
+
+      - name: Print mutation log
+        if: always()
+        run: cat infection.log || echo "No infection.log found"
