@@ -25,6 +25,13 @@ final class SecretKey
         string $bytes,
         string $algo = 'ed25519'
     ) {
+        $expectedLength = match($algo) {
+            'ed25519' => 64,
+            default => throw new CryptoException('Unknown algorithm: ' . $algo)
+        };
+        if (strlen($bytes) !== $expectedLength) {
+            throw new CryptoException('Secret key must be ' . $expectedLength . ' bytes');
+        }
         $this->bytes = $bytes;
         $this->algo = $algo;
     }
