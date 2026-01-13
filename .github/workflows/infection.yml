@@ -1,7 +1,6 @@
 name: Mutation Testing
 
 on:
-  pull_request:
   push:
     tags:
       - v*
@@ -42,7 +41,7 @@ jobs:
         run: composer update
 
       - name: Mutation Tests
-        run: vendor/bin/infection --threads=4
+        run: vendor/bin/infection
 
       - name: Print mutation log
         if: always()
