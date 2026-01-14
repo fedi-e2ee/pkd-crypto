@@ -213,7 +213,7 @@ class WebFingerTest extends TestCase
     {
         $webFinger = $this->createWebFingerWithMock(new MockHandler());
 
-        $this->expectException(NetworkException::class);
+        $this->expectException(InputException::class);
         $this->expectExceptionMessage('Actor handle must contain exactly one @');
         $webFinger->canonicalize('nodomainsymbol');
     }
@@ -230,7 +230,7 @@ class WebFingerTest extends TestCase
     {
         $webFinger = $this->createWebFingerWithMock(new MockHandler());
 
-        $this->expectException(NetworkException::class);
+        $this->expectException(InputException::class);
         $this->expectExceptionMessage('Actor handle must contain exactly one @');
         $webFinger->canonicalize('@@example.com'); // After ltrim becomes 'example.com' with no @
     }
