@@ -59,7 +59,7 @@ class WebFinger
             return $this->webFingerCache[$actorUsernameOrUrl];
         }
         // Is this already canonicalized?
-        if (preg_match('#^https?://([^.]+)/(.+?)$#i', $actorUsernameOrUrl, $m)) {
+        if (preg_match('#^https?://([^/]+)/(.+?)$#i', $actorUsernameOrUrl, $m)) {
             $url = filter_var($actorUsernameOrUrl, FILTER_VALIDATE_URL);
             if (!$url || !in_array(parse_url($url, PHP_URL_SCHEME), ['http', 'https'], true)) {
                 throw new NetworkException('Invalid URL provided');
@@ -81,11 +81,11 @@ class WebFinger
         if (empty($username) || empty($domain)) {
             throw new InputException('Invalid actor handle format');
         }
-        if (str_contains($domain, '@') || str_contains($username, '@')) {
-            throw new InputException('Parse error: piece contains @');
+        if (str_contains($domain, '@')) {
+            throw new InputException('Parse error: domain contains @');
         }
-        if (str_contains($domain, '://') || str_contains($username, '://')) {
-            throw new InputException('Parse error: piece contains ://');
+        if (str_contains($username, '://')) {
+            throw new InputException('Parse error: username contains ://');
         }
 
         // Optional: Support internationalized domain names
