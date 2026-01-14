@@ -177,6 +177,15 @@ class IncrementalTree extends Tree
         if (!array_key_exists('nodes', $state)) {
             throw new InputException('Nodes not specified');
         }
+        if (!is_string($state['hashAlgo'])) {
+            throw new InputException('Hash algorithm must be a string');
+        }
+        if (!is_int($state['size'])) {
+            throw new InputException('Tree size must be an integer');
+        }
+        if (!is_array($state['nodes'])) {
+            throw new InputException('Nodes must be an array');
+        }
         $tree = new static([], $state['hashAlgo']);
         $tree->size = $state['size'];
         foreach ($state['nodes'] as $key => $hash) {

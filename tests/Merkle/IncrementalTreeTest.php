@@ -162,4 +162,28 @@ class IncrementalTreeTest extends TestCase
         $this->expectException(InputException::class);
         IncrementalTree::fromJson($input);
     }
+
+    public static function invalidJsonProvider(): array
+    {
+        return [
+            ["'''", JsonException::class],
+            ['0', JsonException::class],
+            ['"test"', JsonException::class],
+            ['null', JsonException::class],
+            ['[]', InputException::class],
+            ['{"size":0,"nodes":{}}', InputException::class],
+            ['{"hashAlgo":"sha256","nodes":{}}', InputException::class],
+            ['{"hashAlgo":"sha256","size":0}', InputException::class],
+            ['{"hashAlgo":123,"size":0,"nodes":{}}', InputException::class],
+            ['{"hashAlgo":"sha256","size":"0","nodes":{}}', InputException::class],
+            ['{"hashAlgo":"sha256","size":0,"nodes":"{}"}', InputException::class],
+        ];
+    }
+
+    #[DataProvider("invalidJsonProvider")]
+    public function testFromJsonInvalidInput(string $json, string $exceptionClass): void
+    {
+        $this->expectException($exceptionClass);
+        IncrementalTree::fromJson($json);
+    }
 }
