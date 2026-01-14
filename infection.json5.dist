@@ -30,22 +30,8 @@
             	"FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger"
             ]
 		},
-        "Concat": {
-        	"ignore": [
-            	"FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger",
-        	],
-        	"ignoreSourcECodeByRegex": [
-        		"throw.*Exception\\("
-        	]
-        },
-        "ConcatOperandRemoval": {
-        	"ignore": [
-            	"FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger",
-        	],
-        	"ignoreSourcECodeByRegex": [
-        		"throw.*Exception\\("
-        	]
-        },
+        "Concat": false,
+        "ConcatOperandRemoval": false,
         "DecrementInteger": {
             "ignore": [
             	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
