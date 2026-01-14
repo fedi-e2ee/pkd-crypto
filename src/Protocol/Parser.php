@@ -82,7 +82,22 @@ class Parser
         } else {
             $time = new DateTimeImmutable($components['time'] );
         }
-        return match ($bundle->getAction()) {
+        $action = $bundle->getAction();
+        if ($action === 'BurnDown') {
+            self::assertAllArrayKeysExist($components, 'actor', 'operator', 'otp');
+        } elseif ($action === 'Checkpoint') {
+            self::assertAllArrayKeysExist(
+                $components,
+                'from-directory',
+                'from-root',
+                'from-public-key',
+                'to-directory',
+                'to-validated-root',
+            );
+        } elseif ($action === 'RevokeKeyThirdParty') {
+            self::assertAllArrayKeysExist($components, 'revocation-token');
+        }
+        return match ($action) {
             'BurnDown' =>
                 new BurnDown(
                     $components['actor'],
@@ -92,16 +107,16 @@ class Parser
                 ),
             'Checkpoint' =>
                 new Checkpoint(
-                    $components['from-directory'] ?? '',
-                        $components['from-root'] ?? '',
-                        PublicKey::fromString($components['from-public-key'] ?? ''),
-                        $components['to-directory'] ?? '',
-                        $components['to-validated-root'] ?? '',
+                    $components['from-directory'],
+                        $components['from-root'],
+                        PublicKey::fromString($components['from-public-key']),
+                        $components['to-directory'],
+                        $components['to-validated-root'],
                     $time
                 ),
             'RevokeKeyThirdParty' =>
                 new RevokeKeyThirdParty(
-                    $components['revocation-token'] ?? ''
+                    $components['revocation-token']
                 ),
             default =>
                 throw new CryptoException('Unknown action: ' . $bundle->getAction()),

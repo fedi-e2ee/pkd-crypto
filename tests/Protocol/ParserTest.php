@@ -123,6 +123,7 @@ class ParserTest extends TestCase
     {
         return [
             [sodium_hex2bin('18181818182d2d302d2d2d2d2d2d7e50f3')],
+            [sodium_hex2bin('402f2f2f2f2f2f2f2f2f2f2f2f2f30')],
         ];
     }
 
