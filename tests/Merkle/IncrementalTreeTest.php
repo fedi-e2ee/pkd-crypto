@@ -12,6 +12,7 @@ use FediE2EE\PKD\Crypto\Merkle\Tree;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Random\RandomException;
 use SodiumException;
 
 #[CoversClass(IncrementalTree::class)]
@@ -27,6 +28,10 @@ class IncrementalTreeTest extends TestCase
         ];
     }
 
+    /**
+     * @throws RandomException
+     * @throws SodiumException
+     */
     #[DataProvider("hashAlgProvider")]
     public function testIncrementalFromZero(string $hashAlg): void
     {
@@ -56,6 +61,10 @@ class IncrementalTreeTest extends TestCase
 
     }
 
+    /**
+     * @throws CryptoException
+     * @throws SodiumException
+     */
     #[DataProvider("hashAlgProvider")]
     public function testCompatibilityWithBaseTree(string $hashAlg): void
     {
@@ -90,6 +99,10 @@ class IncrementalTreeTest extends TestCase
         );
     }
 
+    /**
+     * @throws CryptoException
+     * @throws SodiumException
+     */
     #[DataProvider("hashAlgProvider")]
     public function testEvenLeaves(string $hashAlg): void
     {
@@ -107,6 +120,9 @@ class IncrementalTreeTest extends TestCase
         $this->assertEquals($baseProof, $incrementalProof);
     }
 
+    /**
+     * @throws SodiumException
+     */
     #[DataProvider("hashAlgProvider")]
     public function testIncrementalUpdates(string $hashAlg): void
     {
@@ -122,6 +138,11 @@ class IncrementalTreeTest extends TestCase
         $this->assertEquals(count($leaves), $incrementalTree->getSize());
     }
 
+    /**
+     * @throws InputException
+     * @throws JsonException
+     * @throws SodiumException
+     */
     #[DataProvider("hashAlgProvider")]
     public function testJsonSerialization(string $hashAlg): void
     {
@@ -143,6 +164,11 @@ class IncrementalTreeTest extends TestCase
         $this->assertEquals($baseTree->getRoot(), $deserializedTree->getRoot());
     }
 
+    /**
+     * @throws InputException
+     * @throws JsonException
+     * @throws SodiumException
+     */
     public function testFromJsonInvalidType(): void
     {
         $this->expectException(JsonException::class);
@@ -158,6 +184,11 @@ class IncrementalTreeTest extends TestCase
         ];
     }
 
+    /**
+     * @throws InputException
+     * @throws JsonException
+     * @throws SodiumException
+     */
     #[DataProvider("fromJsonMissingProvider")]
     public function testFromJsonMissingElements(string $input): void
     {
@@ -182,6 +213,11 @@ class IncrementalTreeTest extends TestCase
         ];
     }
 
+    /**
+     * @throws InputException
+     * @throws JsonException
+     * @throws SodiumException
+     */
     #[DataProvider("invalidJsonProvider")]
     public function testFromJsonInvalidInput(string $json, string $exceptionClass): void
     {
@@ -420,5 +456,88 @@ class IncrementalTreeTest extends TestCase
     {
         $this->expectException(\Exception::class);
         IncrementalTree::fromJson('{"hashAlgo":"sha256","size":1,"nodes":{"0-0":"not-valid-base64!!!"}}');
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testAddLeafSiblingPathsDetailed(string $hashAlg): void
+    {
+        // Test that the break statement in addLeaf works correctly
+        // by verifying the tree state after adding leaves one by one
+        $tree = new IncrementalTree([], $hashAlg);
+        $roots = [];
+
+        // Build up incrementally and capture each root
+        for ($i = 1; $i <= 8; ++$i) {
+            $tree->addLeaf("leaf$i");
+            $roots[$i] = $tree->getRoot();
+            $this->assertNotNull($roots[$i]);
+
+            // Verify against fresh tree
+            $freshTree = new Tree(array_map(fn($j) => "leaf$j", range(1, $i)), $hashAlg);
+            $this->assertEquals(
+                $freshTree->getRoot(),
+                $roots[$i],
+                "Root mismatch at size $i"
+            );
+        }
+
+        // Verify all roots are different (proves tree is being updated correctly)
+        $uniqueRoots = array_unique($roots, SORT_STRING);
+        $this->assertCount(8, $uniqueRoots, "All 8 roots should be unique");
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testSiblingIndexCalculation(string $hashAlg): void
+    {
+        $tree = new IncrementalTree([], $hashAlg);
+
+        // Add leaf 0 (even index) - sibling would be 1 (doesn't exist)
+        $tree->addLeaf('leaf0');
+        $root0 = $tree->getRoot();
+        $this->assertNotNull($root0);
+
+        // Add leaf 1 (odd index) - sibling is 0 (exists)
+        $tree->addLeaf('leaf1');
+        $root1 = $tree->getRoot();
+        $this->assertNotNull($root1);
+
+        // Root should have changed since sibling exists and parent was calculated
+        $this->assertNotEquals($root0, $root1);
+
+        // Verify structure
+        $baseTree = new Tree(['leaf0', 'leaf1'], $hashAlg);
+        $this->assertEquals($baseTree->getRoot(), $root1);
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testInclusionProofMidCalculation(string $hashAlg): void
+    {
+        // Test with trees of sizes that exercise the mid = start + k calculation
+        $leaves = array_map(fn($i) => "leaf$i", range(0, 6));
+        $tree = new IncrementalTree($leaves, $hashAlg);
+        $root = $tree->getRoot();
+        $this->assertNotNull($root);
+
+        // Verify proofs for leaf at different positions relative to split point
+        // For 7 leaves, k=4, so mid=4, testing index 3 (left subtree) and 4 (right subtree)
+        $proof3 = $tree->getInclusionProof('leaf3');
+        $this->assertTrue($tree->verifyInclusionProof($root, 'leaf3', $proof3));
+
+        $proof4 = $tree->getInclusionProof('leaf4');
+        $this->assertTrue($tree->verifyInclusionProof($root, 'leaf4', $proof4));
+
+        // Also test boundary: exactly at mid
+        $proof2 = $tree->getInclusionProof('leaf2');
+        $this->assertTrue($tree->verifyInclusionProof($root, 'leaf2', $proof2));
     }
 }

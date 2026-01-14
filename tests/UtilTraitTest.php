@@ -116,4 +116,67 @@ class UtilTraitTest extends TestCase
         // Test stripNewLines is publicly accessible
         $this->assertSame("line1line2", $helper::stripNewlines("line1\r\nline2"));
     }
+
+    public static function stripNewlinesProvider(): array
+    {
+        return [
+            // [input, expected]
+            ['', ''],
+            ['no newlines', 'no newlines'],
+            ["unix\nstyle", 'unixstyle'],
+            ["windows\r\nstyle", 'windowsstyle'],
+            ["mac\rstyle", 'macstyle'],
+            ["\n", ''],
+            ["\r", ''],
+            ["\r\n", ''],
+            ["\n\n\n", ''],
+            ["\r\r\r", ''],
+            ["a\nb\nc", 'abc'],
+            ["a\rb\rc", 'abc'],
+            ["\nabc", 'abc'],
+            ["abc\n", 'abc'],
+            ["\nabc\n", 'abc'],
+            // Mixed newlines
+            ["a\n\r\nb\r\nc", 'abc'],
+            // All newlines
+            ["\n\r\n\r", ''],
+            // Adjacent newlines
+            ["test\n\ndata", 'testdata'],
+            ["test\r\rdata", 'testdata'],
+            // Only CR characters (0x0d)
+            ["\x0d\x0d\x0d", ''],
+            // Only LF characters (0x0a)
+            ["\x0a\x0a\x0a", ''],
+            // Mixed content with various characters
+            ["abc\x0adef\x0dghi", 'abcdefghi'],
+            // Binary-safe: check non-newline control chars are preserved
+            ["a\x09b", "a\x09b"],
+            ["a\x00b", "a\x00b"],
+        ];
+    }
+
+    #[DataProvider("stripNewlinesProvider")]
+    public function testStripNewlines(string $input, string $expected): void
+    {
+        $this->assertSame($expected, self::stripNewlines($input));
+    }
+
+    public function testStripNewlinesPreservesLength(): void
+    {
+        // Input with known newline count should have predictable output length
+        $input = "abc\ndef\rghi\r\njkl";
+        $result = self::stripNewlines($input);
+        // 12 chars minus 4 newline chars (one \n, one \r, one \r\n = 2)
+        $this->assertSame('abcdefghijkl', $result);
+        $this->assertSame(12, strlen($result));
+    }
+
+    public function testStripNewlinesOnlyRemovesCrLf(): void
+    {
+        // Verify that ONLY CR (0x0d) and LF (0x0a) are removed
+        // Other characters in the vicinity should be preserved
+        $input = "\x09\x0a\x0b\x0c\x0d\x0e";
+        $expected = "\x09\x0b\x0c\x0e";
+        $this->assertSame($expected, self::stripNewlines($input));
+    }
 }

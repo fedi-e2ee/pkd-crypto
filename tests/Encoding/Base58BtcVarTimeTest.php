@@ -359,4 +359,40 @@ class Base58BtcVarTimeTest extends TestCase
             }
         }
     }
+
+    /**
+     * This is just a provider for some inputs that should hit the boundary conditions
+     * within the base58 codec, which should in turn fail if the codecs are mutated.
+     */
+    public static function pedanticEncodingProvider(): array
+    {
+        return [
+            ['', ''],
+            ["\x00", '1'],
+            ["\x00\x00\x00\x00\x00", '11111'],
+            ["\x01", '2'],
+            ["\x02", '3'],
+            ["\x03", '4'],
+            ["\x04\x04", 'Jj'],
+            ["\x05\x05\x05", '2gnp'],
+            ["\x01\x02\x03\x04", '2VfUX'],
+            ["\xFE", '5P'],
+            ["\xFF", '5Q'],
+            ["\xFF\xFF", 'LUv'],
+            ["\x36\x36\x36\x36\x36", '77k5N45'],
+            ["\x5C\x5C\x5C\x5C\x5C\x5C", 'nzbMxVxX'],
+            ["\x00\x5D\x00", '185V'],
+            ["\x00\x5D\x00\x00", '1YEnb'],
+            ["\x12\x34\x56\x78\x9a\xbc\xde\xf0", '43c9JGph3DZ'],
+            ["\xfe\xdc\xba\x98\x76\x54\x32\x10", 'jdV1ApWfY6s'],
+        ];
+    }
+
+    #[DataProvider("pedanticEncodingProvider")]
+    public function testPedanticEncoding(string $input, string $expected): void
+    {
+        $encoded = Base58BtcVarTime::encode($input);
+        $this->assertSame($expected, $encoded);
+        $this->assertSame($input, Base58BtcVarTime::decode($encoded));
+    }
 }

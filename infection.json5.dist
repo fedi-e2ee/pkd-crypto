@@ -9,11 +9,17 @@
         "configDir": "."
     },
     "mutators": {
-        "@default": true
+        "@default": true,
+        // HKDF output length changes cannot be reliably tested without known-answer vectors for each specific length
+        "IncrementInteger": {
+            "ignoreSourceCodeByRegex": [
+                "hash_hkdf\\('sha512'.*\\d+,"
+            ]
+        }
     },
     "threads": "max",
     "timeout": 300,
-    "minCoveredMsi": 80,
+    "minCoveredMsi": 85,
     "logs": {
         "text": "infection.log"
     }

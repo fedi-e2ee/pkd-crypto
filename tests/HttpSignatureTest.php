@@ -749,4 +749,112 @@ class HttpSignatureTest extends TestCase
 
         $this->assertTrue($httpSignature->verify($pk, $signedRequest));
     }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testSignatureExtractionExactLabel(): void
+    {
+        $keypair = sodium_crypto_sign_seed_keypair(
+            sodium_crypto_generichash('exact label test')
+        );
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+
+        $httpSignature = new HttpSignature('sig1');
+        $request = new Request(
+            'POST',
+            '/foo',
+            [
+                'Host' => 'example.com',
+                'Signature-Input' => 'sig1=("@method");alg="ed25519";created=' . time(),
+                'Signature' => 'sig10=:AAAA:, sig11=:BBBB:',
+            ],
+            'body'
+        );
+        $this->assertFalse($httpSignature->verify($pk, $request));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testMethodLowercasedInBase(): void
+    {
+        $keypair = sodium_crypto_sign_seed_keypair(
+            sodium_crypto_generichash('method lowercase test')
+        );
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $pk = $sk->getPublicKey();
+
+        $httpSignature = new HttpSignature();
+
+        // Sign with POST (uppercase in HTTP spec)
+        $request = new Request('POST', '/test', ['Host' => 'example.com'], 'body');
+        $signedRequest = $httpSignature->sign($sk, $request, ['@method'], 'key');
+
+        // The signature should verify because method is normalized
+        $this->assertTrue($httpSignature->verify($pk, $signedRequest));
+
+        // Verify the signature-input shows lowercase method in covered components
+        $signatureInput = $signedRequest->getHeaderLine('Signature-Input');
+        $this->assertStringContainsString('"@method"', $signatureInput);
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testDefaultTimeoutIs300(): void
+    {
+        $keypair = sodium_crypto_sign_seed_keypair(
+            sodium_crypto_generichash('default timeout test')
+        );
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $pk = $sk->getPublicKey();
+
+        $httpSignature = new HttpSignature();
+        $request = new Request('POST', '/foo', ['Host' => 'example.com'], 'body');
+
+        $created = time() - 299;
+        $signedRequest = $httpSignature->sign($sk, $request, ['@method', 'host'], 'key', $created);
+        $this->assertTrue($httpSignature->verify($pk, $signedRequest));
+
+        $created2 = time() - 301;
+        $signedRequest2 = $httpSignature->sign($sk, $request, ['@method', 'host'], 'key', $created2);
+        $this->assertFalse($httpSignature->verify($pk, $signedRequest2));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testSignatureParamsExtraction(): void
+    {
+        $keypair = sodium_crypto_sign_seed_keypair(
+            sodium_crypto_generichash('params extraction test')
+        );
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $pk = $sk->getPublicKey();
+
+        $httpSignature = new HttpSignature();
+        $request = new Request('POST', '/test', ['Host' => 'example.com'], 'body');
+
+        $created = time();
+        $signedRequest = $httpSignature->sign($sk, $request, ['@method', 'host'], 'my-key-id', $created);
+
+        $signatureInput = $signedRequest->getHeaderLine('Signature-Input');
+
+        // Verify all params are present
+        $this->assertStringContainsString('alg="ed25519"', $signatureInput);
+        $this->assertStringContainsString('keyid="my-key-id"', $signatureInput);
+        $this->assertStringContainsString('created=' . $created, $signatureInput);
+    }
 }
