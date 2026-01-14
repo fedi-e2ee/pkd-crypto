@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\ActivityPub;
 
+use FediE2EE\PKD\Crypto\Exceptions\InputException;
 use FediE2EE\PKD\Crypto\Exceptions\JsonException;
 use FediE2EE\PKD\Crypto\Exceptions\NetworkException;
 use GuzzleHttp\Client;
@@ -47,6 +48,7 @@ class WebFinger
     }
 
     /**
+     * @throws InputException
      * @throws NetworkException
      * @throws GuzzleException
      * @throws JsonException
@@ -62,6 +64,9 @@ class WebFinger
             if (!$url || !in_array(parse_url($url, PHP_URL_SCHEME), ['http', 'https'], true)) {
                 throw new NetworkException('Invalid URL provided');
             }
+            if (str_contains($actorUsernameOrUrl, '@')) {
+                throw new InputException('Parse error: URL contains @');
+            }
             // Normalize to HTTPS if possible
             return str_replace(['http://', 'HTTP://'], 'https://', $url);
         }
@@ -71,7 +76,13 @@ class WebFinger
         }
         [$username, $domain] = explode('@', $actorUsernameOrUrl, 2);
         if (empty($username) || empty($domain)) {
-            throw new \InvalidArgumentException('Invalid actor handle format');
+            throw new InputException('Invalid actor handle format');
+        }
+        if (str_contains($domain, '@') || str_contains($username, '@')) {
+            throw new InputException('Parse error: piece contains @');
+        }
+        if (str_contains($domain, '://') || str_contains($username, '://')) {
+            throw new InputException('Parse error: piece contains ://');
         }
 
         // Optional: Support internationalized domain names

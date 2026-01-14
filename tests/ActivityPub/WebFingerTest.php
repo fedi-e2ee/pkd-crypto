@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests\ActivityPub;
 
 use FediE2EE\PKD\Crypto\ActivityPub\WebFinger;
+use FediE2EE\PKD\Crypto\Exceptions\InputException;
 use FediE2EE\PKD\Crypto\Exceptions\JsonException;
 use FediE2EE\PKD\Crypto\Exceptions\NetworkException;
 use GuzzleHttp\Client;
@@ -83,6 +84,28 @@ class WebFingerTest extends TestCase
         // lowercase http:// should become https://
         $result = $webFinger->canonicalize('http://example.com/users/test');
         $this->assertSame('https://example.com/users/test', $result);
+    }
+
+    public static function weirdInputs(): array
+    {
+        return [
+            ['https://user@exmaple.com'],
+            ['userhttps://foo.com@example.com@example.net']
+        ];
+    }
+
+    /**
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws NetworkException
+     */
+    #[DataProvider("weirdInputs")]
+    public function testCanonicalEdgeCases(string $weird): void
+    {
+        $webFinger = new WebFinger();
+        $this->expectException(InputException::class);
+        $webFinger->canonicalize($weird);
     }
 
     /**
@@ -216,7 +239,7 @@ class WebFingerTest extends TestCase
     {
         $webFinger = $this->createWebFingerWithMock(new MockHandler());
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InputException::class);
         $this->expectExceptionMessage('Invalid actor handle format');
         $webFinger->canonicalize('@username@'); // Empty domain
     }

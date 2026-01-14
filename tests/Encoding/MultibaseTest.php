@@ -3,8 +3,12 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests\Encoding;
 
 use FediE2EE\PKD\Crypto\Encoding\Multibase;
+use FediE2EE\PKD\Crypto\Exceptions\EncodingException;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+#[CoversClass(Multibase::class)]
 class MultibaseTest extends TestCase
 {
     public function testKnownInput(): void
@@ -31,5 +35,44 @@ class MultibaseTest extends TestCase
         // Default should be "u":
         $encoded = Multibase::encode($random, true);
         $this->assertSame('z', $encoded[0]);
+    }
+
+    public function testDecodeEmptyStringThrows(): void
+    {
+        $this->expectException(EncodingException::class);
+        $this->expectExceptionMessage('Multibase encoding requires a header');
+        Multibase::decode('');
+    }
+
+    public static function unknownHeaderProvider(): array
+    {
+        return [
+            ['x'],
+            ['a'],
+            ['Z'],
+            ['U'],
+            ['1'],
+            ['!'],
+        ];
+    }
+
+    #[DataProvider('unknownHeaderProvider')]
+    public function testDecodeUnknownHeaderThrows(string $header): void
+    {
+        $this->expectException(EncodingException::class);
+        $this->expectExceptionMessage('Unknown header: ' . $header);
+        Multibase::decode($header . 'somedata');
+    }
+
+    public function testDecodeUnknownHeaderMessageIncludesHeader(): void
+    {
+        try {
+            Multibase::decode('Xinvalid');
+            $this->fail('Expected EncodingException was not thrown');
+        } catch (EncodingException $e) {
+            // Verify that the message contains both the prefix and the header
+            $this->assertStringContainsString('Unknown header:', $e->getMessage());
+            $this->assertStringContainsString('X', $e->getMessage());
+        }
     }
 }

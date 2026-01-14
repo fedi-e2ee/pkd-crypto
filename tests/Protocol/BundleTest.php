@@ -244,6 +244,33 @@ class BundleTest extends TestCase
      * @throws BundleException
      * @throws InputException
      */
+    public function testFromJsonEmptyString(): void
+    {
+        $this->expectException(BundleException::class);
+        $this->expectExceptionMessage('Empty JSON string');
+        Bundle::fromJson('');
+    }
+
+    /**
+     * @throws InputException
+     */
+    public function testFromJsonInvalidJsonContainsErrorMessage(): void
+    {
+        try {
+            Bundle::fromJson('{invalid json}');
+            $this->fail('Expected BundleException was not thrown');
+        } catch (BundleException $e) {
+            // Verify the message contains both the prefix and the JSON error
+            $this->assertStringContainsString('Invalid JSON string:', $e->getMessage());
+            // The json_last_error_msg() should also be included
+            $this->assertMatchesRegularExpression('/Invalid JSON string:.*/', $e->getMessage());
+        }
+    }
+
+    /**
+     * @throws BundleException
+     * @throws InputException
+     */
     public function testFromJsonNotObject(): void
     {
         $this->expectException(BundleException::class);

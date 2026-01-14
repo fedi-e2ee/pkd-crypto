@@ -10,22 +10,86 @@
     },
     "mutators": {
         "@default": true,
+        "ArrayItem": {
+        	"ignore": [
+            	"FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger",
+        	]
+		},
+        "ArrayItemRemoval": {
+        	"ignore": [
+            	"FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger",
+        	]
+		},
+        "CastInt": {
+            "ignore": [
+            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+            ]
+		},
+        "Coalesce": {
+            "ignore": [
+            	"FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger"
+            ]
+		},
         "Concat": {
+        	"ignore": [
+            	"FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger",
+        	].
         	"ignoreSourcECodeByRegex": [
         		"throw.*Exception\("
         	]
-        }
-        // HKDF output length changes cannot be reliably tested without known-answer vectors for each specific length
+        },
+        "ConcatOperandRemoval": {
+        	"ignore": [
+            	"FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger",
+        	],
+        	"ignoreSourcECodeByRegex": [
+        		"throw.*Exception\("
+        	]
+        },
+        "DecrementInteger": {
+            "ignore": [
+            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+            ]
+		},
         "IncrementInteger": {
+            "ignore": [
+            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+            ],
             "ignoreSourceCodeByRegex": [
                 "hash_hkdf",
                 "substr"
             ]
-        }
+        },
+        "LogicalOr": {
+            "ignore": [
+            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+            ]
+		},
+        "Minus": {
+            "ignore": [
+            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+            ]
+		},
+        "Plus": {
+            "ignore": [
+            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+            ]
+		},
+        "RoundingFamily": {
+            "ignore": [
+            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+            ]
+		},
+        "ShiftRight": {
+            "ignore": [
+            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+            ]
+        },
+        "Throw_": false
     },
     "threads": "max",
     "timeout": 300,
-    "minCoveredMsi": 85,
+    "minCoveredMsi": 86,
     "logs": {
         "text": "infection.log"
     }

@@ -317,4 +317,27 @@ class SignedMessageTest extends TestCase
         $this->assertStringContainsString('!pkd-context', $encoded);
         $this->assertStringContainsString(SignedMessage::PKD_CONTEXT, $encoded);
     }
+
+    /**
+     * @throws NotImplementedException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    public function testGetRecentMerkleRootIsPublic(): void
+    {
+        $recent = 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(random_bytes(32));
+        $sk = SecretKey::generate();
+        $pk = $sk->getPublicKey();
+
+        $sm = new SignedMessage(
+            new AddKey('https://example.com/@alice', $pk),
+            $recent
+        );
+
+        $encodedRoot = $sm->getRecentMerkleRoot();
+        $this->assertIsString($encodedRoot);
+        $this->assertNotEmpty($encodedRoot);
+
+        $this->assertGreaterThan(70, strlen($encodedRoot));
+    }
 }
