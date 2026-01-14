@@ -3,6 +3,8 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Merkle;
 
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
+use FediE2EE\PKD\Crypto\Exceptions\InputException;
+use FediE2EE\PKD\Crypto\Exceptions\JsonException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use Override;
 use SodiumException;
@@ -156,11 +158,25 @@ class IncrementalTree extends Tree
     }
 
     /**
+     * @throws InputException
+     * @throws JsonException
      * @throws SodiumException
      */
     public static function fromJson(string $json): static
     {
         $state = json_decode($json, true);
+        if (!is_array($state)) {
+            throw new JsonException('Invalid JSON string: ' . json_last_error_msg());
+        }
+        if (!array_key_exists('hashAlgo', $state)) {
+            throw new InputException('Hash algorithm not specified');
+        }
+        if (!array_key_exists('size', $state)) {
+            throw new InputException('Tree size not specified');
+        }
+        if (!array_key_exists('nodes', $state)) {
+            throw new InputException('Nodes not specified');
+        }
         $tree = new static([], $state['hashAlgo']);
         $tree->size = $state['size'];
         foreach ($state['nodes'] as $key => $hash) {

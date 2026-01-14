@@ -2,11 +2,12 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests\Merkle;
 
+use FediE2EE\PKD\Crypto\Exceptions\InputException;
+use FediE2EE\PKD\Crypto\Exceptions\JsonException;
 use FediE2EE\PKD\Crypto\Merkle\ConsistencyProof;
 use FediE2EE\PKD\Crypto\Merkle\InclusionProof;
 use FediE2EE\PKD\Crypto\Merkle\IncrementalTree;
 use FediE2EE\PKD\Crypto\Merkle\Tree;
-use ParagonIE\ConstantTime\Hex;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -138,5 +139,27 @@ class IncrementalTreeTest extends TestCase
 
         $deserializedTree->addLeaf('f');
         $this->assertEquals($baseTree->getRoot(), $deserializedTree->getRoot());
+    }
+
+    public function testFromJsonInvalidType(): void
+    {
+        $this->expectException(JsonException::class);
+        IncrementalTree::fromJson('123');
+    }
+
+    public static function fromJsonMissingProvider(): array
+    {
+        return [
+            ['{"size":0,"nodes":[]}'],
+            ['{"hashAlgo":"sha256","nodes":[]}'],
+            ['{"hashAlgo":"sha256","size":0}'],
+        ];
+    }
+
+    #[DataProvider("fromJsonMissingProvider")]
+    public function testFromJsonMissingElements(string $input): void
+    {
+        $this->expectException(InputException::class);
+        IncrementalTree::fromJson($input);
     }
 }
