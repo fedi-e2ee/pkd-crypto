@@ -27,4 +27,13 @@ class AttributeKeyMapTest extends TestCase
         $baz = $keyMap->getKey('baz');
         $this->assertNotSame($blah, $baz->getBytes());
     }
+
+    public function testIsEmpty(): void
+    {
+        $keyMap = new AttributeKeyMap();
+        $this->assertTrue($keyMap->isEmpty());
+
+        $keyMap->addRandomKey('test');
+        $this->assertFalse($keyMap->isEmpty());
+    }
 }

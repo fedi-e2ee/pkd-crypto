@@ -6,31 +6,44 @@ use FediE2EE\PKD\Crypto\Exceptions\JsonException;
 use FediE2EE\PKD\Crypto\Exceptions\NetworkException;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use ParagonIE\Certainty\Exception\CertaintyException;
 use ParagonIE\Certainty\Fetch;
 use ParagonIE\Certainty\RemoteFetch;
+use SodiumException;
 
 class WebFinger
 {
     protected Client $http;
+    protected Fetch $caCertFetcher;
 
     protected array $webFingerCache = [];
 
+    /**
+     * @throws CertaintyException
+     * @throws SodiumException
+     */
     public function __construct(?Client $client = null, ?Fetch $caCertFetcher = null)
     {
+        if (is_null($caCertFetcher)) {
+            $caCertFetcher = new RemoteFetch(
+                dirname(__DIR__, 2) . '/cache'
+            );
+        }
+        $this->caCertFetcher = $caCertFetcher;
         if (is_null($client)) {
-            if (is_null($caCertFetcher)) {
-                $caCertFetcher = new RemoteFetch(
-                    dirname(__DIR__, 2) . '/cache'
-                );
-            }
             $client = new Client([
                 'headers' => [
                     'Accept' => 'application/jrd+json'
                 ],
-                'verify' => $caCertFetcher->getLatestBundle()->getFilePath()
+                'verify' => $this->caCertFetcher->getLatestBundle()->getFilePath()
             ]);
         }
         $this->http = $client;
+    }
+
+    public function getCaCertFetcher(): Fetch
+    {
+        return $this->caCertFetcher;
     }
 
     /**

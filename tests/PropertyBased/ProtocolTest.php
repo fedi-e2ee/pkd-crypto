@@ -23,6 +23,15 @@ use PHPUnit\Framework\TestCase;
 class ProtocolTest extends TestCase
 {
     use TestTrait;
+    use ErisPhpUnit12Trait {
+        ErisPhpUnit12Trait::getTestCaseAnnotations insteadof TestTrait;
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->erisSetupCompat();
+    }
 
     /**
      * Property: Bundle toJson/fromJson is a roundtrip.

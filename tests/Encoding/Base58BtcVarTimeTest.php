@@ -148,4 +148,215 @@ class Base58BtcVarTimeTest extends TestCase
             $this->assertSame(-1, Base58BtcVarTime::decodeByte($b58));
         }
     }
+
+    /**
+     * Test empty string encoding returns empty string
+     */
+    public function testEncodeEmptyString(): void
+    {
+        $this->assertSame('', Base58BtcVarTime::encode(''));
+    }
+
+    /**
+     * Test empty string decoding returns empty string
+     */
+    public function testDecodeEmptyString(): void
+    {
+        $this->assertSame('', Base58BtcVarTime::decode(''));
+    }
+
+    /**
+     * Test boundary values around character thresholds
+     */
+    public function testCharacterBoundaries(): void
+    {
+        // Test values at boundaries where bit shifts matter
+        // Value 8: boundary between '9' and 'A'
+        $this->assertSame(0x39, Base58BtcVarTime::encodeByte(8)); // '9'
+        $this->assertSame(0x41, Base58BtcVarTime::encodeByte(9)); // 'A'
+
+        // Value 16: boundary in A-H range
+        $this->assertSame(0x48, Base58BtcVarTime::encodeByte(16)); // 'H'
+        $this->assertSame(0x4A, Base58BtcVarTime::encodeByte(17)); // 'J' (skips I)
+
+        // Value 21: boundary in J-N range
+        $this->assertSame(0x4E, Base58BtcVarTime::encodeByte(21)); // 'N'
+        $this->assertSame(0x50, Base58BtcVarTime::encodeByte(22)); // 'P' (skips O)
+
+        // Value 32: boundary in P-Z range
+        $this->assertSame(0x5A, Base58BtcVarTime::encodeByte(32)); // 'Z'
+        $this->assertSame(0x61, Base58BtcVarTime::encodeByte(33)); // 'a'
+
+        // Value 43: boundary in a-k range
+        $this->assertSame(0x6B, Base58BtcVarTime::encodeByte(43)); // 'k'
+        $this->assertSame(0x6D, Base58BtcVarTime::encodeByte(44)); // 'm' (skips l)
+
+        // Value 57: last valid value
+        $this->assertSame(0x7A, Base58BtcVarTime::encodeByte(57)); // 'z'
+    }
+
+    /**
+     * Test decode of each boundary character
+     */
+    public function testDecodeBoundaryCharacters(): void
+    {
+        // Decode boundary characters
+        $this->assertSame(0, Base58BtcVarTime::decodeByte(0x31));  // '1' -> 0
+        $this->assertSame(8, Base58BtcVarTime::decodeByte(0x39));  // '9' -> 8
+        $this->assertSame(9, Base58BtcVarTime::decodeByte(0x41));  // 'A' -> 9
+        $this->assertSame(16, Base58BtcVarTime::decodeByte(0x48)); // 'H' -> 16
+        $this->assertSame(17, Base58BtcVarTime::decodeByte(0x4A)); // 'J' -> 17
+        $this->assertSame(21, Base58BtcVarTime::decodeByte(0x4E)); // 'N' -> 21
+        $this->assertSame(22, Base58BtcVarTime::decodeByte(0x50)); // 'P' -> 22
+        $this->assertSame(32, Base58BtcVarTime::decodeByte(0x5A)); // 'Z' -> 32
+        $this->assertSame(33, Base58BtcVarTime::decodeByte(0x61)); // 'a' -> 33
+        $this->assertSame(43, Base58BtcVarTime::decodeByte(0x6B)); // 'k' -> 43
+        $this->assertSame(44, Base58BtcVarTime::decodeByte(0x6D)); // 'm' -> 44
+        $this->assertSame(57, Base58BtcVarTime::decodeByte(0x7A)); // 'z' -> 57
+
+        // Invalid characters
+        $this->assertSame(-1, Base58BtcVarTime::decodeByte(0x30)); // '0' invalid
+        $this->assertSame(-1, Base58BtcVarTime::decodeByte(0x49)); // 'I' invalid
+        $this->assertSame(-1, Base58BtcVarTime::decodeByte(0x4F)); // 'O' invalid
+        $this->assertSame(-1, Base58BtcVarTime::decodeByte(0x6C)); // 'l' invalid
+
+        for ($i = 0; $i < 0x31; $i++) {
+            $this->assertSame(-1, Base58BtcVarTime::decodeByte($i));
+        }
+        // Simply not in the range at all:
+        for ($i = 0x7B; $i < 0xFF; $i++) {
+            $this->assertSame(-1, Base58BtcVarTime::decodeByte($i));
+        }
+    }
+
+    /**
+     * Test strings with leading zeros
+     */
+    public function testLeadingZeros(): void
+    {
+        // Leading null bytes should be preserved
+        $input = "\x00\x00\x00\x01";
+        $encoded = Base58BtcVarTime::encode($input);
+        $decoded = Base58BtcVarTime::decode($encoded);
+        $this->assertSame($input, $decoded);
+
+        // All zeros
+        $zeros = str_repeat("\x00", 10);
+        $encodedZeros = Base58BtcVarTime::encode($zeros);
+        $this->assertSame(str_repeat('1', 10), $encodedZeros);
+        $decodedZeros = Base58BtcVarTime::decode($encodedZeros);
+        $this->assertSame($zeros, $decodedZeros);
+    }
+
+    /**
+     * Test large values to exercise carry and overflow handling
+     */
+    public function testLargeValues(): void
+    {
+        // Maximum byte value
+        $maxByte = "\xff";
+        $this->assertSame('5Q', Base58BtcVarTime::encode($maxByte));
+        $this->assertSame($maxByte, Base58BtcVarTime::decode('5Q'));
+
+        // Two max bytes
+        $twoMax = "\xff\xff";
+        $encoded = Base58BtcVarTime::encode($twoMax);
+        $decoded = Base58BtcVarTime::decode($encoded);
+        $this->assertSame($twoMax, $decoded);
+
+        // Large random value
+        $large = str_repeat("\xff", 32);
+        $encoded = Base58BtcVarTime::encode($large);
+        $decoded = Base58BtcVarTime::decode($encoded);
+        $this->assertSame($large, $decoded);
+    }
+
+    /**
+     * Test mixed zeros and non-zeros
+     */
+    public function testMixedZerosAndData(): void
+    {
+        // Zero at start
+        $this->assertSame("\x00\x01", Base58BtcVarTime::decode('12'));
+
+        // Zero at end (should be in the binary)
+        $input = "\x01\x00";
+        $encoded = Base58BtcVarTime::encode($input);
+        $decoded = Base58BtcVarTime::decode($encoded);
+        $this->assertSame($input, $decoded);
+
+        // Zeros interspersed
+        $input2 = "\x00\x01\x00\x02\x00";
+        $encoded2 = Base58BtcVarTime::encode($input2);
+        $decoded2 = Base58BtcVarTime::decode($encoded2);
+        $this->assertSame($input2, $decoded2);
+    }
+
+    /**
+     * Test that invalid decode characters return -1 consistently
+     */
+    public function testInvalidDecodeCharacters(): void
+    {
+        // Characters just outside valid ranges
+        for ($i = 0; $i < 0x31; ++$i) {
+            $this->assertSame(-1, Base58BtcVarTime::decodeByte($i), "Byte $i should be invalid");
+        }
+
+        // Characters after 'z'
+        for ($i = 0x7B; $i < 256; ++$i) {
+            $this->assertSame(-1, Base58BtcVarTime::decodeByte($i), "Byte $i should be invalid");
+        }
+    }
+
+    /**
+     * Test div58 with edge cases
+     */
+    public function testDiv58EdgeCases(): void
+    {
+        // Zero
+        [$div, $mod] = Base58BtcVarTime::div58(0);
+        $this->assertSame(0, $div);
+        $this->assertSame(0, $mod);
+
+        // Exactly 58
+        [$div, $mod] = Base58BtcVarTime::div58(58);
+        $this->assertSame(1, $div);
+        $this->assertSame(0, $mod);
+
+        // Just under 58
+        [$div, $mod] = Base58BtcVarTime::div58(57);
+        $this->assertSame(0, $div);
+        $this->assertSame(57, $mod);
+
+        // Large value
+        [$div, $mod] = Base58BtcVarTime::div58(32767);
+        $this->assertSame(intdiv(32767, 58), $div);
+        $this->assertSame(32767 % 58, $mod);
+    }
+
+    /**
+     * Test single byte encoding/decoding for all values 0-255
+     *
+     * Also tests repeating the same byte value up to 5 times
+     *
+     * We go up to 5 because (4 * 58 < 255) but (5 * 58 > 255)
+     */
+    public function testAllSingleByteValues(): void
+    {
+        for ($i = 0; $i < 256; ++$i) {
+            $input = chr($i);
+            $encoded = Base58BtcVarTime::encode($input);
+            $decoded = Base58BtcVarTime::decode($encoded);
+            $this->assertSame($input, $decoded, "Failed for byte value $i");
+
+            // Let's also try up to 5 repeats
+            $concat = $input;
+            for ($j = 0; $j < 5; ++$j) {
+                $concat .= $input;
+                $encoded = Base58BtcVarTime::encode($concat);
+                $decoded = Base58BtcVarTime::decode($encoded);
+                $this->assertSame($concat, $decoded, "Failed for byte value $i concatenation loop {$j}");
+            }
+        }
+    }
 }

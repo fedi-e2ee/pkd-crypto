@@ -329,5 +329,351 @@ class TreeTest extends TestCase
         $this->assertFalse(Tree::isHashFunctionAllowed('md5'));
         $this->assertFalse(Tree::isHashFunctionAllowed('sha1'));
         $this->assertTrue(Tree::isHashFunctionAllowed('blake2b'));
+        // Test all allowed hash algorithms
+        $this->assertTrue(Tree::isHashFunctionAllowed('sha256'));
+        $this->assertTrue(Tree::isHashFunctionAllowed('sha384'));
+        $this->assertTrue(Tree::isHashFunctionAllowed('sha512'));
+        $this->assertTrue(Tree::isHashFunctionAllowed('sha512/224'));
+        $this->assertTrue(Tree::isHashFunctionAllowed('sha512/256'));
+        $this->assertTrue(Tree::isHashFunctionAllowed('sha3-256'));
+        $this->assertTrue(Tree::isHashFunctionAllowed('sha3-384'));
+        $this->assertTrue(Tree::isHashFunctionAllowed('sha3-512'));
+        // Test unknown/non-existent hash function
+        $this->assertFalse(Tree::isHashFunctionAllowed('not-a-real-hash'));
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testVerifyInclusionProofWithInvalidIndex(string $hashAlg): void
+    {
+        $tree = new Tree(['a', 'b', 'c', 'd'], $hashAlg);
+        $root = $tree->getRoot();
+        $this->assertNotNull($root);
+
+        // Create a proof with an index that exceeds the tree size
+        $proof = new InclusionProof(100, []);
+        $this->assertFalse($tree->verifyInclusionProof($root, 'a', $proof));
+
+        // Test with index equal to size (should fail)
+        $proof2 = new InclusionProof(4, []);
+        $this->assertFalse($tree->verifyInclusionProof($root, 'a', $proof2));
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testVerifyInclusionProofWithEmptyProof(string $hashAlg): void
+    {
+        $tree = new Tree(['a', 'b', 'c', 'd'], $hashAlg);
+        $root = $tree->getRoot();
+        $this->assertNotNull($root);
+
+        // Empty proof should fail for multi-leaf tree
+        $proof = new InclusionProof(0, []);
+        $this->assertFalse($tree->verifyInclusionProof($root, 'a', $proof));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testVerifyInclusionProofWithTamperedRoot(string $hashAlg): void
+    {
+        $tree = new Tree(['a', 'b', 'c', 'd'], $hashAlg);
+        $root = $tree->getRoot();
+        $this->assertNotNull($root);
+
+        $proof = $tree->getInclusionProof('c');
+
+        // Tamper with the root
+        $tamperedRoot = str_repeat("\x00", strlen($root));
+        $this->assertFalse($tree->verifyInclusionProof($tamperedRoot, 'c', $proof));
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testVerifyConsistencyProofOldSizeGreaterThanNew(string $hashAlg): void
+    {
+        $tree = new Tree(['a', 'b', 'c'], $hashAlg);
+        $root = $tree->getRoot();
+        $this->assertNotNull($root);
+
+        $proof = new ConsistencyProof([]);
+        // oldSize > newSize should return false
+        $this->assertFalse($tree->verifyConsistencyProof(5, 3, $root, $root, $proof));
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testVerifyConsistencyProofNegativeOldSize(string $hashAlg): void
+    {
+        $tree = new Tree(['a', 'b', 'c'], $hashAlg);
+        $root = $tree->getRoot();
+        $this->assertNotNull($root);
+
+        $proof = new ConsistencyProof([]);
+        // negative oldSize should return false
+        $this->assertFalse($tree->verifyConsistencyProof(-1, 3, $root, $root, $proof));
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testVerifyConsistencyProofSameSizeMatchingRoots(string $hashAlg): void
+    {
+        $tree = new Tree(['a', 'b', 'c'], $hashAlg);
+        $root = $tree->getRoot();
+        $this->assertNotNull($root);
+
+        $proof = new ConsistencyProof([]);
+        // same size with matching roots and empty proof should return true
+        $this->assertTrue($tree->verifyConsistencyProof(3, 3, $root, $root, $proof));
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testVerifyConsistencyProofSameSizeDifferentRoots(string $hashAlg): void
+    {
+        $tree1 = new Tree(['a', 'b', 'c'], $hashAlg);
+        $root1 = $tree1->getRoot();
+        $this->assertNotNull($root1);
+
+        $tree2 = new Tree(['x', 'y', 'z'], $hashAlg);
+        $root2 = $tree2->getRoot();
+        $this->assertNotNull($root2);
+
+        $proof = new ConsistencyProof([]);
+        // same size with different roots should return false
+        $this->assertFalse($tree1->verifyConsistencyProof(3, 3, $root1, $root2, $proof));
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testVerifyConsistencyProofZeroOldSize(string $hashAlg): void
+    {
+        $tree = new Tree(['a', 'b', 'c'], $hashAlg);
+        $root = $tree->getRoot();
+        $this->assertNotNull($root);
+
+        // oldSize == 0 with empty proof should return true
+        $proof = new ConsistencyProof([]);
+        $this->assertTrue($tree->verifyConsistencyProof(0, 3, null, $root, $proof));
+
+        // oldSize == 0 with non-empty proof should return false
+        $proofWithData = new ConsistencyProof(['something']);
+        $this->assertFalse($tree->verifyConsistencyProof(0, 3, null, $root, $proofWithData));
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testVerifyConsistencyProofNullOldRoot(string $hashAlg): void
+    {
+        $tree = new Tree(['a', 'b', 'c', 'd', 'e'], $hashAlg);
+        $root = $tree->getRoot();
+        $this->assertNotNull($root);
+
+        $proof = $tree->getConsistencyProof(3);
+        // null oldRoot with oldSize > 0 should return false
+        $this->assertFalse($tree->verifyConsistencyProof(3, 5, null, $root, $proof));
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testVerifyConsistencyProofEmptyProofWhenNeeded(string $hashAlg): void
+    {
+        $tree1 = new Tree(['a', 'b', 'c'], $hashAlg);
+        $root1 = $tree1->getRoot();
+        $this->assertNotNull($root1);
+
+        $tree2 = new Tree(['a', 'b', 'c', 'd', 'e'], $hashAlg);
+        $root2 = $tree2->getRoot();
+        $this->assertNotNull($root2);
+
+        // Empty proof when we need one should return false
+        $emptyProof = new ConsistencyProof([]);
+        $this->assertFalse($tree1->verifyConsistencyProof(3, 5, $root1, $root2, $emptyProof));
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testVerifyConsistencyProofPowerOfTwoOldSize(string $hashAlg): void
+    {
+        // Create trees where oldSize is a power of two (4)
+        $tree1 = new Tree(['a', 'b', 'c', 'd'], $hashAlg);
+        $root1 = $tree1->getRoot();
+        $this->assertNotNull($root1);
+
+        $tree2 = new Tree(['a', 'b', 'c', 'd', 'e', 'f'], $hashAlg);
+        $root2 = $tree2->getRoot();
+        $this->assertNotNull($root2);
+
+        $proof = $tree2->getConsistencyProof(4);
+        $this->assertTrue($tree2->verifyConsistencyProof(4, 6, $root1, $root2, $proof));
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testGetConsistencyProofInvalidOldSize(string $hashAlg): void
+    {
+        $tree = new Tree(['a', 'b', 'c'], $hashAlg);
+
+        // oldSize > newSize should return empty proof
+        $proof = $tree->getConsistencyProof(10);
+        $this->assertEmpty($proof->proof);
+
+        // oldSize <= 0 should return empty proof
+        $proof2 = $tree->getConsistencyProof(0);
+        $this->assertEmpty($proof2->proof);
+
+        $proof3 = $tree->getConsistencyProof(-1);
+        $this->assertEmpty($proof3->proof);
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testGetConsistencyProofSameSize(string $hashAlg): void
+    {
+        $tree = new Tree(['a', 'b', 'c'], $hashAlg);
+        $proof = $tree->getConsistencyProof(3);
+        $this->assertEmpty($proof->proof);
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testInclusionProofVariousSizes(string $hashAlg): void
+    {
+        // Test with various tree sizes to exercise different code paths
+        foreach ([2, 3, 4, 5, 7, 8, 9, 15, 16, 17] as $size) {
+            $leaves = array_map(fn($i) => "leaf$i", range(0, $size - 1));
+            $tree = new Tree($leaves, $hashAlg);
+            $root = $tree->getRoot();
+            $this->assertNotNull($root);
+
+            // Test first, middle, and last leaf
+            foreach ([0, (int)($size / 2), $size - 1] as $idx) {
+                $proof = $tree->getInclusionProof($leaves[$idx]);
+                $this->assertTrue(
+                    $tree->verifyInclusionProof($root, $leaves[$idx], $proof),
+                    "Failed for size=$size, idx=$idx"
+                );
+            }
+        }
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testConsistencyProofVariousSizes(string $hashAlg): void
+    {
+        // Create a large tree
+        $allLeaves = array_map(fn($i) => "leaf$i", range(0, 16));
+        $fullTree = new Tree($allLeaves, $hashAlg);
+        $fullRoot = $fullTree->getRoot();
+        $this->assertNotNull($fullRoot);
+
+        // Test consistency from various old sizes
+        foreach ([1, 2, 3, 4, 5, 7, 8, 9, 15, 16] as $oldSize) {
+            $oldLeaves = array_slice($allLeaves, 0, $oldSize);
+            $oldTree = new Tree($oldLeaves, $hashAlg);
+            $oldRoot = $oldTree->getRoot();
+            $this->assertNotNull($oldRoot);
+
+            $proof = $fullTree->getConsistencyProof($oldSize);
+            $this->assertTrue(
+                $fullTree->verifyConsistencyProof($oldSize, 17, $oldRoot, $fullRoot, $proof),
+                "Failed for oldSize=$oldSize"
+            );
+        }
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testEmptySubtreeRoot(string $hashAlg): void
+    {
+        $tree = new Tree(['a', 'b', 'c'], $hashAlg);
+
+        // The encoded root for an empty tree should be all zeros
+        $emptyTree = new Tree([], $hashAlg);
+        $encodedEmpty = $emptyTree->getEncodedRoot();
+        $this->assertStringContainsString('AAAA', $encodedEmpty);
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testAddLeafUpdatesRoot(string $hashAlg): void
+    {
+        $tree = new Tree([], $hashAlg);
+        $this->assertNull($tree->getRoot());
+
+        $tree->addLeaf('first');
+        $root1 = $tree->getRoot();
+        $this->assertNotNull($root1);
+
+        $tree->addLeaf('second');
+        $root2 = $tree->getRoot();
+        $this->assertNotNull($root2);
+        $this->assertNotEquals($root1, $root2);
+
+        // Compare with fresh tree
+        $freshTree = new Tree(['first', 'second'], $hashAlg);
+        $this->assertEquals($freshTree->getRoot(), $root2);
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testHashFunctions(string $hashAlg): void
+    {
+        $tree = new Tree([], $hashAlg);
+
+        // Test hashLeaf produces different results for different inputs
+        $hash1 = $tree->hashLeaf('a');
+        $hash2 = $tree->hashLeaf('b');
+        $this->assertNotEquals($hash1, $hash2);
+
+        // Test hashNode produces different results for different order
+        $nodeHash1 = $tree->hashNode($hash1, $hash2);
+        $nodeHash2 = $tree->hashNode($hash2, $hash1);
+        $this->assertNotEquals($nodeHash1, $nodeHash2);
+
+        // Verify hash length is appropriate for algorithm
+        $expectedLength = match($hashAlg) {
+            'blake2b', 'sha256' => 32,
+            'sha384' => 48,
+            'sha512' => 64,
+        };
+        $this->assertEquals($expectedLength, strlen($hash1));
     }
 }

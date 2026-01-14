@@ -28,6 +28,15 @@ use PHPUnit\Framework\TestCase;
 class RoundTripTest extends TestCase
 {
     use TestTrait;
+    use ErisPhpUnit12Trait {
+        ErisPhpUnit12Trait::getTestCaseAnnotations insteadof TestTrait;
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->erisSetupCompat();
+    }
 
     /**
      * Property: Base58 encode/decode is a roundtrip for arbitrary binary data.
@@ -322,6 +331,106 @@ class RoundTripTest extends TestCase
             $isValid = $secretKey2->getPublicKey()->verify($signature, $message);
 
             $this->assertFalse($isValid, 'Verification with wrong key should fail');
+        });
+    }
+
+    /**
+     * Property: Base58 encodeByte/decodeByte are inverses for valid range [0-57].
+     *
+     * decodeByte(encodeByte(x)) == x for x in [0, 57]
+     */
+    public function testBase58ByteCodecRoundtrip(): void
+    {
+        $this->forAll(
+            Generators::choose(0, 57)
+        )->then(function (int $value): void {
+            $encoded = Base58BtcVarTime::encodeByte($value);
+            $decoded = Base58BtcVarTime::decodeByte($encoded);
+            $this->assertSame(
+                $value,
+                $decoded,
+                "Base58 byte codec roundtrip failed for value $value"
+            );
+        });
+    }
+
+    /**
+     * Property: Base58 decodeByte returns -1 for invalid characters.
+     *
+     * decodeByte(c) == -1 for c not in Base58Alphabet
+     */
+    public function testBase58InvalidByteReturnsNegativeOne(): void
+    {
+        // Invalid byte values that are NOT in the Base58 alphabet
+        $invalidRanges = [
+            [0, 0x30],      // 0x00-0x30 (before '1')
+            [0x3A, 0x40],   // ':' to '@' (between '9' and 'A')
+            [0x49, 0x49],   // 'I'
+            [0x4F, 0x4F],   // 'O'
+            [0x5B, 0x60],   // '[' to '`' (between 'Z' and 'a')
+            [0x6C, 0x6C],   // 'l'
+            [0x7B, 0xFF],   // '{' to 0xFF (after 'z')
+        ];
+
+        foreach ($invalidRanges as [$low, $high]) {
+            $this->forAll(
+                Generators::choose($low, $high)
+            )->then(function (int $byte): void {
+                $this->assertSame(
+                    -1,
+                    Base58BtcVarTime::decodeByte($byte),
+                    "Invalid byte $byte should decode to -1"
+                );
+            });
+        }
+    }
+
+    /**
+     * Property: Base58 encoding preserves leading zeros as '1' characters.
+     *
+     * encode(\x00^n . data) starts with '1'^n
+     */
+    public function testBase58LeadingZerosPreserved(): void
+    {
+        $this->forAll(
+            Generators::choose(1, 10),  // number of leading zeros
+            Generators::string()        // data after zeros
+        )->then(function (int $numZeros, string $data): void {
+            $input = str_repeat("\x00", $numZeros) . $data;
+            $encoded = Base58BtcVarTime::encode($input);
+
+            // Encoded string should start with exactly $numZeros '1' characters
+            // (unless data also decodes to leading zeros)
+            $leadingOnes = 0;
+            for ($i = 0; $i < strlen($encoded); ++$i) {
+                if ($encoded[$i] === '1') {
+                    $leadingOnes++;
+                } else {
+                    break;
+                }
+            }
+
+            $this->assertGreaterThanOrEqual(
+                $numZeros,
+                $leadingOnes,
+                "Expected at least $numZeros leading '1' characters"
+            );
+        });
+    }
+
+    /**
+     * Property: Base58 div58 produces correct quotient and remainder.
+     *
+     * div58(x) == (x / 58, x % 58)
+     */
+    public function testBase58Div58Correctness(): void
+    {
+        $this->forAll(
+            Generators::choose(0, 32767)
+        )->then(function (int $x): void {
+            [$quotient, $remainder] = Base58BtcVarTime::div58($x);
+            $this->assertSame(intdiv($x, 58), $quotient, "Division failed for $x");
+            $this->assertSame($x % 58, $remainder, "Modulo failed for $x");
         });
     }
 }

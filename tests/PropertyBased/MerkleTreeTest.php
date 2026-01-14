@@ -17,6 +17,15 @@ use PHPUnit\Framework\TestCase;
 class MerkleTreeTest extends TestCase
 {
     use TestTrait;
+    use ErisPhpUnit12Trait {
+        ErisPhpUnit12Trait::getTestCaseAnnotations insteadof TestTrait;
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->erisSetupCompat();
+    }
 
     /**
      * Property: Empty tree has null root (before encoding).

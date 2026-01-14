@@ -25,4 +25,12 @@ class WebFingerTest extends TestCase
         $actual = (new WebFinger())->canonicalize($input);
         $this->assertSame($expected, $actual, $input);
     }
+
+    public function testRemoteFetchLocation(): void
+    {
+        $fetcher = (new WebFinger())->getCaCertFetcher();
+        $filePath = $fetcher->getLatestBundle()->getFilePath();
+        $expected = dirname(__DIR__, 2) . '/cache';
+        $this->assertStringStartsWith($expected, $filePath);
+    }
 }

@@ -12,6 +12,7 @@
         "@default": true
     },
     "threads": "max",
+    "timeout": 300,
     "minCoveredMsi": 80,
     "logs": {
         "text": "infection.log"
