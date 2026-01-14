@@ -2,38 +2,53 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\ActivityPub;
 
+use FediE2EE\PKD\Crypto\Exceptions\InputException;
 use FediE2EE\PKD\Crypto\Exceptions\JsonException;
 use FediE2EE\PKD\Crypto\Exceptions\NetworkException;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use ParagonIE\Certainty\Exception\CertaintyException;
 use ParagonIE\Certainty\Fetch;
 use ParagonIE\Certainty\RemoteFetch;
+use SodiumException;
 
 class WebFinger
 {
     protected Client $http;
+    protected Fetch $caCertFetcher;
 
     protected array $webFingerCache = [];
 
+    /**
+     * @throws CertaintyException
+     * @throws SodiumException
+     */
     public function __construct(?Client $client = null, ?Fetch $caCertFetcher = null)
     {
+        if (is_null($caCertFetcher)) {
+            $caCertFetcher = new RemoteFetch(
+                dirname(__DIR__, 2) . '/cache'
+            );
+        }
+        $this->caCertFetcher = $caCertFetcher;
         if (is_null($client)) {
-            if (is_null($caCertFetcher)) {
-                $caCertFetcher = new RemoteFetch(
-                    dirname(__DIR__, 2) . '/cache'
-                );
-            }
             $client = new Client([
                 'headers' => [
                     'Accept' => 'application/jrd+json'
                 ],
-                'verify' => $caCertFetcher->getLatestBundle()->getFilePath()
+                'verify' => $this->caCertFetcher->getLatestBundle()->getFilePath()
             ]);
         }
         $this->http = $client;
     }
 
+    public function getCaCertFetcher(): Fetch
+    {
+        return $this->caCertFetcher;
+    }
+
     /**
+     * @throws InputException
      * @throws NetworkException
      * @throws GuzzleException
      * @throws JsonException
@@ -44,21 +59,33 @@ class WebFinger
             return $this->webFingerCache[$actorUsernameOrUrl];
         }
         // Is this already canonicalized?
-        if (preg_match('#^https?://#i', $actorUsernameOrUrl)) {
+        if (preg_match('#^https?://([^/]+)/(.+?)$#i', $actorUsernameOrUrl, $m)) {
             $url = filter_var($actorUsernameOrUrl, FILTER_VALIDATE_URL);
             if (!$url || !in_array(parse_url($url, PHP_URL_SCHEME), ['http', 'https'], true)) {
                 throw new NetworkException('Invalid URL provided');
+            }
+            if (str_contains($m[1], '://')) {
+                throw new InputException('Parse error: URL contains :// after protocol');
+            }
+            if (str_contains($m[2], '://')) {
+                throw new InputException('Parse error: URL contains :// after domain');
             }
             // Normalize to HTTPS if possible
             return str_replace(['http://', 'HTTP://'], 'https://', $url);
         }
         $actorUsernameOrUrl = ltrim($actorUsernameOrUrl, '@');
         if (!str_contains($actorUsernameOrUrl, '@')) {
-            throw new NetworkException('Actor handle must contain exactly one @');
+            throw new InputException('Actor handle must contain exactly one @');
         }
         [$username, $domain] = explode('@', $actorUsernameOrUrl, 2);
         if (empty($username) || empty($domain)) {
-            throw new \InvalidArgumentException('Invalid actor handle format');
+            throw new InputException('Invalid actor handle format');
+        }
+        if (str_contains($domain, '@')) {
+            throw new InputException('Parse error: domain contains @');
+        }
+        if (str_contains($username, '://')) {
+            throw new InputException('Parse error: username contains ://');
         }
 
         // Optional: Support internationalized domain names

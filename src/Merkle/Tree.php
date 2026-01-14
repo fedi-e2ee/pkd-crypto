@@ -320,7 +320,7 @@ class Tree
      * @param int $n
      * @return int
      */
-    protected static function getSplitPoint(int $n): int
+    public static function getSplitPoint(int $n): int
     {
         if ($n < 2) {
             return 0;

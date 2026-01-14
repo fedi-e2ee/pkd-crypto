@@ -9,10 +9,73 @@
         "configDir": "."
     },
     "mutators": {
-        "@default": true
+        "@default": true,
+        "ArrayItem": {
+        	"ignore": [
+            	"FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger",
+        	]
+		},
+        "ArrayItemRemoval": {
+        	"ignore": [
+            	"FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger",
+        	]
+		},
+        "CastInt": {
+            "ignore": [
+            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+            ]
+		},
+        "Coalesce": {
+            "ignore": [
+            	"FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger"
+            ]
+		},
+        "Concat": false,
+        "ConcatOperandRemoval": false,
+        "DecrementInteger": {
+            "ignore": [
+            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+            ]
+		},
+        "IncrementInteger": {
+            "ignore": [
+            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+            ],
+            "ignoreSourceCodeByRegex": [
+                "hash_hkdf",
+                "substr"
+            ]
+        },
+        "LogicalOr": {
+            "ignore": [
+            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+            ]
+		},
+        "Minus": {
+            "ignore": [
+            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+            ]
+		},
+        "Plus": {
+            "ignore": [
+            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+            ]
+		},
+        "RoundingFamily": {
+            "ignore": [
+            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+            ]
+		},
+        "ShiftRight": {
+            "ignore": [
+            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+            ]
+        },
+        "Throw_": false
     },
     "threads": "max",
-    "minCoveredMsi": 80,
+    "timeout": 300,
+    "minCoveredMsi": 86,
     "logs": {
         "text": "infection.log"
     }

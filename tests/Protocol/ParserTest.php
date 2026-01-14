@@ -12,7 +12,20 @@ use FediE2EE\PKD\Crypto\Exceptions\{
 };
 use FediE2EE\PKD\Crypto\Protocol\{
     Actions\AddKey,
+    Actions\AddAuxData,
+    Actions\Fireproof,
+    Actions\MoveIdentity,
+    Actions\RevokeAuxData,
+    Actions\RevokeKey,
+    Actions\UndoFireproof,
+    Bundle,
     EncryptedActions\EncryptedAddKey,
+    EncryptedActions\EncryptedAddAuxData,
+    EncryptedActions\EncryptedFireproof,
+    EncryptedActions\EncryptedMoveIdentity,
+    EncryptedActions\EncryptedRevokeAuxData,
+    EncryptedActions\EncryptedRevokeKey,
+    EncryptedActions\EncryptedUndoFireproof,
     Handler,
     ParsedMessage,
     Parser
@@ -139,5 +152,58 @@ class ParserTest extends TestCase
     {
         $this->expectException(BundleException::class);
         (new Parser())->parseUnverifiedForActivityPub($input);
+    }
+
+    /**
+     * Test getEncryptedMessage for each action type.
+     * This kills MatchArmRemoval mutations.
+     */
+    public static function actionTypeProvider(): array
+    {
+        return [
+            ['AddKey', EncryptedAddKey::class],
+            ['AddAuxData', EncryptedAddAuxData::class],
+            ['Fireproof', EncryptedFireproof::class],
+            ['MoveIdentity', EncryptedMoveIdentity::class],
+            ['RevokeAuxData', EncryptedRevokeAuxData::class],
+            ['RevokeKey', EncryptedRevokeKey::class],
+            ['UndoFireproof', EncryptedUndoFireproof::class],
+        ];
+    }
+
+    #[DataProvider("actionTypeProvider")]
+    public function testGetEncryptedMessageForActionType(string $action, string $expectedClass): void
+    {
+        $keyMap = new AttributeKeyMap();
+        $keyMap->addKey('test', SymmetricKey::generate());
+
+        $bundle = new Bundle(
+            action: $action,
+            message: ['encrypted' => Base64UrlSafe::encodeUnpadded(random_bytes(32))],
+            recentMerkleRoot: 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(random_bytes(32)),
+            signature: random_bytes(64),
+            symmetricKeys: $keyMap
+        );
+
+        $parser = new Parser();
+        $encrypted = $parser->getEncryptedMessage($bundle);
+        $this->assertInstanceOf($expectedClass, $encrypted);
+    }
+
+    public function testGetEncryptedMessageUnknownAction(): void
+    {
+        $keyMap = new AttributeKeyMap();
+        $bundle = new Bundle(
+            action: 'UnknownAction',
+            message: [],
+            recentMerkleRoot: 'pkd-mr-v1:test',
+            signature: random_bytes(64),
+            symmetricKeys: $keyMap
+        );
+
+        $parser = new Parser();
+        $this->expectException(CryptoException::class);
+        $this->expectExceptionMessage('Unknown action: UnknownAction');
+        $parser->getEncryptedMessage($bundle);
     }
 }

@@ -17,6 +17,15 @@ use PHPUnit\Framework\TestCase;
 class RevocationTest extends TestCase
 {
     use TestTrait;
+    use ErisPhpUnit12Trait {
+        ErisPhpUnit12Trait::getTestCaseAnnotations insteadof TestTrait;
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->erisSetupCompat();
+    }
 
     /**
      * Property: Revocation token created from key verifies with same key.
