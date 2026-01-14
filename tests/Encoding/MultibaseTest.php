@@ -19,4 +19,17 @@ class MultibaseTest extends TestCase
 
         $this->assertSame(Multibase::decode($base58), Multibase::decode($default));
     }
+
+    public function testPublicFacingApi(): void
+    {
+        $random = random_bytes(16);
+
+        // Default should be "u":
+        $encoded = Multibase::encode($random);
+        $this->assertSame('u', $encoded[0]);
+
+        // Default should be "u":
+        $encoded = Multibase::encode($random, true);
+        $this->assertSame('z', $encoded[0]);
+    }
 }

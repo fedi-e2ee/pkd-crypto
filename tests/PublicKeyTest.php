@@ -7,6 +7,8 @@ use FediE2EE\PKD\Crypto\PublicKey;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use SodiumException;
+use function Sodium\crypto_sign_publickey;
 
 #[CoversClass(PublicKey::class)]
 class PublicKeyTest extends TestCase
@@ -32,6 +34,23 @@ class PublicKeyTest extends TestCase
         $this->expectException(CryptoException::class);
         $this->expectExceptionMessage('Invalid public key: algorithm prefix required');
         PublicKey::fromString('foo');
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws SodiumException
+     */
+    public function testEncodePem(): void
+    {
+        $keypair = sodium_crypto_sign_seed_keypair(
+            sodium_crypto_generichash('phpunit PublicKeyTest.php')
+        );
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $encoded = $pk->encodePem();
+        $expected = "-----BEGIN PUBLIC KEY-----\n" .
+            'MCowBQYDK2VwAyEA/oXGYTQRev2uQ5jJvmubXo+moXZFmhKPcnHLFllM0K0=' . "\n" .
+        "-----END PUBLIC KEY-----";
+        $this->assertSame($expected, $encoded);
     }
 
     public function testTooShort(): void

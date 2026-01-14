@@ -109,5 +109,11 @@ class UtilTraitTest extends TestCase
 
         // Test constantTimeSelect is publicly accessible
         $this->assertSame('left', $helper->constantTimeSelect(1, 'left', 'rght'));
+
+        // Test stringToByteArray is publicly accessible
+        $this->assertSame([116, 101, 115, 116], $helper->stringToByteArray('test'));
+
+        // Test stripNewLines is publicly accessible
+        $this->assertSame("line1line2", $helper::stripNewlines("line1\r\nline2"));
     }
 }
