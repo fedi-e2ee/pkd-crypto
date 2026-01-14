@@ -34,8 +34,8 @@ class Bundle
             throw new BundleException('Empty JSON string');
         }
         $data = json_decode($json, true);
-        if (is_null($data)) {
-            throw new BundleException('Invalid JSON string');
+        if (!is_array($data)) {
+            throw new BundleException('Invalid JSON string: ' . json_last_error_msg());
         }
         self::assertAllArrayKeysExist(
             $data,
