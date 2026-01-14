@@ -33,7 +33,7 @@
         "Concat": {
         	"ignore": [
             	"FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger",
-        	].
+        	],
         	"ignoreSourcECodeByRegex": [
         		"throw.*Exception\("
         	]
