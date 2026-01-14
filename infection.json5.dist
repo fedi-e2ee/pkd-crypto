@@ -43,7 +43,7 @@
             	"FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger",
         	],
         	"ignoreSourcECodeByRegex": [
-        		"throw.*Exception\("
+        		"throw.*Exception\\("
         	]
         },
         "DecrementInteger": {
