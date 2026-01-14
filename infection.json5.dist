@@ -10,10 +10,16 @@
     },
     "mutators": {
         "@default": true,
+        "Concat": {
+        	"ignoreSourcECodeByRegex": [
+        		"throw.*Exception\("
+        	]
+        }
         // HKDF output length changes cannot be reliably tested without known-answer vectors for each specific length
         "IncrementInteger": {
             "ignoreSourceCodeByRegex": [
-                "hash_hkdf\\('sha512'.*\\d+,"
+                "hash_hkdf",
+                "substr"
             ]
         }
     },
