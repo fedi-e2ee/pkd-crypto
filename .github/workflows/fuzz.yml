@@ -43,22 +43,22 @@ jobs:
       - name: Run FuzzMerkleTree
         run: |
           php-fuzzer fuzz --max-runs "$FUZZ_RUNS" fuzzing/FuzzMerkleTree.php
-          for f in crash-*.txt; do [ -e "$f" ] && mv "$f" "${f/crash-/crash-FuzzMerkleTree-}"; done
+          shopt -s nullglob; for f in crash-*.txt; do [ -e "$f" ] && mv "$f" "${f/crash-/crash-FuzzMerkleTree-}"; done
 
       - name: Run FuzzEncoding
         run: |
           php-fuzzer fuzz --max-runs "$FUZZ_RUNS" fuzzing/FuzzEncoding.php
-          for f in crash-*.txt; do [ -e "$f" ] && mv "$f" "${f/crash-/crash-FuzzEncoding-}"; done
+          shopt -s nullglob; for f in crash-*.txt; do [ -e "$f" ] && mv "$f" "${f/crash-/crash-FuzzEncoding-}"; done
 
       - name: Run FuzzProtocol
         run: |
           php-fuzzer fuzz --max-runs "$FUZZ_RUNS" fuzzing/FuzzProtocol.php
-          for f in crash-*.txt; do [ -e "$f" ] && mv "$f" "${f/crash-/crash-FuzzProtocol-}"; done
+          shopt -s nullglob; for f in crash-*.txt; do [ -e "$f" ] && mv "$f" "${f/crash-/crash-FuzzProtocol-}"; done
 
       - name: Run FuzzAttributeEncryption
         run: |
           php-fuzzer fuzz --max-runs "$FUZZ_RUNS_AE" fuzzing/FuzzAttributeEncryption.php
-          for f in crash-*.txt; do [ -e "$f" ] && mv "$f" "${f/crash-/crash-FuzzAttributeEncryption-}"; done
+          shopt -s nullglob; for f in crash-*.txt; do [ -e "$f" ] && mv "$f" "${f/crash-/crash-FuzzAttributeEncryption-}"; done
 
       - name: Check for crashes
         if: always()
