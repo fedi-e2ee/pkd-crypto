@@ -58,6 +58,7 @@ class WebFingerTest extends TestCase
     /**
      * @throws CertaintyException
      * @throws GuzzleException
+     * @throws InputException
      * @throws JsonException
      * @throws NetworkException
      * @throws SodiumException
@@ -90,6 +91,7 @@ class WebFingerTest extends TestCase
     {
         return [
             ['https://user@exmaple.com'],
+            ['https://example.com/users/http://example.net/users/alice'],
             ['userhttps://foo.com@example.com@example.net']
         ];
     }
@@ -111,6 +113,7 @@ class WebFingerTest extends TestCase
     /**
      * @throws CertaintyException
      * @throws GuzzleException
+     * @throws InputException
      * @throws JsonException
      * @throws NetworkException
      * @throws SodiumException
@@ -128,6 +131,7 @@ class WebFingerTest extends TestCase
     /**
      * @throws CertaintyException
      * @throws GuzzleException
+     * @throws InputException
      * @throws JsonException
      * @throws NetworkException
      * @throws SodiumException
@@ -164,6 +168,7 @@ class WebFingerTest extends TestCase
     /**
      * @throws CertaintyException
      * @throws GuzzleException
+     * @throws InputException
      * @throws JsonException
      * @throws NetworkException
      * @throws SodiumException
@@ -199,6 +204,7 @@ class WebFingerTest extends TestCase
     /**
      * @throws CertaintyException
      * @throws GuzzleException
+     * @throws InputException
      * @throws JsonException
      * @throws NetworkException
      * @throws SodiumException
@@ -215,6 +221,7 @@ class WebFingerTest extends TestCase
     /**
      * @throws CertaintyException
      * @throws GuzzleException
+     * @throws InputException
      * @throws JsonException
      * @throws NetworkException
      * @throws SodiumException
@@ -231,6 +238,7 @@ class WebFingerTest extends TestCase
     /**
      * @throws CertaintyException
      * @throws GuzzleException
+     * @throws InputException
      * @throws JsonException
      * @throws NetworkException
      * @throws SodiumException
@@ -247,6 +255,7 @@ class WebFingerTest extends TestCase
     /**
      * @throws CertaintyException
      * @throws GuzzleException
+     * @throws InputException
      * @throws JsonException
      * @throws NetworkException
      * @throws SodiumException
@@ -267,6 +276,7 @@ class WebFingerTest extends TestCase
     /**
      * @throws CertaintyException
      * @throws GuzzleException
+     * @throws InputException
      * @throws JsonException
      * @throws NetworkException
      * @throws SodiumException
@@ -287,6 +297,7 @@ class WebFingerTest extends TestCase
     /**
      * @throws CertaintyException
      * @throws GuzzleException
+     * @throws InputException
      * @throws JsonException
      * @throws NetworkException
      * @throws SodiumException
@@ -307,6 +318,7 @@ class WebFingerTest extends TestCase
     /**
      * @throws CertaintyException
      * @throws GuzzleException
+     * @throws InputException
      * @throws JsonException
      * @throws NetworkException
      * @throws SodiumException
@@ -340,6 +352,7 @@ class WebFingerTest extends TestCase
     /**
      * @throws CertaintyException
      * @throws GuzzleException
+     * @throws InputException
      * @throws JsonException
      * @throws NetworkException
      * @throws SodiumException
@@ -374,6 +387,7 @@ class WebFingerTest extends TestCase
     /**
      * @throws CertaintyException
      * @throws GuzzleException
+     * @throws InputException
      * @throws JsonException
      * @throws NetworkException
      * @throws SodiumException
@@ -408,6 +422,7 @@ class WebFingerTest extends TestCase
     /**
      * @throws CertaintyException
      * @throws GuzzleException
+     * @throws InputException
      * @throws JsonException
      * @throws NetworkException
      * @throws SodiumException
@@ -442,6 +457,7 @@ class WebFingerTest extends TestCase
     /**
      * @throws CertaintyException
      * @throws GuzzleException
+     * @throws InputException
      * @throws JsonException
      * @throws NetworkException
      * @throws SodiumException
@@ -472,6 +488,7 @@ class WebFingerTest extends TestCase
     /**
      * @throws CertaintyException
      * @throws GuzzleException
+     * @throws InputException
      * @throws JsonException
      * @throws NetworkException
      * @throws SodiumException
@@ -502,6 +519,7 @@ class WebFingerTest extends TestCase
     /**
      * @throws CertaintyException
      * @throws GuzzleException
+     * @throws InputException
      * @throws JsonException
      * @throws NetworkException
      * @throws SodiumException
@@ -532,6 +550,7 @@ class WebFingerTest extends TestCase
     /**
      * @throws CertaintyException
      * @throws GuzzleException
+     * @throws InputException
      * @throws JsonException
      * @throws NetworkException
      * @throws SodiumException
@@ -551,6 +570,7 @@ class WebFingerTest extends TestCase
     /**
      * @throws CertaintyException
      * @throws GuzzleException
+     * @throws InputException
      * @throws JsonException
      * @throws NetworkException
      * @throws SodiumException

@@ -59,20 +59,23 @@ class WebFinger
             return $this->webFingerCache[$actorUsernameOrUrl];
         }
         // Is this already canonicalized?
-        if (preg_match('#^https?://#i', $actorUsernameOrUrl)) {
+        if (preg_match('#^https?://([^.]+)/(.+?)$#i', $actorUsernameOrUrl, $m)) {
             $url = filter_var($actorUsernameOrUrl, FILTER_VALIDATE_URL);
             if (!$url || !in_array(parse_url($url, PHP_URL_SCHEME), ['http', 'https'], true)) {
                 throw new NetworkException('Invalid URL provided');
             }
-            if (str_contains($actorUsernameOrUrl, '@')) {
-                throw new InputException('Parse error: URL contains @');
+            if (str_contains($m[1], '://')) {
+                throw new InputException('Parse error: URL contains :// after protocol');
+            }
+            if (str_contains($m[2], '://')) {
+                throw new InputException('Parse error: URL contains :// after domain');
             }
             // Normalize to HTTPS if possible
             return str_replace(['http://', 'HTTP://'], 'https://', $url);
         }
         $actorUsernameOrUrl = ltrim($actorUsernameOrUrl, '@');
         if (!str_contains($actorUsernameOrUrl, '@')) {
-            throw new NetworkException('Actor handle must contain exactly one @');
+            throw new InputException('Actor handle must contain exactly one @');
         }
         [$username, $domain] = explode('@', $actorUsernameOrUrl, 2);
         if (empty($username) || empty($domain)) {
