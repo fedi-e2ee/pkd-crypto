@@ -4,11 +4,14 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests\Protocol;
 
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
+use FediE2EE\PKD\Crypto\Exceptions\BundleException;
+use FediE2EE\PKD\Crypto\Exceptions\InputException;
 use FediE2EE\PKD\Crypto\Protocol\Actions\AddKey;
 use FediE2EE\PKD\Crypto\Protocol\Bundle;
 use FediE2EE\PKD\Crypto\Protocol\SignedMessage;
 use FediE2EE\PKD\Crypto\SecretKey;
 use ParagonIE\ConstantTime\Base64UrlSafe;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class BundleTest extends TestCase
@@ -34,5 +37,20 @@ class BundleTest extends TestCase
 
         $signedFromBundle = $bundle->toSignedMessage();
         $this->assertTrue($signedFromBundle->verify($pk));
+    }
+
+    public static function invalidFromFuzzer(): array
+    {
+       return [
+           [sodium_hex2bin('18181818182d2d302d2d2d2d2d2d7e50f3')],
+           [sodium_hex2bin('402f2f2f2f2f2f2f2f2f2f2f2f2f30')],
+       ];
+    }
+
+    #[DataProvider("invalidFromFuzzer")]
+    public function testInvalidInput(string $input): void
+    {
+        $this->expectException(BundleException::class);
+        Bundle::fromJson($input);
     }
 }

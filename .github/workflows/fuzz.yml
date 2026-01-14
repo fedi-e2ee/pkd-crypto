@@ -5,6 +5,8 @@ on:
     branches:
       - main
   pull_request:
+    branches:
+      - main
   schedule:
     - cron: '23 7 * * *'  # Run fuzzing daily at 07:23 UTC
 
@@ -14,6 +16,10 @@ permissions:
 jobs:
   fuzz:
     runs-on: ubuntu-latest
+    env:
+      # 500k runs for releases, 50k for regular CI
+      FUZZ_RUNS: ${{ startsWith(github.ref, 'refs/tags/') && '500000' || '50000' }}
+      FUZZ_RUNS_AE: ${{ startsWith(github.ref, 'refs/tags/') && '10000' || '5000' }}
     steps:
       - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955  # v4.3.0
         with:
@@ -35,13 +41,39 @@ jobs:
           composer-options: "--optimize-autoloader"
 
       - name: Run FuzzMerkleTree
-        run: php-fuzzer fuzz --max-runs 50000 fuzzing/FuzzMerkleTree.php
+        run: |
+          php-fuzzer fuzz --max-runs "$FUZZ_RUNS" fuzzing/FuzzMerkleTree.php
+          shopt -s nullglob; for f in crash-*.txt; do [ -e "$f" ] && mv "$f" "${f/crash-/fuzzed-FuzzMerkleTree-}"; done
 
       - name: Run FuzzEncoding
-        run: php-fuzzer fuzz --max-runs 50000 fuzzing/FuzzEncoding.php
+        run: |
+          php-fuzzer fuzz --max-runs "$FUZZ_RUNS" fuzzing/FuzzEncoding.php
+          shopt -s nullglob; for f in crash-*.txt; do [ -e "$f" ] && mv "$f" "${f/crash-/fuzzed-FuzzEncoding-}"; done
 
       - name: Run FuzzProtocol
-        run: php-fuzzer fuzz --max-runs 50000 fuzzing/FuzzProtocol.php
+        run: |
+          php-fuzzer fuzz --max-runs "$FUZZ_RUNS" fuzzing/FuzzProtocol.php
+          shopt -s nullglob; for f in crash-*.txt; do [ -e "$f" ] && mv "$f" "${f/crash-/fuzzed-FuzzProtocol-}"; done
 
       - name: Run FuzzAttributeEncryption
-        run: php-fuzzer fuzz --max-runs 5000 fuzzing/FuzzAttributeEncryption.php
+        run: |
+          php-fuzzer fuzz --max-runs "$FUZZ_RUNS_AE" fuzzing/FuzzAttributeEncryption.php
+          shopt -s nullglob; for f in crash-*.txt; do [ -e "$f" ] && mv "$f" "${f/crash-/fuzzed-FuzzAttributeEncryption-}"; done
+
+      - name: Check for crashes
+        if: always()
+        run: |
+          if compgen -G "fuzzed-*.txt" > /dev/null; then
+            echo "::error::Fuzzing found crashes"
+            echo "=== Crash files found ==="
+            for f in fuzzed-*.txt; do
+              echo "--- $f ---"
+              cat "$f"
+              echo ""
+              echo "Hex dump:"
+              xxd "$f"
+              echo ""
+            done
+            exit 1
+          fi
+          echo "No crashes detected"
