@@ -4,12 +4,11 @@ namespace FediE2EE\PKD\Crypto\Fuzzing;
 
 use FediE2EE\PKD\Crypto\Exceptions\BundleException;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
+use FediE2EE\PKD\Crypto\Exceptions\InputException;
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use FediE2EE\PKD\Crypto\Exceptions\ParserException;
 use FediE2EE\PKD\Crypto\Protocol\Bundle;
 use FediE2EE\PKD\Crypto\Protocol\Parser;
-use FediE2EE\PKD\Crypto\PublicKey;
-use FediE2EE\PKD\Crypto\SecretKey;
 use PhpFuzzer\Config;
 use SodiumException;
 use TypeError;
@@ -41,7 +40,7 @@ $config->setTarget(function (string $input): void {
     try {
         $bundle = Parser::fromJson($input);
         assert(is_string($bundle->getAction()));
-    } catch (TypeError|BundleException) {
+    } catch (TypeError|BundleException|InputException) {
         // Expected for malformed data
     }
 

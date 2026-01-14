@@ -5,6 +5,7 @@ namespace FediE2EE\PKD\Crypto\Protocol;
 use FediE2EE\PKD\Crypto\Exceptions\{
     BundleException,
     CryptoException,
+    InputException,
     NotImplementedException,
     ParserException
 };
@@ -109,6 +110,7 @@ class Parser
 
     /**
      * @throws BundleException
+     * @throws InputException
      */
     public static function fromJson(string $json): Bundle
     {

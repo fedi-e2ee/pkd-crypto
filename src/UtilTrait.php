@@ -3,10 +3,30 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto;
 
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
+use FediE2EE\PKD\Crypto\Exceptions\InputException;
 use ParagonIE_Sodium_Core_Util;
 
 trait UtilTrait
 {
+    /**
+     * @throws InputException
+     */
+    public static function assertAllArrayKeysExist(array $target, string ...$arrayKeys): void
+    {
+        if (!self::allArrayKeysExist($target, ...$arrayKeys)) {
+            throw new InputException('All expected keys do not exist');
+        }
+    }
+
+    public static function allArrayKeysExist(array $target, string ...$arrayKeys): bool
+    {
+        $allExist = true;
+        foreach ($arrayKeys as $arrayKey) {
+            $allExist = array_key_exists($arrayKey, $target) && $allExist;
+        }
+        return $allExist;
+    }
+
     /**
      * @param int $select 1 -> returns left, 0 -> returns right
      *

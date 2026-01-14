@@ -1,17 +1,20 @@
 <?php
 declare(strict_types=1);
-
 namespace FediE2EE\PKD\Crypto\Protocol;
 
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 use FediE2EE\PKD\Crypto\Exceptions\BundleException;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
+use FediE2EE\PKD\Crypto\Exceptions\InputException;
 use FediE2EE\PKD\Crypto\Exceptions\JsonException;
 use FediE2EE\PKD\Crypto\SymmetricKey;
+use FediE2EE\PKD\Crypto\UtilTrait;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 
 class Bundle
 {
+    use UtilTrait;
+
     public function __construct(
         private readonly string          $action,
         private readonly array           $message,
@@ -23,6 +26,7 @@ class Bundle
 
     /**
      * @throws BundleException
+     * @throws InputException
      */
     public static function fromJson(string $json): self
     {
@@ -31,8 +35,15 @@ class Bundle
         }
         $data = json_decode($json, true);
         if (is_null($data)) {
-            throw new  BundleException('Invalid JSON string');
+            throw new BundleException('Invalid JSON string');
         }
+        self::assertAllArrayKeysExist(
+            $data,
+            'symmetric-keys',
+            'action',
+            'message',
+            'recent-merkle-root',
+        );
         $symmetricKeys = new AttributeKeyMap();
         foreach ($data['symmetric-keys'] as $attribute => $key) {
             $symmetricKeys->addKey(

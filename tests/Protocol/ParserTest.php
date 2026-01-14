@@ -4,6 +4,7 @@ namespace FediE2EE\PKD\Crypto\Tests\Protocol;
 
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 use FediE2EE\PKD\Crypto\Exceptions\{
+    BundleException,
     CryptoException,
     JsonException,
     NotImplementedException,
@@ -14,10 +15,15 @@ use FediE2EE\PKD\Crypto\Protocol\{
     EncryptedActions\EncryptedAddKey,
     Handler,
     ParsedMessage,
-    Parser,
+    Parser
 };
 use ParagonIE\ConstantTime\Base64UrlSafe;
-use FediE2EE\PKD\Crypto\{Merkle\Tree, PublicKey, SecretKey, SymmetricKey};
+use FediE2EE\PKD\Crypto\{
+    Merkle\Tree,
+    PublicKey,
+    SecretKey,
+    SymmetricKey
+};
 use ParagonIE\HPKE\{
     Factory,
     HPKEException,
@@ -25,6 +31,7 @@ use ParagonIE\HPKE\{
     KEM\DHKEM\DecapsKey
 };
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use SodiumException;
 
@@ -110,5 +117,26 @@ class ParserTest extends TestCase
         $parser = new Parser();
         $parsed = $parser->decryptAndParse($encrypted, $decapsKey, $encapsKey, $hpke, $publicKey);
         $this->assertInstanceOf(ParsedMessage::class, $parsed);
+    }
+
+    public static function invalidFromFuzzer(): array
+    {
+        return [
+            [sodium_hex2bin('18181818182d2d302d2d2d2d2d2d7e50f3')],
+        ];
+    }
+
+    #[DataProvider("invalidFromFuzzer")]
+    public function testInvalidInput(string $input): void
+    {
+        $this->expectException(BundleException::class);
+        Parser::fromJson($input);
+    }
+
+    #[DataProvider("invalidFromFuzzer")]
+    public function testInvalidInputForActivityPub(string $input): void
+    {
+        $this->expectException(BundleException::class);
+        (new Parser())->parseUnverifiedForActivityPub($input);
     }
 }
