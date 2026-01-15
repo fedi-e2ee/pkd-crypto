@@ -34,12 +34,12 @@
         "ConcatOperandRemoval": false,
         "DecrementInteger": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
 		},
         "IncrementInteger": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ],
             "ignoreSourceCodeByRegex": [
                 "hash_hkdf",
@@ -48,27 +48,27 @@
         },
         "LogicalOr": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
 		},
         "Minus": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
 		},
         "Plus": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
 		},
         "RoundingFamily": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
 		},
         "ShiftRight": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
         },
         "Throw_": false
