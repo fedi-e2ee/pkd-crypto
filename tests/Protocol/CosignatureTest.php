@@ -36,12 +36,20 @@ class CosignatureTest extends TestCase
             'signature' =>
                 'Ex9HPWvWP2BO8_7S1qyC0qDPsJQgJe1pkqURYdiTIMBjH3ew5kYayauk9pXoSdiHKe1aQklI3ruamHSd1EPsAg',
         ]);
+        $beforeAppend = $cosignature->getTree()->toJson();
         $cosignature->append($record, $expected);
+        $afterAppend = $cosignature->getTree()->toJson();
         $this->assertSame($expected, $cosignature->getTree()->getEncodedRoot());
+        $this->assertNotSame($beforeAppend, $afterAppend);
 
         $cosigned = $cosignature->cosign($sk, 'http://localhost');
         $this->assertIsString($cosigned);
         $results = Cosignature::verifyCosignature($sk->getPublicKey(), $cosigned);
         $this->assertIsArray($results);
+        $this->assertArrayHasKey('!pkd-context', $results);
+        $this->assertArrayHasKey('current-time', $results);
+        $this->assertArrayHasKey('hostname', $results);
+        $this->assertArrayHasKey('merkle-root', $results);
+        $this->assertArrayHasKey('signature', $results);
     }
 }

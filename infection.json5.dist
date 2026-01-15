@@ -11,71 +11,133 @@
     "mutators": {
         "@default": true,
         "ArrayItem": {
-        	"ignore": [
-            	"FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger",
-        	]
-		},
+            "ignore": [
+                "FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger",
+            ]
+        },
         "ArrayItemRemoval": {
-        	"ignore": [
-            	"FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger",
-        	]
-		},
+            "ignore": [
+                "FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger",
+            ]
+        },
+        "Assignment": {
+            "ignore": [
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+            ]
+        },
+        "BitwiseAnd": {
+            "ignore": [
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+            ],
+            "ignoreSourceCodeByRegex": [
+                ".*JSON_.*"
+            ]
+        },
+        "BitwiseOr": {
+            "ignore": [
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+            ],
+            "ignoreSourceCodeByRegex": [
+                ".*JSON_.*"
+            ]
+        },
         "CastInt": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
-		},
+        },
+        "Division": {
+            "ignore": [
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+            ]
+        },
         "Coalesce": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger"
+                "FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger"
             ]
-		},
+        },
         "Concat": false,
         "ConcatOperandRemoval": false,
         "DecrementInteger": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
-            ]
-		},
-        "IncrementInteger": {
-            "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+                "FediE2EE\\PKD\\Merkle\\Tree",
+                "FediE2EE\\PKD\\Merkle\\IncrementalTree",
+                "FediE2EE\\PKD\\PublicKey::encodePem",
+                "FediE2EE\\PKD\\UtilTrait::stripNewlines",
+                "*::stripNewlines",
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ],
             "ignoreSourceCodeByRegex": [
-                "hash_hkdf",
-                "substr"
+            	".*chunk_split.*"
+            ]
+        },
+        "IncrementInteger": {
+            "ignore": [
+                "FediE2EE\\PKD\\Merkle\\Tree",
+                "FediE2EE\\PKD\\Merkle\\IncrementalTree",
+                "FediE2EE\\PKD\\PublicKey::encodePem",
+                "FediE2EE\\PKD\\UtilTrait::stripNewlines",
+                "*::stripNewlines",
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+            ],
+            "ignoreSourceCodeByRegex": [
+            	".*chunk_split.*",
+                ".*hash_hkdf.*",
+                ".*substr.*"
             ]
         },
         "LogicalOr": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+                "FediE2EE\\PKD\\Merkle\\Tree",
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
-		},
+        },
         "Minus": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
-		},
+        },
+        "Modulus": {
+            "ignore": [
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+            ]
+        },
+        "Multiplication": {
+            "ignore": [
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+            ]
+        },
         "Plus": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
-		},
+        },
+        "ReturnRemoval": {
+            "ignore": [
+                "FediE2EE\\PKD\\Merkle\\Tree",
+                "FediE2EE\\PKD\\Merkle\\IncrementalTree"
+            ],
+            "ignoreSourceCodeByRegex": [
+            	".*chunk_split.*",
+                ".*hash_hkdf.*",
+                ".*substr.*"
+            ]
+        },
         "RoundingFamily": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
-		},
+        },
         "ShiftRight": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
         },
         "Throw_": false
     },
     "threads": "max",
-    "timeout": 300,
-    "minCoveredMsi": 86,
+    "timeout": 600,
+    "minCoveredMsi": 90,
     "logs": {
         "text": "infection.log"
     }

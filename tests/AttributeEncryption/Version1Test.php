@@ -253,4 +253,53 @@ class Version1Test extends TestCase
             }
         }
     }
+
+    public function testEncryptedStructureLengths(): void
+    {
+        [$v1, $ikm, $merkle] = $this->getBasicData();
+        $testCases = [
+            ['plaintext' => '', 'label' => 'empty'],
+            ['plaintext' => 'x', 'label' => 'single char'],
+            ['plaintext' => 'test message', 'label' => 'short message'],
+            ['plaintext' => str_repeat('a', 100), 'label' => '100 bytes'],
+        ];
+
+        foreach ($testCases as $testCase) {
+            $plaintext = $testCase['plaintext'];
+            $label = $testCase['label'];
+
+            $encrypted = $v1->encryptAttribute('test-attr', $plaintext, $ikm, $merkle);
+            $expectedLength = 1 + 32 + 32 + 32 + strlen($plaintext);
+            $this->assertSame(
+                $expectedLength,
+                strlen($encrypted),
+                "Encrypted length mismatch for {$label}: expected {$expectedLength}, got " . strlen($encrypted)
+            );
+            $this->assertSame(
+                "\x01",
+                $encrypted[0],
+                "Version byte should be 0x01 for {$label}"
+            );
+            $decrypted = $v1->decryptAttribute('test-attr', $encrypted, $ikm, $merkle);
+            $this->assertSame($plaintext, $decrypted, "Decryption failed for {$label}");
+        }
+    }
+
+    public function testEncryptionSelectsRandomNonces(): void
+    {
+        [$v1, $ikm, $merkle] = $this->getBasicData();
+        $plaintext = 'same plaintext';
+        $encrypted1 = $v1->encryptAttribute('attr', $plaintext, $ikm, $merkle);
+        $encrypted2 = $v1->encryptAttribute('attr', $plaintext, $ikm, $merkle);
+
+        $this->assertNotSame(
+            $encrypted1,
+            $encrypted2,
+            'Encrypting same plaintext twice should produce different ciphertexts'
+        );
+        $decrypted1 = $v1->decryptAttribute('attr', $encrypted1, $ikm, $merkle);
+        $decrypted2 = $v1->decryptAttribute('attr', $encrypted2, $ikm, $merkle);
+        $this->assertSame($plaintext, $decrypted1);
+        $this->assertSame($plaintext, $decrypted2);
+    }
 }

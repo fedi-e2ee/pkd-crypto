@@ -22,6 +22,7 @@ class TreeTest extends TestCase
         return [
             ['blake2b'],
             ['sha256'],
+            ['sha3-256'],
             ['sha384'],
             ['sha512'],
         ];
@@ -49,7 +50,7 @@ class TreeTest extends TestCase
         $tree = new Tree([], $hashAlg);
 
         $expected = match($hashAlg) {
-            'blake2b', 'sha256' =>
+            'blake2b', 'sha256', 'sha3-256' =>
                 'pkd-mr-v1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
             'sha384' =>
                 'pkd-mr-v1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
@@ -77,6 +78,7 @@ class TreeTest extends TestCase
         $expected = match($hashAlg) {
             'blake2b' => 'pkd-mr-v1:QhNgpgmYA7Rl3_UkbLFkwrb_rFTxfOzAT6e_4lYeGAQ',
             'sha256' => 'pkd-mr-v1:MzdqO9Y-mZNwioTd_mworli4NQXdH-1xG9kk7FpiOfA',
+            'sha3-256' => 'pkd-mr-v1:gSnihg8t_wUXNZVNa-JKpstioGDzZJfQe4EbjabZmrs',
             'sha384' => 'pkd-mr-v1:RbDLKSG-nJN_-x5PqHDQN2J4DVaxwLMrgF0LqCawkV7T6znmy3iDG-TXJ32G4Ccc',
             'sha512' => 'pkd-mr-v1:JiUhMQ_CPQlw_t3zNN__z8gNrO6d4FRjlXq5oJJFH3PKK0jF61eudNBq7px9MDWvWBHaD8nB3zt-5DmklfaErg'
         };
@@ -109,6 +111,7 @@ class TreeTest extends TestCase
         $expected = match($hashAlg) {
             'blake2b' => 'pkd-mr-v1:V9NmIuP5ANrdMn-xCLYuKCy49lIl_yR0nfeNCRdsHQ0',
             'sha256' => 'pkd-mr-v1:_hSlQm-9cMD6c_UjQq_tDaC9I8SDhmLM9riKMHDq2Xs',
+            'sha3-256' => 'pkd-mr-v1:BLNFnlMEtSt_TDsZRFf67DTZ_AFo3Pg4880PSpplMh8',
             'sha384' => 'pkd-mr-v1:NWgj9ZkVvEPSYjVSNgzhQ45j_NQiVmDtmIFNYn15_qp9tH4xwOm_QuqYOEBzykEz',
             'sha512' => 'pkd-mr-v1:iE7_WlEAigFVObBrPIQew_S7Fsj9R1EWXpArLNCWfoH50X-h0e4Llvq-Z8y4wYPYKO1mTGL0A5gN_eHdMdaZfg'
         };
@@ -267,6 +270,7 @@ class TreeTest extends TestCase
         $expected1 = match ($hashAlg) {
             'blake2b' => 'pkd-mr-v1:eS9FxLEc9YTNiesIOL1cono1n7u3VuH4WRm9hPGLA9I',
             'sha256' => 'pkd-mr-v1:CH0-7A8ry0FMVD7i7urGHqcTuL4ueMlYmXxE0bzxwCI',
+            'sha3-256' => 'pkd-mr-v1:cz2IpuVoPZ39rZr7KtO-LWkAFrIGfFslUsZpsFrmHdg',
             'sha384' => 'pkd-mr-v1:48tTulgIWNDjKT-aSVmCL8hW1BbXDmLR7UXyuwTWYy4msh-rEf1WlQgeiHmXCv_L',
             'sha512' => 'pkd-mr-v1:czy8MCjUDCzsu0-d7OHRdXf2y58tszxFXfaEZCP4bv1sJK7yCgL1LUKvXdPbwOqatjQqBaYpt8k2WCErsOz1tw',
         };
@@ -280,6 +284,7 @@ class TreeTest extends TestCase
         $expected2 = match ($hashAlg) {
             'blake2b' => 'pkd-mr-v1:fUkSRnyXBBWO7dN5c0DF6ez4KNexSArLlotB9x3M_Rk',
             'sha256' => 'pkd-mr-v1:pMuu_3rgLYrVc5Nljatotbo9Mue7qp437Cg_0NAq3h0',
+            'sha3-256' => 'pkd-mr-v1:hqqu_geVr9x5I-ES2pElZ0Y3CKAyxIJmPnaXB8OdOrI',
             'sha384' => 'pkd-mr-v1:4IkmMGSWp2mvNLhehZ8IKu9uisaBd5vTdFHPoVzlzzmmbi6MuhvGPr9xm8O2pk-Y',
             'sha512' => 'pkd-mr-v1:IPYsZtgnh2DwBFgSm8vtVVyBf3bv_FrfXpM6xdJU3uYJioo4ZCH8rFyv_EafWJNSX4hZL8IVnPL_VPZ-WttEMg',
         };
@@ -673,6 +678,7 @@ class TreeTest extends TestCase
             'blake2b', 'sha256' => 32,
             'sha384' => 48,
             'sha512' => 64,
+            default => strlen(hash($hashAlg, '', true)),
         };
         $this->assertEquals($expectedLength, strlen($hash1));
     }

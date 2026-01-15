@@ -14,6 +14,7 @@ use GuzzleHttp\Psr7\Response;
 use ParagonIE\Certainty\Exception\CertaintyException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use SodiumException;
 
@@ -29,6 +30,7 @@ class WebFingerTest extends TestCase
         ];
     }
 
+    #[Group('network')]
     #[DataProvider("knownAnswers")]
     public function testKnownAnswers(string $input, string $expected): void
     {
@@ -36,6 +38,7 @@ class WebFingerTest extends TestCase
         $this->assertSame($expected, $actual, $input);
     }
 
+    #[Group('network')]
     public function testRemoteFetchLocation(): void
     {
         $fetcher = (new WebFinger())->getCaCertFetcher();
@@ -585,5 +588,37 @@ class WebFingerTest extends TestCase
 
         $this->expectException(JsonException::class);
         $webFinger->canonicalize('@user@example.com');
+    }
+
+    /**
+     * @throws CertaintyException
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws NetworkException
+     * @throws SodiumException
+     */
+    public function testUppercaseProtocolInUrl(): void
+    {
+        $webFinger = $this->createWebFingerWithMock(new MockHandler());
+        $this->expectException(NetworkException::class);
+        $this->expectExceptionMessage('Invalid URL provided');
+        $webFinger->canonicalize('HTTP://example.com/users/test');
+    }
+
+    /**
+     * @throws CertaintyException
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws NetworkException
+     * @throws SodiumException
+     */
+    public function testHandleWithMultipleAtSymbols(): void
+    {
+        $webFinger = $this->createWebFingerWithMock(new MockHandler());
+
+        $this->expectException(InputException::class);
+        $this->expectExceptionMessage('Parse error: domain contains @');
+        $webFinger->canonicalize('user@host@extra.com');
     }
 }
