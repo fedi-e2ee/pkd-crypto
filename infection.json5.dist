@@ -6,7 +6,10 @@
         ]
     },
     "phpUnit": {
-        "configDir": "."
+        "configDir": ".",
+        "excludeGroups": [
+            "network"
+        ]
     },
     "mutators": {
         "@default": true,
@@ -20,14 +23,32 @@
                 "FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger",
             ]
         },
+        "Assignment": {
+            "ignore": [
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+            ]
+        },
+        "BitwiseAnd": {
+            "ignore": [
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+            ]
+        },
         "BitwiseOr": {
+            "ignore": [
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+            ],
             "ignoreSourceCodeByRegex": [
                 "JSON_"
             ]
         },
         "CastInt": {
             "ignore": [
-                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+            ]
+        },
+        "Division": {
+            "ignore": [
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
         },
         "Coalesce": {
@@ -61,6 +82,16 @@
             ]
         },
         "Minus": {
+            "ignore": [
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+            ]
+        },
+        "Modulus": {
+            "ignore": [
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+            ]
+        },
+        "Multiplication": {
             "ignore": [
                 "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
