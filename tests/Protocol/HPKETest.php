@@ -137,4 +137,50 @@ class HPKETest extends TestCase
         $this->assertInstanceOf(AddKey::class, $dec2);
         $this->assertSame($dec1->toString(), $dec2->toString());
     }
+
+    /**
+     * @throws CryptoException
+     * @throws HPKEException
+     * @throws JsonException
+     * @throws NotImplementedException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    #[DataProvider("ciphersuites")]
+    public function testInvalidHPKEPayload(HPKE $ciphersuite): void
+    {
+        [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();
+        $this->assertInstanceOf(EncapsKeyInterface::class, $encapsKey);
+
+        $root = (new Tree([random_bytes(32)]))->getEncodedRoot();
+        $sk = SecretKey::generate();
+        $pk = $sk->getPublicKey();
+
+        $dummy = new AddKey('https://example.com/users/foo', $pk);
+        $keyMap = (new AttributeKeyMap())
+            ->addRandomKey('actor')
+            ->addRandomKey('public-key');
+
+        $handler = new Handler();
+        $bundle = $handler->handle($dummy->encrypt($keyMap), $sk, $keyMap, $root);
+        $encrypted = $handler->hpkeEncrypt($bundle, $encapsKey, $ciphersuite);
+        $this->assertIsString($encrypted);
+        $this->assertTrue((new HPKEAdapter($ciphersuite))->isHpkeCiphertext($encrypted));
+
+        // OK, now let's mutate the sucker.
+        $encrypted = 'hpke::' . substr($encrypted, 5);
+
+        $this->expectException(HPKEException::class);
+        $this->expectExceptionMessage('HPKE ciphertext must be base64url encoded without padding');
+        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey, $encrypted);
+    }
+
+    #[DataProvider("ciphersuites")]
+    public function testShortPayload(HPKE $ciphersuite): void
+    {
+        [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();
+        $this->expectException(HPKEException::class);
+        $this->expectExceptionMessage('Invalid payload: too short');
+        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey,'abcd');
+    }
 }

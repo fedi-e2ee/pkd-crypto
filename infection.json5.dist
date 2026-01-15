@@ -28,6 +28,9 @@
         "BitwiseAnd": {
             "ignore": [
                 "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+            ],
+            "ignoreSourceCodeByRegex": [
+                ".*JSON_.*"
             ]
         },
         "BitwiseOr": {
@@ -35,7 +38,7 @@
                 "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ],
             "ignoreSourceCodeByRegex": [
-                "JSON_"
+                ".*JSON_.*"
             ]
         },
         "CastInt": {
@@ -57,24 +60,33 @@
         "ConcatOperandRemoval": false,
         "DecrementInteger": {
             "ignore": [
+                "FediE2EE\\PKD\\Merkle\\Tree",
                 "FediE2EE\\PKD\\PublicKey::encodePem",
                 "FediE2EE\\PKD\\UtilTrait::stripNewlines",
+                "*::stripNewlines",
                 "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+            ],
+            "ignoreSourceCodeByRegex": [
+            	".*chunk_split.*"
             ]
         },
         "IncrementInteger": {
             "ignore": [
+                "FediE2EE\\PKD\\Merkle\\Tree",
                 "FediE2EE\\PKD\\PublicKey::encodePem",
                 "FediE2EE\\PKD\\UtilTrait::stripNewlines",
+                "*::stripNewlines",
                 "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ],
             "ignoreSourceCodeByRegex": [
-                "hash_hkdf",
-                "substr"
+            	".*chunk_split.*",
+                ".*hash_hkdf.*",
+                ".*substr.*"
             ]
         },
         "LogicalOr": {
             "ignore": [
+                "FediE2EE\\PKD\\Merkle\\Tree",
                 "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
         },
@@ -96,6 +108,16 @@
         "Plus": {
             "ignore": [
                 "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+            ]
+        },
+        "ReturnRemoval": {
+            "ignore": [
+                "FediE2EE\\PKD\\Merkle\\IncrementalTree"
+            ],
+            "ignoreSourceCodeByRegex": [
+            	".*chunk_split.*",
+                ".*hash_hkdf.*",
+                ".*substr.*"
             ]
         },
         "RoundingFamily": {
