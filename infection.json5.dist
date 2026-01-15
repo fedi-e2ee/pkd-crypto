@@ -11,35 +11,44 @@
     "mutators": {
         "@default": true,
         "ArrayItem": {
-        	"ignore": [
-            	"FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger",
-        	]
-		},
+            "ignore": [
+                "FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger",
+            ]
+        },
         "ArrayItemRemoval": {
-        	"ignore": [
-            	"FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger",
-        	]
-		},
+            "ignore": [
+                "FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger",
+            ]
+        },
+        "BitwiseOr": {
+            "ignoreSourceCodeByRegex": [
+                "JSON_"
+            ]
+        },
         "CastInt": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58VarTime"
             ]
-		},
+        },
         "Coalesce": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger"
+                "FediE2EE\\PKD\\Crypto\\ActivityPub\\WebFinger"
             ]
-		},
+        },
         "Concat": false,
         "ConcatOperandRemoval": false,
         "DecrementInteger": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+                "FediE2EE\\PKD\\PublicKey::encodePem",
+                "FediE2EE\\PKD\\UtilTrait::stripNewlines",
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
-		},
+        },
         "IncrementInteger": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+                "FediE2EE\\PKD\\PublicKey::encodePem",
+                "FediE2EE\\PKD\\UtilTrait::stripNewlines",
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ],
             "ignoreSourceCodeByRegex": [
                 "hash_hkdf",
@@ -48,27 +57,27 @@
         },
         "LogicalOr": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
-		},
+        },
         "Minus": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
-		},
+        },
         "Plus": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
-		},
+        },
         "RoundingFamily": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
-		},
+        },
         "ShiftRight": {
             "ignore": [
-            	"FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
         },
         "Throw_": false

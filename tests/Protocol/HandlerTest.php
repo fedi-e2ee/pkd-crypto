@@ -2,11 +2,13 @@
 declare(strict_types=1);
 
 namespace FediE2EE\PKD\Crypto\Tests\Protocol;
-
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
+use FediE2EE\PKD\Crypto\Exceptions\BundleException;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
+use FediE2EE\PKD\Crypto\Exceptions\InputException;
 use FediE2EE\PKD\Crypto\Exceptions\JsonException;
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
+use FediE2EE\PKD\Crypto\Exceptions\ParserException;
 use FediE2EE\PKD\Crypto\Merkle\Tree;
 use FediE2EE\PKD\Crypto\Protocol\Actions\AddKey;
 use FediE2EE\PKD\Crypto\Protocol\Handler;
@@ -21,10 +23,20 @@ use ParagonIE\HPKE\HPKEException;
 use ParagonIE\HPKE\KEM\DHKEM\Curve;
 use ParagonIE\HPKE\KEM\DHKEM\DecapsKey;
 use PHPUnit\Framework\TestCase;
+use Random\RandomException;
 use SodiumException;
 
 class HandlerTest extends TestCase
 {
+    /**
+     * @throws BundleException
+     * @throws CryptoException
+     * @throws JsonException
+     * @throws NotImplementedException
+     * @throws ParserException
+     * @throws SodiumException
+     * @throws RandomException
+     */
     public function testHandler(): void
     {
         $secretKey = SecretKey::generate();
@@ -50,8 +62,24 @@ class HandlerTest extends TestCase
 
         $this->assertSame($addKey->getAction(), $encrypted->getAction());
         $this->assertEquals($keyMap, $newKeyMap);
+
+        $parsed = $parser->parseUnverified($json);
+        $encrypted = $parsed->getMessage();
+        $newKeyMap = $parsed->getKeyMap();
+
+        $this->assertSame($addKey->getAction(), $encrypted->getAction());
+        $this->assertEquals($keyMap, $newKeyMap);
     }
 
+    /**
+     * @throws BundleException
+     * @throws CryptoException
+     * @throws HPKEException
+     * @throws JsonException
+     * @throws NotImplementedException
+     * @throws RandomException
+     * @throws SodiumException
+     */
     public function testHpke(): void
     {
         $secretKey = SecretKey::generate();
@@ -79,6 +107,15 @@ class HandlerTest extends TestCase
         $this->assertEquals($message, $decrypted);
     }
 
+    /**
+     * @throws BundleException
+     * @throws CryptoException
+     * @throws InputException
+     * @throws JsonException
+     * @throws NotImplementedException
+     * @throws RandomException
+     * @throws SodiumException
+     */
     public function testMessageFromJson(): void
     {
         $secretKey = SecretKey::generate();
@@ -101,6 +138,12 @@ class HandlerTest extends TestCase
         $this->assertEquals($message, $newMessage);
     }
 
+    /**
+     * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws RandomException
+     * @throws SodiumException
+     */
     public function testHandle(): void
     {
         // Generate a keypair
@@ -128,10 +171,11 @@ class HandlerTest extends TestCase
 
     /**
      * @throws CryptoException
+     * @throws HPKEException
+     * @throws InsecureCurveException
      * @throws JsonException
      * @throws NotImplementedException
-     * @throws InsecureCurveException
-     * @throws HPKEException
+     * @throws RandomException
      * @throws SodiumException
      */
     public function testAdditionalHpkeEncrypt(): void

@@ -33,8 +33,10 @@ use PHPUnit\Framework\Attributes\{
     CoversClass,
     DataProvider
 };
+use Mdanter\Ecc\Exception\InsecureCurveException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use PHPUnit\Framework\TestCase;
+use Random\RandomException;
 use SodiumException;
 
 #[CoversClass(Handler::class)]
@@ -49,6 +51,11 @@ class HPKETest extends TestCase
         ];
     }
 
+    /**
+     * @throws HPKEException
+     * @throws InsecureCurveException
+     * @throws SodiumException
+     */
     #[DataProvider("ciphersuites")]
     public function testKeyID(HPKE $ciphersuite): void
     {
@@ -67,6 +74,7 @@ class HPKETest extends TestCase
      * @throws HPKEException
      * @throws JsonException
      * @throws NotImplementedException
+     * @throws RandomException
      * @throws SodiumException
      */
     #[DataProvider("ciphersuites")]

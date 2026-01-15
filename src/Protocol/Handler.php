@@ -45,10 +45,7 @@ class Handler
     ): Bundle {
         if (!($message instanceof EncryptedProtocolMessageInterface)) {
             if (!in_array($message->getAction(), Parser::UNENCRYPTED_ACTIONS, true)) {
-                if (!$keyMap->isEmpty()) {
-                    // We assume the intention was to be encrypted, so we encrypt it.
-                    $message = $message->encrypt($keyMap);
-                }
+                $message = $message->encrypt($keyMap);
             }
         }
         $signedMessage = new SignedMessage($message, $recentMerkleRoot);
