@@ -6,9 +6,12 @@ use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use FediE2EE\PKD\Crypto\Protocol\Actions\AddKey;
+use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
+use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\Protocol\SignedMessage;
 use FediE2EE\PKD\Crypto\SecretKey;
 use FediE2EE\PKD\Crypto\SymmetricKey;
+use JsonSerializable;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -316,6 +319,45 @@ class SignedMessageTest extends TestCase
         $encoded = $sm->encodeForSigning();
         $this->assertStringContainsString('!pkd-context', $encoded);
         $this->assertStringContainsString(SignedMessage::PKD_CONTEXT, $encoded);
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    public function testEncodeForSigningInvalidChars(): void
+    {
+        $recent = random_bytes(32);
+        $sk = SecretKey::generate();
+        $pk = $sk->getPublicKey();
+
+        $dummy = new class implements ProtocolMessageInterface, JsonSerializable {
+            public function getAction(): string
+            {
+                return '';
+            }
+
+            public function toArray(): array
+            {
+                return [];
+            }
+
+            public function jsonSerialize(): string
+            {
+                return random_bytes(32);
+            }
+
+            public function encrypt(AttributeKeyMap $keyMap): EncryptedProtocolMessageInterface
+            {
+                throw new NotImplementedException();
+            }
+        };
+        $sm = new SignedMessage($dummy, $recent);
+        $this->expectException(CryptoException::class);
+        $this->expectExceptionMessage('Could not encode message for signing');
+        $sm->encodeForSigning();
     }
 
     /**

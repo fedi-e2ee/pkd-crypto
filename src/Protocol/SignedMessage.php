@@ -44,18 +44,25 @@ final class SignedMessage implements \JsonSerializable
         return $self;
     }
 
+    /**
+     * @throws CryptoException
+     */
     public function encodeForSigning(): string
     {
+        $encodedMessage = json_encode(
+            $this->message,
+            JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+        );
+        if (!$encodedMessage) {
+            throw new CryptoException("Could not encode message for signing");
+        }
         return $this->preAuthEncode([
             '!pkd-context',
             self::PKD_CONTEXT,
             'action',
             $this->message->getAction(),
             'message',
-            (string) json_encode(
-                $this->message,
-                JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
-            ),
+            $encodedMessage,
             'recent-merkle-root',
             $this->recentMerkleRoot
         ]);

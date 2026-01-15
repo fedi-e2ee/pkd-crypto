@@ -173,12 +173,9 @@ class Parser
             // These fields have encryption
             $encrypted = $this->getEncryptedMessage($message);
         }
-
-        if ($publicKey) {
-            $signedMessage = new SignedMessage($encrypted, $message->getRecentMerkleRoot());
-            if (!$signedMessage->verify($publicKey, $message->getSignature())) {
-                throw new ParserException('Signature verification failed');
-            }
+        $signedMessage = new SignedMessage($encrypted, $message->getRecentMerkleRoot());
+        if (!$signedMessage->verify($publicKey, $message->getSignature())) {
+            throw new ParserException('Signature verification failed');
         }
         $keyMap = $message->getSymmetricKeys();
         return new ParsedMessage($encrypted, $keyMap);

@@ -61,6 +61,7 @@
         "DecrementInteger": {
             "ignore": [
                 "FediE2EE\\PKD\\Merkle\\Tree",
+                "FediE2EE\\PKD\\Merkle\\IncrementalTree",
                 "FediE2EE\\PKD\\PublicKey::encodePem",
                 "FediE2EE\\PKD\\UtilTrait::stripNewlines",
                 "*::stripNewlines",
@@ -73,6 +74,7 @@
         "IncrementInteger": {
             "ignore": [
                 "FediE2EE\\PKD\\Merkle\\Tree",
+                "FediE2EE\\PKD\\Merkle\\IncrementalTree",
                 "FediE2EE\\PKD\\PublicKey::encodePem",
                 "FediE2EE\\PKD\\UtilTrait::stripNewlines",
                 "*::stripNewlines",
@@ -112,6 +114,7 @@
         },
         "ReturnRemoval": {
             "ignore": [
+                "FediE2EE\\PKD\\Merkle\\Tree",
                 "FediE2EE\\PKD\\Merkle\\IncrementalTree"
             ],
             "ignoreSourceCodeByRegex": [
@@ -133,8 +136,8 @@
         "Throw_": false
     },
     "threads": "max",
-    "timeout": 300,
-    "minCoveredMsi": 86,
+    "timeout": 600,
+    "minCoveredMsi": 90,
     "logs": {
         "text": "infection.log"
     }

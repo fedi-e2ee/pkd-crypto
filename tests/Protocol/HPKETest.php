@@ -183,4 +183,41 @@ class HPKETest extends TestCase
         $this->expectExceptionMessage('Invalid payload: too short');
         (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey,'abcd');
     }
+
+    #[DataProvider("ciphersuites")]
+    public function testNotAsShortPayload(HPKE $ciphersuite): void
+    {
+        [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();
+        $this->expectException(HPKEException::class);
+        $this->expectExceptionMessage('Invalid payload header');
+        // Still wrong but different size
+        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey,'abcde');
+    }
+
+    #[DataProvider("ciphersuites")]
+    public function testOnlyHeader(HPKE $ciphersuite): void
+    {
+        [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();
+        $this->expectException(HPKEException::class);
+        $this->expectExceptionMessage('HPKE ciphertext must be base64url encoded without padding');
+        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey,'hpke:');
+    }
+
+    #[DataProvider("ciphersuites")]
+    public function testInvalidPayloadExtra(HPKE $ciphersuite): void
+    {
+        [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();
+        $this->expectException(HPKEException::class);
+        $this->expectExceptionMessage('HPKE ciphertext must be base64url encoded without padding');
+        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey,'hpke:abcd:efg');
+    }
+
+    #[DataProvider("ciphersuites")]
+    public function testInvalidPayloadSuffix(HPKE $ciphersuite): void
+    {
+        [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();
+        $this->expectException(HPKEException::class);
+        $this->expectExceptionMessage('HPKE ciphertext must be base64url encoded without padding');
+        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey,'hpke:abcdefg:');
+    }
 }
