@@ -28,7 +28,7 @@ class Bundle
      * @throws BundleException
      * @throws InputException
      */
-    public static function fromJson(string $json): self
+    public static function fromJson(string $json, ?AttributeKeyMap $symmetricKeys = null): self
     {
         if (empty($json)) {
             throw new BundleException('Empty JSON string');
@@ -37,20 +37,29 @@ class Bundle
         if (!is_array($data)) {
             throw new BundleException('Invalid JSON string: ' . json_last_error_msg());
         }
-        self::assertAllArrayKeysExist(
-            $data,
-            'symmetric-keys',
-            'action',
-            'message',
-            'recent-merkle-root',
-        );
-        $symmetricKeys = new AttributeKeyMap();
-        foreach ($data['symmetric-keys'] as $attribute => $key) {
-            $symmetricKeys->addKey(
-                $attribute,
-                new SymmetricKey(
-                    Base64UrlSafe::decodeNoPadding($key)
-                )
+        if (is_null($symmetricKeys)) {
+            self::assertAllArrayKeysExist(
+                $data,
+                'symmetric-keys',
+                'action',
+                'message',
+                'recent-merkle-root',
+            );
+            $symmetricKeys = new AttributeKeyMap();
+            foreach ($data['symmetric-keys'] as $attribute => $key) {
+                $symmetricKeys->addKey(
+                    $attribute,
+                    new SymmetricKey(
+                        Base64UrlSafe::decodeNoPadding($key)
+                    )
+                );
+            }
+        } else {
+            self::assertAllArrayKeysExist(
+                $data,
+                'action',
+                'message',
+                'recent-merkle-root',
             );
         }
 

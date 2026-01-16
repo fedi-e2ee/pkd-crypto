@@ -25,10 +25,7 @@ use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\{
     EncryptedUndoFireproof
 };
 use Exception;
-use FediE2EE\PKD\Crypto\{
-    PublicKey,
-    UtilTrait
-};
+use FediE2EE\PKD\Crypto\{AttributeEncryption\AttributeKeyMap, PublicKey, UtilTrait};
 use ParagonIE\HPKE\{
     HPKE,
     HPKEException,
@@ -127,9 +124,9 @@ class Parser
      * @throws BundleException
      * @throws InputException
      */
-    public static function fromJson(string $json): Bundle
+    public static function fromJson(string $json, ?AttributeKeyMap $symmetricKeys = null): Bundle
     {
-        return Bundle::fromJson($json);
+        return Bundle::fromJson($json, $symmetricKeys);
     }
 
     /**
