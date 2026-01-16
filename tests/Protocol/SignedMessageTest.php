@@ -68,6 +68,21 @@ class SignedMessageTest extends TestCase
         $sm2 = SignedMessage::init($encrypted, $recent, $sk);
         $this->assertNotSame($sm1->jsonSerialize(), $sm2->jsonSerialize());
         $this->assertNotSame($sm1->getSignature(), $sm2->getSignature());
+
+        // Let's ensure it decrypts as expected:
+        $decrypted = $sm2->getDecryptedContents($map);
+        $this->assertArrayHasKey('!pkd-context', $decrypted);
+        $this->assertArrayHasKey('action', $decrypted);
+        $this->assertArrayHasKey('message', $decrypted);
+        $this->assertArrayHasKey('recent-merkle-root', $decrypted);
+        $this->assertIsString($decrypted['!pkd-context']);
+        $this->assertIsString($decrypted['action']);
+        $this->assertIsArray($decrypted['message']);
+        $this->assertIsString($decrypted['recent-merkle-root']);
+        $this->assertSame('AddKey', $decrypted['action']);
+        $this->assertSame('https://example.com/@alice', $decrypted['message']['actor']);
+        $this->assertSame($pk->toString(), $decrypted['message']['public-key']);
+        $this->assertSame($recent, $decrypted['recent-merkle-root']);
     }
 
     /**

@@ -44,6 +44,16 @@ final class SignedMessage implements \JsonSerializable
         return $self;
     }
 
+    public function getDecryptedContents(AttributeKeyMap $keyMap): array
+    {
+        return [
+            '!pkd-context' => self::PKD_CONTEXT,
+            'action' => $this->message->getAction(),
+            'message' => $this->decrypt($keyMap)->toArray(),
+            'recent-merkle-root' => $this->recentMerkleRoot
+        ];
+    }
+
     /**
      * @throws CryptoException
      */
