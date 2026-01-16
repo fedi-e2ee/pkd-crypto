@@ -26,6 +26,7 @@ use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\{
 };
 use Exception;
 use FediE2EE\PKD\Crypto\{
+    AttributeEncryption\AttributeKeyMap,
     PublicKey,
     UtilTrait
 };
@@ -127,9 +128,9 @@ class Parser
      * @throws BundleException
      * @throws InputException
      */
-    public static function fromJson(string $json): Bundle
+    public static function fromJson(string $json, ?AttributeKeyMap $symmetricKeys = null): Bundle
     {
-        return Bundle::fromJson($json);
+        return Bundle::fromJson($json, $symmetricKeys);
     }
 
     /**
