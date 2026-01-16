@@ -308,6 +308,15 @@ class BundleTest extends TestCase
         $this->assertSame($bundle->toJson(), (string) $bundle);
     }
 
+    /**
+     * @throws BundleException
+     * @throws CryptoException
+     * @throws InputException
+     * @throws JsonException
+     * @throws NotImplementedException
+     * @throws RandomException
+     * @throws SodiumException
+     */
     public function testWithKeyMap(): void
     {
         $sk = SecretKey::generate();
