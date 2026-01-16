@@ -25,7 +25,11 @@ use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\{
     EncryptedUndoFireproof
 };
 use Exception;
-use FediE2EE\PKD\Crypto\{AttributeEncryption\AttributeKeyMap, PublicKey, UtilTrait};
+use FediE2EE\PKD\Crypto\{
+    AttributeEncryption\AttributeKeyMap,
+    PublicKey,
+    UtilTrait
+};
 use ParagonIE\HPKE\{
     HPKE,
     HPKEException,

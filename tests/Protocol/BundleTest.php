@@ -11,6 +11,7 @@ use FediE2EE\PKD\Crypto\Exceptions\JsonException;
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use FediE2EE\PKD\Crypto\Protocol\Actions\AddKey;
 use FediE2EE\PKD\Crypto\Protocol\Bundle;
+use FediE2EE\PKD\Crypto\Protocol\Handler;
 use FediE2EE\PKD\Crypto\Protocol\SignedMessage;
 use FediE2EE\PKD\Crypto\SecretKey;
 use ParagonIE\ConstantTime\Base64UrlSafe;
@@ -305,5 +306,30 @@ class BundleTest extends TestCase
         // toString and __toString should return the same as toJson
         $this->assertSame($bundle->toJson(), $bundle->toString());
         $this->assertSame($bundle->toJson(), (string) $bundle);
+    }
+
+    public function testWithKeyMap(): void
+    {
+        $sk = SecretKey::generate();
+        $pk = $sk->getPublicKey();
+        $keyMap = (new AttributeKeyMap())
+            ->addRandomKey('actor')
+            ->addRandomKey('public-key');
+        $recent = 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(random_bytes(32));
+        $addKey = new AddKey('https://example.com/@alice', $pk);
+        $handler = new Handler();
+        $bundle = $handler->handle($addKey, $sk, $keyMap, $recent);
+        $toJson = $bundle->toJson();
+
+        $decoded = json_decode($toJson, true);
+        $this->assertArrayHasKey('symmetric-keys', $decoded);
+        unset($decoded['symmetric-keys']);
+
+        $pass1 = Bundle::fromJson($toJson)->toJson();
+        $pass2 = Bundle::fromJson(json_encode($decoded), $keyMap)->toJson();
+        $this->assertSame($pass1, $pass2);
+
+        $this->expectException(InputException::class);
+        Bundle::fromJson(json_encode($decoded));
     }
 }
