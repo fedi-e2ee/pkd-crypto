@@ -540,4 +540,206 @@ class IncrementalTreeTest extends TestCase
         $proof2 = $tree->getInclusionProof('leaf2');
         $this->assertTrue($tree->verifyInclusionProof($root, 'leaf2', $proof2));
     }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testGetRootEmptyTreeReturnsNull(string $hashAlg): void
+    {
+        $tree = new IncrementalTree([], $hashAlg);
+        $this->assertNull($tree->getRoot(), '0 elements should have a NULL root');
+        $tree->addLeaf('a');
+        $this->assertNotNull($tree->getRoot(), 'nonzero elements should not have a NULL root');
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testConsistencyProofSameSizeReturnsEmpty(string $hashAlg): void
+    {
+        $leaves = ['a', 'b', 'c', 'd'];
+        $tree = new IncrementalTree($leaves, $hashAlg);
+
+        $proof = $tree->getConsistencyProof(4);
+        $this->assertEmpty($proof->proof);
+        $proof2 = $tree->getConsistencyProof(2);
+        $this->assertNotEmpty($proof2->proof);
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testConsistencyProofOldSizeGreaterThanNewSize(string $hashAlg): void
+    {
+        $tree = new IncrementalTree(['a', 'b', 'c'], $hashAlg);
+
+        $proof = $tree->getConsistencyProof(4);
+        $this->assertEmpty($proof->proof);
+
+        $proof2 = $tree->getConsistencyProof(3);
+        $this->assertEmpty($proof2->proof);
+
+        $proof3 = $tree->getConsistencyProof(2);
+        $this->assertNotEmpty($proof3->proof);
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testGetInclusionProofFindsFirstMatch(string $hashAlg): void
+    {
+        $tree = new IncrementalTree(['a', 'b', 'c', 'd'], $hashAlg);
+        $root = $tree->getRoot();
+        $this->assertNotNull($root);
+
+        $proof = $tree->getInclusionProof('a');
+        $this->assertSame(0, $proof->index);
+        $this->assertTrue($tree->verifyInclusionProof($root, 'a', $proof));
+
+        $proofLast = $tree->getInclusionProof('d');
+        $this->assertSame(3, $proofLast->index);
+        $this->assertTrue($tree->verifyInclusionProof($root, 'd', $proofLast));
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testRootForSubtreeSingleLeaf(string $hashAlg): void
+    {
+        $tree = new IncrementalTree(['a'], $hashAlg);
+        $baseTree = new Tree(['a'], $hashAlg);
+
+        $this->assertEquals($baseTree->getRoot(), $tree->getRoot());
+        $this->assertNotNull($tree->getRoot());
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testPowerOfTwoDetection(string $hashAlg): void
+    {
+        $tree2 = new IncrementalTree(['a', 'b'], $hashAlg);
+        $base2 = new Tree(['a', 'b'], $hashAlg);
+        $this->assertEquals($base2->getRoot(), $tree2->getRoot());
+
+        $tree3 = new IncrementalTree(['a', 'b', 'c'], $hashAlg);
+        $base3 = new Tree(['a', 'b', 'c'], $hashAlg);
+        $this->assertEquals($base3->getRoot(), $tree3->getRoot());
+
+        $tree4 = new IncrementalTree(['a', 'b', 'c', 'd'], $hashAlg);
+        $base4 = new Tree(['a', 'b', 'c', 'd'], $hashAlg);
+        $this->assertEquals($base4->getRoot(), $tree4->getRoot());
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testSiblingIndexEvenOdd(string $hashAlg): void
+    {
+        $tree = new IncrementalTree([], $hashAlg);
+
+        // Add leaves to exercise even/odd sibling paths
+        $tree->addLeaf('a');
+        $root1 = $tree->getRoot();
+        $this->assertNotNull($root1);
+
+        $tree->addLeaf('b');
+        $root2 = $tree->getRoot();
+        $this->assertNotNull($root2);
+        $this->assertNotEquals($root1, $root2);
+
+        $tree->addLeaf('c');
+        $root3 = $tree->getRoot();
+        $this->assertNotNull($root3);
+
+        $tree->addLeaf('d');
+        $root4 = $tree->getRoot();
+        $this->assertNotNull($root4);
+
+        $baseTree = new Tree(['a', 'b', 'c', 'd'], $hashAlg);
+        $this->assertEquals($baseTree->getRoot(), $root4);
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testLeftRightHashAssignment(string $hashAlg): void
+    {
+        $leaves = ['leaf0', 'leaf1', 'leaf2', 'leaf3'];
+        $tree1 = new IncrementalTree($leaves, $hashAlg);
+        $tree2 = new Tree($leaves, $hashAlg);
+
+        $this->assertEquals($tree2->getRoot(), $tree1->getRoot());
+
+        $moreLeaves = array_map(fn($i) => "leaf$i", range(4, 15));
+        foreach ($moreLeaves as $leaf) {
+            $tree1->addLeaf($leaf);
+        }
+        $fullLeaves = array_map(fn($i) => "leaf$i", range(0, 15));
+        $fullTree = new Tree($fullLeaves, $hashAlg);
+
+        $this->assertEquals($fullTree->getRoot(), $tree1->getRoot());
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testAlignmentCheck(string $hashAlg): void
+    {
+        $leaves = array_map(fn($i) => "leaf$i", range(0, 7));
+        $tree = new IncrementalTree($leaves, $hashAlg);
+        $baseTree = new Tree($leaves, $hashAlg);
+
+        $this->assertEquals($baseTree->getRoot(), $tree->getRoot());
+        for ($i = 8; $i < 25; $i++) {
+            $tree->addLeaf("leaf$i");
+        }
+        $fullLeaves = array_map(fn($i) => "leaf$i", range(0, 24));
+        $fullTree = new Tree($fullLeaves, $hashAlg);
+        $this->assertEquals($fullTree->getRoot(), $tree->getRoot());
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testLevelIncrement(string $hashAlg): void
+    {
+        $tree = new IncrementalTree([], $hashAlg);
+        for ($i = 0; $i < 8; $i++) {
+            $tree->addLeaf("leaf$i");
+        }
+        $baseTree = new Tree(array_map(fn($i) => "leaf$i", range(0, 7)), $hashAlg);
+        $this->assertEquals($baseTree->getRoot(), $tree->getRoot());
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testCurrentIndexCalculation(string $hashAlg): void
+    {
+        $tree = new IncrementalTree([], $hashAlg);
+
+        // Add leaves and verify each step
+        for ($i = 0; $i < 34; $i++) {
+            $tree->addLeaf("leaf$i");
+            $baseTree = new Tree(array_map(fn($j) => "leaf$j", range(0, $i)), $hashAlg);
+            $this->assertEquals(
+                $baseTree->getRoot(),
+                $tree->getRoot(),
+                "Mismatch after adding leaf $i"
+            );
+        }
+    }
 }

@@ -11,6 +11,7 @@ use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use FediE2EE\PKD\Crypto\Exceptions\ParserException;
 use FediE2EE\PKD\Crypto\Merkle\Tree;
 use FediE2EE\PKD\Crypto\Protocol\Actions\AddKey;
+use FediE2EE\PKD\Crypto\Protocol\Actions\BurnDown;
 use FediE2EE\PKD\Crypto\Protocol\Handler;
 use FediE2EE\PKD\Crypto\Protocol\Bundle;
 use FediE2EE\PKD\Crypto\Protocol\Parser;
@@ -210,5 +211,103 @@ class HandlerTest extends TestCase
 
         $encrypted = $handler->hpkeEncrypt($bundle, $encapsKey, $hpke);
         $this->assertIsString($encrypted);
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    public function testHandleUnencryptedAction(): void
+    {
+        $secretKey = SecretKey::generate();
+        $keyMap = (new AttributeKeyMap())
+            ->addKey('actor', SymmetricKey::generate())
+            ->addKey('operator', SymmetricKey::generate());
+
+        $merkleRoot = (new Tree([random_bytes(32)]))->getEncodedRoot();
+        $burnDown = new BurnDown(
+            actor: 'https://example.com/users/foo',
+            operator: 'https://pkd.example.org'
+        );
+
+        $handler = new Handler();
+        $bundle = $handler->handle($burnDown, $secretKey, $keyMap, $merkleRoot);
+
+        $this->assertInstanceOf(Bundle::class, $bundle);
+        $this->assertSame('BurnDown', $bundle->getAction());
+
+        $message = $bundle->getMessage();
+        $this->assertArrayHasKey('actor', $message);
+        $this->assertArrayHasKey('operator', $message);
+        $this->assertArrayHasKey('time', $message);
+        $this->assertSame('https://example.com/users/foo', $message['actor']);
+        $this->assertSame('https://pkd.example.org', $message['operator']);
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    public function testHandleMessageNeedsEncryption(): void
+    {
+        $secretKey = SecretKey::generate();
+        $publicKey = $secretKey->getPublicKey();
+        $keyMap = (new AttributeKeyMap())
+            ->addKey('actor', SymmetricKey::generate())
+            ->addKey('public-key', SymmetricKey::generate());
+
+        $merkleRoot = (new Tree([random_bytes(32)]))->getEncodedRoot();
+
+        $addKey = new AddKey(
+            actor: 'https://example.com/users/foo',
+            publicKey: $publicKey
+        );
+
+        $handler = new Handler();
+        $bundle = $handler->handle($addKey, $secretKey, $keyMap, $merkleRoot);
+
+        $this->assertInstanceOf(Bundle::class, $bundle);
+        $this->assertSame('AddKey', $bundle->getAction());
+
+        $message = $bundle->getMessage();
+        $this->assertArrayHasKey('actor', $message);
+        $this->assertStringNotContainsString('https://', $message['actor']);
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    public function testHandleAlreadyEncryptedMessage(): void
+    {
+        $secretKey = SecretKey::generate();
+        $publicKey = $secretKey->getPublicKey();
+        $keyMap = (new AttributeKeyMap())
+            ->addKey('actor', SymmetricKey::generate())
+            ->addKey('public-key', SymmetricKey::generate());
+
+        $merkleRoot = (new Tree([random_bytes(32)]))->getEncodedRoot();
+        $addKey = new AddKey(
+            actor: 'https://example.com/users/foo',
+            publicKey: $publicKey
+        );
+        $encryptedAddKey = $addKey->encrypt($keyMap);
+        $originalMessage = $encryptedAddKey->toArray();
+
+        $handler = new Handler();
+        $bundle = $handler->handle($encryptedAddKey, $secretKey, $keyMap, $merkleRoot);
+
+        $this->assertInstanceOf(Bundle::class, $bundle);
+        $this->assertSame('AddKey', $bundle->getAction());
+
+        $bundleMessage = $bundle->getMessage();
+        $this->assertSame($originalMessage['actor'], $bundleMessage['actor'], 'double-encrypted test');
+        $this->assertSame($originalMessage['public-key'], $bundleMessage['public-key'], 'double-encrypted test');
     }
 }

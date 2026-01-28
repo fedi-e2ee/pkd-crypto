@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\{
     CoversClass,
     DataProvider
 };
+use ParagonIE\ConstantTime\Base64;
 use PHPUnit\Framework\TestCase;
 use SodiumException;
 
@@ -108,7 +109,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('test key')
         );
-        $pk = new \FediE2EE\PKD\Crypto\PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
 
         $httpSignature = new HttpSignature();
         $request = new Request('POST', '/foo', ['Host' => 'example.com'], 'body');
@@ -118,7 +119,6 @@ class HttpSignatureTest extends TestCase
     }
 
     /**
-     * Test verification fails when Signature header is missing
      * @throws CryptoException
      * @throws HttpSignatureException
      * @throws NotImplementedException
@@ -141,9 +141,9 @@ class HttpSignatureTest extends TestCase
             ],
             'body'
         );
-
-        // Has Signature-Input but no Signature header
-        $this->assertFalse($httpSignature->verify($pk, $request));
+        $this->expectException(HttpSignatureException::class);
+        $this->expectExceptionMessage('HTTP header missing: Signature');
+        $httpSignature->verifyThrow($pk, $request);
     }
 
     /**
@@ -856,5 +856,637 @@ class HttpSignatureTest extends TestCase
         $this->assertStringContainsString('alg="ed25519"', $signatureInput);
         $this->assertStringContainsString('keyid="my-key-id"', $signatureInput);
         $this->assertStringContainsString('created=' . $created, $signatureInput);
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testMissingSignatureInputWithSignaturePresent(): void
+    {
+        $keypair = sodium_crypto_sign_seed_keypair(
+            sodium_crypto_generichash('missing sig input test')
+        );
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+
+        $httpSignature = new HttpSignature();
+        $request = new Request(
+            'POST',
+            '/foo',
+            [
+                'Host' => 'example.com',
+                'Signature' => 'sig1=:' . str_repeat('A', 86) . ':',
+            ],
+            'body'
+        );
+        $this->assertFalse($httpSignature->verify($pk, $request));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testUnknownHeadersAreSkipped(): void
+    {
+        $keypair = sodium_crypto_sign_seed_keypair(
+            sodium_crypto_generichash('unknown headers test')
+        );
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $pk = $sk->getPublicKey();
+
+        $httpSignature = new HttpSignature();
+        $request = new Request(
+            'POST',
+            '/test',
+            [
+                'Host' => 'example.com',
+                'X-Custom' => 'value',
+            ],
+            'body'
+        );
+        $signed = $httpSignature->sign($sk, $request, ['host', 'x-custom'], 'key');
+        $this->assertTrue($httpSignature->verify($pk, $signed));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testMethodLowercasedForConsistency(): void
+    {
+        $keypair = sodium_crypto_sign_seed_keypair(
+            sodium_crypto_generichash('method lowercase consistency')
+        );
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+
+        $httpSignature = new HttpSignature();
+        $created = time();
+
+        // POST should produce same signature as post
+        $requestUpper = new Request('POST', '/test', ['Host' => 'example.com']);
+        $requestLower = new Request('post', '/test', ['Host' => 'example.com']);
+
+        $signedUpper = $httpSignature->sign($sk, $requestUpper, ['@method'], 'key', $created);
+        $signedLower = $httpSignature->sign($sk, $requestLower, ['@method'], 'key', $created);
+        $this->assertSame(
+            $signedUpper->getHeaderLine('Signature'),
+            $signedLower->getHeaderLine('Signature')
+        );
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testPathInSignatureBase(): void
+    {
+        $keypair = sodium_crypto_sign_seed_keypair(
+            sodium_crypto_generichash('path signature test')
+        );
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $pk = $sk->getPublicKey();
+
+        $httpSignature = new HttpSignature();
+        $request1 = new Request('GET', '/path1', ['Host' => 'example.com']);
+        $request2 = new Request('GET', '/path2', ['Host' => 'example.com']);
+
+        $created = time();
+        $signed1 = $httpSignature->sign($sk, $request1, ['@path'], 'key', $created);
+        $signed2 = $httpSignature->sign($sk, $request2, ['@path'], 'key', $created);
+        $this->assertNotSame(
+            $signed1->getHeaderLine('Signature'),
+            $signed2->getHeaderLine('Signature')
+        );
+        $this->assertTrue($httpSignature->verify($pk, $signed1));
+        $this->assertTrue($httpSignature->verify($pk, $signed2));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testCustomTimeoutWindow(): void
+    {
+        $keypair = sodium_crypto_sign_seed_keypair(
+            sodium_crypto_generichash('custom timeout window')
+        );
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $pk = $sk->getPublicKey();
+        $httpSignature = new HttpSignature('sig1', 60);
+        $request = new Request('POST', '/foo', ['Host' => 'example.com'], 'body');
+        $created = time() - 59;
+        $signedRequest = $httpSignature->sign($sk, $request, ['@method'], 'key', $created);
+        $this->assertTrue($httpSignature->verify($pk, $signedRequest));
+        $created2 = time() - 61;
+        $signedRequest2 = $httpSignature->sign($sk, $request, ['@method'], 'key', $created2);
+        $this->assertFalse($httpSignature->verify($pk, $signedRequest2));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testMissingRequiredHeaderFails(): void
+    {
+        $keypair = sodium_crypto_sign_seed_keypair(
+            sodium_crypto_generichash('missing header test')
+        );
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+
+        $httpSignature = new HttpSignature();
+        $request = new Request(
+            'POST',
+            '/foo',
+            [
+                'Host' => 'example.com',
+                'Signature-Input' => 'sig1=("@method" "x-custom-missing");alg="ed25519";created=' . time(),
+                'Signature' => 'sig1=:' . str_repeat('A', 86) . ':',
+            ],
+            'body'
+        );
+        $this->assertFalse($httpSignature->verify($pk, $request));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testForeachProcessesAllHeaders(): void
+    {
+        $keypair = sodium_crypto_sign_seed_keypair(
+            sodium_crypto_generichash('foreach all headers')
+        );
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $pk = $sk->getPublicKey();
+
+        $httpSignature = new HttpSignature();
+        $request = new Request(
+            'POST',
+            '/test/path',
+            [
+                'Host' => 'example.com',
+                'Content-Type' => 'application/json',
+                'X-Custom-1' => 'value1',
+                'X-Custom-2' => 'value2',
+            ],
+            '{"test": true}'
+        );
+
+        $signed = $httpSignature->sign(
+            $sk,
+            $request,
+            ['@method', '@path', 'host', 'content-type', 'x-custom-1', 'x-custom-2'],
+            'key'
+        );
+        $this->assertTrue($httpSignature->verify($pk, $signed));
+        $signatureInput = $signed->getHeaderLine('Signature-Input');
+
+        $this->assertStringContainsString('"@method"', $signatureInput);
+        $this->assertStringContainsString('"@path"', $signatureInput);
+        $this->assertStringContainsString('"host"', $signatureInput);
+        $this->assertStringContainsString('"content-type"', $signatureInput);
+        $this->assertStringContainsString('"x-custom-1"', $signatureInput);
+        $this->assertStringContainsString('"x-custom-2"', $signatureInput);
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testMethodDoesNotBreakLoop(): void
+    {
+        $keypair = sodium_crypto_sign_seed_keypair(
+            sodium_crypto_generichash('method does not break loop')
+        );
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $pk = $sk->getPublicKey();
+
+        $httpSignature = new HttpSignature();
+        $request = new Request(
+            'POST',
+            '/test/path',
+            ['Host' => 'example.com'],
+            'body'
+        );
+        $created = time();
+        $signedWithAll = $httpSignature->sign(
+            $sk,
+            $request,
+            ['@method', '@path', 'host'],
+            'key',
+            $created
+        );
+        $signedMethodOnly = $httpSignature->sign(
+            $sk,
+            $request,
+            ['@method'],
+            'key',
+            $created
+        );
+        $this->assertNotSame(
+            $signedWithAll->getHeaderLine('Signature'),
+            $signedMethodOnly->getHeaderLine('Signature'),
+            '@method must not break out of the loop - @path and host must be included'
+        );
+        $this->assertTrue($httpSignature->verify($pk, $signedWithAll));
+        $this->assertTrue($httpSignature->verify($pk, $signedMethodOnly));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testPathDoesNotBreakLoop(): void
+    {
+        $keypair = sodium_crypto_sign_seed_keypair(
+            sodium_crypto_generichash('path does not break loop')
+        );
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $pk = $sk->getPublicKey();
+
+        $httpSignature = new HttpSignature();
+        $request = new Request(
+            'POST',
+            '/test/path',
+            ['Host' => 'example.com', 'X-Custom' => 'value'],
+            'body'
+        );
+
+        $created = time();
+        $signedWithAll = $httpSignature->sign(
+            $sk,
+            $request,
+            ['@path', 'host', 'x-custom'],
+            'key',
+            $created
+        );
+
+        $signedPathOnly = $httpSignature->sign(
+            $sk,
+            $request,
+            ['@path'],
+            'key',
+            $created
+        );
+        $this->assertNotSame(
+            $signedWithAll->getHeaderLine('Signature'),
+            $signedPathOnly->getHeaderLine('Signature'),
+            '@path must not break out of the loop - host and x-custom must be included'
+        );
+
+        $this->assertTrue($httpSignature->verify($pk, $signedWithAll));
+        $this->assertTrue($httpSignature->verify($pk, $signedPathOnly));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testMissingHeaderSkippedNotIncluded(): void
+    {
+        $keypair = sodium_crypto_sign_seed_keypair(
+            sodium_crypto_generichash('missing header skipped')
+        );
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $pk = $sk->getPublicKey();
+
+        $httpSignature = new HttpSignature();
+
+        // Request has Host and X-Present but NOT X-Missing
+        $request = new Request(
+            'POST',
+            '/test',
+            ['Host' => 'example.com', 'X-Present' => 'value'],
+            'body'
+        );
+
+        // Sign specifying x-missing (which doesn't exist in request)
+        $signed = $httpSignature->sign(
+            $sk,
+            $request,
+            ['host', 'x-present', 'x-missing'],
+            'key'
+        );
+
+        // Signature should still verify because x-missing is just skipped
+        $this->assertTrue($httpSignature->verify($pk, $signed));
+
+        // Now test that verification fails if a specified header is present but different
+        $differentRequest = new Request(
+            'POST',
+            '/test',
+            ['Host' => 'example.com', 'X-Present' => 'different-value'],
+            'body'
+        );
+
+        // Manually apply the signature headers to the different request
+        $signedDifferent = $differentRequest
+            ->withHeader('Signature-Input', $signed->getHeaderLine('Signature-Input'))
+            ->withHeader('Signature', $signed->getHeaderLine('Signature'));
+
+        // This should fail because x-present has different value
+        $this->assertFalse($httpSignature->verify($pk, $signedDifferent));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testVerifyThrowActuallyThrows(): void
+    {
+        $keypair = sodium_crypto_sign_seed_keypair(
+            sodium_crypto_generichash('throw when missing test')
+        );
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+
+        $httpSignature = new HttpSignature();
+        // Request has Signature-Input but NO Signature
+        $request = new Request(
+            'POST',
+            '/foo',
+            [
+                'Host' => 'example.com',
+                'Signature-Input' => 'sig1=("@method");alg="ed25519";created=' . time(),
+            ],
+            'body'
+        );
+
+        // Must throw HttpSignatureException with specific message
+        $this->expectException(HttpSignatureException::class);
+        $this->expectExceptionMessage('HTTP header missing: Signature');
+        $httpSignature->verifyThrow($pk, $request);
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testDefaultTimeoutExactBoundary(): void
+    {
+        $keypair = sodium_crypto_sign_seed_keypair(
+            sodium_crypto_generichash('default timeout exact')
+        );
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $pk = $sk->getPublicKey();
+
+        $httpSignature = new HttpSignature();
+        $request = new Request('POST', '/foo', ['Host' => 'example.com'], 'body');
+
+        // Exactly 300 seconds ago should pass (boundary)
+        $created = time() - 300;
+        $signedRequest = $httpSignature->sign($sk, $request, ['@method', 'host'], 'key', $created);
+        $this->assertTrue(
+            $httpSignature->verify($pk, $signedRequest),
+            'Signature created exactly 300 seconds ago should be valid'
+        );
+
+        // 301 seconds ago should fail
+        $created2 = time() - 301;
+        $signedRequest2 = $httpSignature->sign($sk, $request, ['@method', 'host'], 'key', $created2);
+        $this->assertFalse(
+            $httpSignature->verify($pk, $signedRequest2),
+            'Signature created 301 seconds ago should be invalid'
+        );
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testSignatureParamsExtractionCorrectness(): void
+    {
+        $keypair = sodium_crypto_sign_seed_keypair(
+            sodium_crypto_generichash('params extraction correctness')
+        );
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $pk = $sk->getPublicKey();
+
+        $httpSignature = new HttpSignature();
+        $request = new Request('POST', '/test', ['Host' => 'example.com'], 'body');
+
+        $signedRequest = $httpSignature->sign($sk, $request, ['@method', 'host'], 'my-key');
+
+        // The signature-input should be: sig1=("@method" "host");alg="ed25519";keyid="my-key";created=...
+        $signatureInput = $signedRequest->getHeaderLine('Signature-Input');
+
+        // Verify the format is correct
+        $this->assertMatchesRegularExpression(
+            '/^sig1=\("@method" "host"\);alg="ed25519";keyid="my-key";created=\d+$/',
+            $signatureInput
+        );
+
+        // The signature should verify - this ensures the params extraction works
+        $this->assertTrue($httpSignature->verify($pk, $signedRequest));
+
+        // Now test with a malformed signature-input where params extraction would fail
+        $badRequest = new Request(
+            'POST',
+            '/test',
+            [
+                'Host' => 'example.com',
+                'Signature-Input' => 'sig1=("@method" "host");alg="ed25519";created=' . time(),
+                'Signature' => 'sig1=:' . str_repeat('A', 86) . ':',
+            ],
+            'body'
+        );
+
+        // This should fail verification (wrong signature) but not error
+        $this->assertFalse($httpSignature->verify($pk, $badRequest));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testSignatureExtractionUsesCorrectCaptureGroup(): void
+    {
+        $keypair = sodium_crypto_sign_seed_keypair(
+            sodium_crypto_generichash('capture group test')
+        );
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $pk = $sk->getPublicKey();
+
+        $httpSignature = new HttpSignature();
+        $request = new Request('POST', '/test', ['Host' => 'example.com'], 'body');
+
+        $signed = $httpSignature->sign($sk, $request, ['@method'], 'key');
+
+        // Verify signature format: sig1=:BASE64:
+        $signatureHeader = $signed->getHeaderLine('Signature');
+        $this->assertMatchesRegularExpression('/^sig1=:[A-Za-z0-9+\/]+=*:$/', $signatureHeader);
+
+        // The signature must verify
+        $this->assertTrue($httpSignature->verify($pk, $signed));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testSignatureMatchesUsesGroup1Not0(): void
+    {
+        $keypair = sodium_crypto_sign_seed_keypair(
+            sodium_crypto_generichash('matches group 1')
+        );
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $pk = $sk->getPublicKey();
+
+        $httpSignature = new HttpSignature();
+        $request = new Request('POST', '/test', ['Host' => 'example.com'], 'body');
+
+        $signed = $httpSignature->sign($sk, $request, ['@method', 'host'], 'key');
+        $this->assertTrue($httpSignature->verify($pk, $signed));
+
+        $signatureHeader = $signed->getHeaderLine('Signature');
+        $this->assertStringStartsWith('sig1=:', $signatureHeader);
+        $this->assertStringEndsWith(':', $signatureHeader);
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testKnownAnswerSignatureWithAllHeaders(): void
+    {
+        // Deterministic key from fixed seed (32 bytes of 0x42)
+        $seed = str_repeat("\x42", 32);
+        $keypair = sodium_crypto_sign_seed_keypair($seed);
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+
+        $httpSignature = new HttpSignature();
+        $request = new Request('POST', '/inbox', ['Host' => 'example.com']);
+
+        $created = 1700000000;
+        $signed = $httpSignature->sign($sk, $request, ['@method', '@path', 'host'], 'key1', $created);
+
+        // Verify Signature-Input format
+        $expectedInput = 'sig1=("@method" "@path" "host");alg="ed25519";keyid="key1";created=1700000000';
+        $this->assertSame($expectedInput, $signed->getHeaderLine('Signature-Input'));
+
+        // Manually compute expected signature base
+        $expectedSignatureBase = implode("\n", [
+            '"@method": post',
+            '"@path": /inbox',
+            '"host": example.com',
+            '"@signature-params": ("@method" "@path" "host");alg="ed25519";keyid="key1";created=1700000000'
+        ]);
+
+        // Sign manually to get expected signature
+        $expectedSignatureBytes = sodium_crypto_sign_detached(
+            $expectedSignatureBase,
+            sodium_crypto_sign_secretkey($keypair)
+        );
+        $expectedSignature = 'sig1=:' . Base64::encode($expectedSignatureBytes) . ':';
+
+        // This assertion catches Continue_→Break_ mutations
+        $this->assertSame(
+            $expectedSignature,
+            $signed->getHeaderLine('Signature'),
+            'Signature must match known answer computed with all headers included'
+        );
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testKnownAnswerMethodThenPath(): void
+    {
+        $seed = str_repeat("\x43", 32);
+        $keypair = sodium_crypto_sign_seed_keypair($seed);
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+
+        $httpSignature = new HttpSignature();
+        $request = new Request('GET', '/api/v1/resource', ['Host' => 'api.test']);
+
+        $created = 1700000001;
+        $signed = $httpSignature->sign($sk, $request, ['@method', '@path'], 'test-key', $created);
+
+        $expectedSignatureBase = implode("\n", [
+            '"@method": get',
+            '"@path": /api/v1/resource',
+            '"@signature-params": ("@method" "@path");alg="ed25519";keyid="test-key";created=1700000001'
+        ]);
+        $expectedSignatureBytes = sodium_crypto_sign_detached(
+            $expectedSignatureBase,
+            sodium_crypto_sign_secretkey($keypair)
+        );
+        $expectedSignature = 'sig1=:' . Base64::encode($expectedSignatureBytes) . ':';
+
+        $this->assertSame(
+            $expectedSignature,
+            $signed->getHeaderLine('Signature'),
+            '@path must be included after @method (continue not break)'
+        );
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testKnownAnswerPathThenHost(): void
+    {
+        $seed = str_repeat("\x44", 32);
+        $keypair = sodium_crypto_sign_seed_keypair($seed);
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+
+        $httpSignature = new HttpSignature();
+        $request = new Request('DELETE', '/users/123', ['Host' => 'admin.example.org']);
+
+        $created = 1700000002;
+        $signed = $httpSignature->sign($sk, $request, ['@path', 'host'], 'admin-key', $created);
+
+        // Expected signature base with BOTH @path and host
+        $expectedSignatureBase = implode("\n", [
+            '"@path": /users/123',
+            '"host": admin.example.org',
+            '"@signature-params": ("@path" "host");alg="ed25519";keyid="admin-key";created=1700000002'
+        ]);
+
+        $expectedSignatureBytes = sodium_crypto_sign_detached(
+            $expectedSignatureBase,
+            sodium_crypto_sign_secretkey($keypair)
+        );
+        $expectedSignature = 'sig1=:' . Base64::encode($expectedSignatureBytes) . ':';
+
+        $this->assertSame(
+            $expectedSignature,
+            $signed->getHeaderLine('Signature'),
+            'host must be included after @path (continue not break)'
+        );
     }
 }

@@ -10,6 +10,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use ParagonIE\Certainty\Exception\CertaintyException;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -620,5 +621,350 @@ class WebFingerTest extends TestCase
         $this->expectException(InputException::class);
         $this->expectExceptionMessage('Parse error: domain contains @');
         $webFinger->canonicalize('user@host@extra.com');
+    }
+
+    /**
+     * @throws CertaintyException
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws NetworkException
+     * @throws SodiumException
+     */
+    public function testLinkMissingOnlyRelIsSkipped(): void
+    {
+        $response = json_encode([
+            'links' => [
+                [
+                    // Missing 'rel'
+                    'type' => 'application/activity+json',
+                    'href' => 'https://bad.example.com/users/bad'
+                ],
+                [
+                    'rel' => 'self',
+                    'type' => 'application/activity+json',
+                    'href' => 'https://good.example.com/users/good'
+                ]
+            ]
+        ]);
+
+        $mock = new MockHandler([
+            new Response(200, [], $response),
+        ]);
+
+        $webFinger = $this->createWebFingerWithMock($mock);
+
+        $result = $webFinger->canonicalize('@user@example.com');
+        $this->assertSame('https://good.example.com/users/good', $result);
+    }
+
+    /**
+     * @throws CertaintyException
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws NetworkException
+     * @throws SodiumException
+     */
+    public function testLinkMissingOnlyTypeIsSkipped(): void
+    {
+        $response = json_encode([
+            'links' => [
+                [
+                    'rel' => 'self',
+                    // Missing 'type'
+                    'href' => 'https://bad.example.com/users/bad'
+                ],
+                [
+                    'rel' => 'self',
+                    'type' => 'application/activity+json',
+                    'href' => 'https://good.example.com/users/good'
+                ]
+            ]
+        ]);
+
+        $mock = new MockHandler([
+            new Response(200, [], $response),
+        ]);
+
+        $webFinger = $this->createWebFingerWithMock($mock);
+
+        $result = $webFinger->canonicalize('@user@example.com');
+        $this->assertSame('https://good.example.com/users/good', $result);
+    }
+
+    /**
+     * @throws CertaintyException
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws NetworkException
+     * @throws SodiumException
+     */
+    public function testLinkMissingOnlyHrefIsSkipped(): void
+    {
+        $response = json_encode([
+            'links' => [
+                [
+                    'rel' => 'self',
+                    'type' => 'application/activity+json',
+                    // Missing 'href'
+                ],
+                [
+                    'rel' => 'self',
+                    'type' => 'application/activity+json',
+                    'href' => 'https://good.example.com/users/good'
+                ]
+            ]
+        ]);
+
+        $mock = new MockHandler([
+            new Response(200, [], $response),
+        ]);
+
+        $webFinger = $this->createWebFingerWithMock($mock);
+
+        $result = $webFinger->canonicalize('@user@example.com');
+        $this->assertSame('https://good.example.com/users/good', $result);
+    }
+
+    /**
+     * @throws CertaintyException
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws NetworkException
+     * @throws SodiumException
+     */
+    public function testNonSelfRelIsSkipped(): void
+    {
+        $response = json_encode([
+            'links' => [
+                [
+                    'rel' => 'alternate', // Not 'self', should continue
+                    'type' => 'application/activity+json',
+                    'href' => 'https://wrong.example.com/alternate'
+                ],
+                [
+                    'rel' => 'self',
+                    'type' => 'application/activity+json',
+                    'href' => 'https://correct.example.com/users/user'
+                ]
+            ]
+        ]);
+
+        $mock = new MockHandler([
+            new Response(200, [], $response),
+        ]);
+
+        $webFinger = $this->createWebFingerWithMock($mock);
+
+        $result = $webFinger->canonicalize('@user@example.com');
+        $this->assertSame('https://correct.example.com/users/user', $result);
+    }
+
+    /**
+     * @throws CertaintyException
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws NetworkException
+     * @throws SodiumException
+     */
+    public function testWrongContentTypeIsSkipped(): void
+    {
+        $response = json_encode([
+            'links' => [
+                [
+                    'rel' => 'self',
+                    'type' => 'application/ld+json', // Wrong type
+                    'href' => 'https://wrong.example.com/ldjson'
+                ],
+                [
+                    'rel' => 'self',
+                    'type' => 'application/activity+json',
+                    'href' => 'https://correct.example.com/users/user'
+                ]
+            ]
+        ]);
+
+        $mock = new MockHandler([
+            new Response(200, [], $response),
+        ]);
+
+        $webFinger = $this->createWebFingerWithMock($mock);
+
+        $result = $webFinger->canonicalize('@user@example.com');
+        $this->assertSame('https://correct.example.com/users/user', $result);
+    }
+
+    /**
+     * @throws CertaintyException
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws NetworkException
+     * @throws SodiumException
+     */
+    public function testInvalidHrefUrlIsSkipped(): void
+    {
+        $response = json_encode([
+            'links' => [
+                [
+                    'rel' => 'self',
+                    'type' => 'application/activity+json',
+                    'href' => 'not-a-valid-url' // Invalid URL
+                ],
+                [
+                    'rel' => 'self',
+                    'type' => 'application/activity+json',
+                    'href' => 'https://correct.example.com/users/user'
+                ]
+            ]
+        ]);
+
+        $mock = new MockHandler([
+            new Response(200, [], $response),
+        ]);
+
+        $webFinger = $this->createWebFingerWithMock($mock);
+
+        $result = $webFinger->canonicalize('@user@example.com');
+        $this->assertSame('https://correct.example.com/users/user', $result);
+    }
+
+    /**
+     * @throws CertaintyException
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws NetworkException
+     * @throws SodiumException
+     */
+    public function testUrlWithProtocolInPathThrowsAfterDomainMessage(): void
+    {
+        $webFinger = $this->createWebFingerWithMock(new MockHandler());
+        $this->expectException(InputException::class);
+        $this->expectExceptionMessage('Parse error: URL contains :// after domain');
+        $webFinger->canonicalize('https://example.com/redirect://evil.com');
+    }
+
+    /**
+     * @throws CertaintyException
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws NetworkException
+     * @throws SodiumException
+     */
+    public function testUsernameWithProtocolSeparatorThrows(): void
+    {
+        $webFinger = $this->createWebFingerWithMock(new MockHandler());
+
+        $this->expectException(InputException::class);
+        $this->expectExceptionMessage('Parse error: username contains ://');
+        $webFinger->canonicalize('https://user@example.com');
+    }
+
+    /**
+     * @throws CertaintyException
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws NetworkException
+     * @throws SodiumException
+     */
+    public function testInternationalizedDomainConvertedToPunycode(): void
+    {
+        if (!extension_loaded('intl')) {
+            $this->markTestSkipped('intl extension required for this test');
+        }
+
+        $webFingerResponse = json_encode([
+            'links' => [
+                [
+                    'rel' => 'self',
+                    'type' => 'application/activity+json',
+                    'href' => 'https://xn--mnchen-3ya.example/users/test'
+                ]
+            ]
+        ]);
+
+        $container = [];
+        $history = Middleware::history($container);
+
+        $mock = new MockHandler([
+            new Response(200, [], $webFingerResponse),
+        ]);
+
+        $handlerStack = HandlerStack::create($mock);
+        $handlerStack->push($history);
+        $client = new Client(['handler' => $handlerStack]);
+
+        $webFinger = new WebFinger($client);
+
+        $result = $webFinger->canonicalize('@testuser@münchen.example');
+        $this->assertSame('https://xn--mnchen-3ya.example/users/test', $result);
+        $this->assertCount(1, $container);
+
+        $requestUri = (string) $container[0]['request']->getUri();
+        $this->assertStringContainsString(
+            'xn--mnchen-3ya.example',
+            $requestUri,
+            'IDN must be converted to Punycode (xn--mnchen-3ya.example)'
+        );
+        $this->assertStringNotContainsString(
+            'münchen',
+            $requestUri,
+            'Original IDN (münchen) must not appear in request URL'
+        );
+    }
+
+    /**
+     * @throws CertaintyException
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws NetworkException
+     * @throws SodiumException
+     */
+    public function testJapaneseInternationalizedDomain(): void
+    {
+        if (!extension_loaded('intl')) {
+            $this->markTestSkipped('intl extension required for this test');
+        }
+
+        $webFingerResponse = json_encode([
+            'links' => [
+                [
+                    'rel' => 'self',
+                    'type' => 'application/activity+json',
+                    'href' => 'https://xn--wgv71a.example/users/nihon'
+                ]
+            ]
+        ]);
+
+        $container = [];
+        $history = Middleware::history($container);
+
+        $mock = new MockHandler([
+            new Response(200, [], $webFingerResponse),
+        ]);
+
+        $handlerStack = HandlerStack::create($mock);
+        $handlerStack->push($history);
+        $client = new Client(['handler' => $handlerStack]);
+
+        $webFinger = new WebFinger($client);
+
+        // 日本 (Japan) should become xn--wgv71a
+        $result = $webFinger->canonicalize('@user@日本.example');
+
+        $this->assertSame('https://xn--wgv71a.example/users/nihon', $result);
+
+        $requestUri = (string) $container[0]['request']->getUri();
+        $this->assertStringContainsString(
+            'xn--wgv71a.example',
+            $requestUri,
+            'Japanese IDN must be converted to Punycode'
+        );
     }
 }

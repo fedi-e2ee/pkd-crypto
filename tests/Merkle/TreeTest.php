@@ -972,4 +972,192 @@ class TreeTest extends TestCase
         $this->assertFalse($tree->verifyConsistencyProof(-1, 5, $root, $root, $proof));
         $this->assertTrue($tree->verifyConsistencyProof(0, 5, null, $root, $proof));
     }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testInclusionProofIndexBoundary(string $hashAlg): void
+    {
+        $tree = new Tree(['a', 'b', 'c', 'd'], $hashAlg);
+        $root = $tree->getRoot();
+        $this->assertNotNull($root);
+
+        $proofAtBoundary = new InclusionProof(4, []);
+        $result = $tree->verifyInclusionProof($root, 'a', $proofAtBoundary);
+        $this->assertIsBool($result);
+        $this->assertFalse($result);
+
+        $proofLastValid = new InclusionProof(3, []);
+
+        $this->assertFalse($tree->verifyInclusionProof($root, 'd', $proofLastValid));
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testGetConsistencyProofBoundary(string $hashAlg): void
+    {
+        $tree = new Tree(['a', 'b', 'c', 'd', 'e'], $hashAlg);
+
+        $proof = $tree->getConsistencyProof(10);
+        $this->assertInstanceOf(ConsistencyProof::class, $proof);
+        $this->assertEmpty($proof->proof);
+
+        $proof0 = $tree->getConsistencyProof(0);
+        $this->assertEmpty($proof0->proof);
+
+        $proofEqual = $tree->getConsistencyProof(5);
+        $this->assertEmpty($proofEqual->proof);
+
+        $proofValid = $tree->getConsistencyProof(3);
+        $this->assertNotEmpty($proofValid->proof);
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testVerifyConsistencyProofSizeValidation(string $hashAlg): void
+    {
+        $tree = new Tree(['a', 'b', 'c'], $hashAlg);
+        $root = $tree->getRoot();
+        $this->assertNotNull($root);
+        $proof = new ConsistencyProof([]);
+
+        $this->assertFalse(
+            $tree->verifyConsistencyProof(5, 3, $root, $root, $proof)
+        );
+
+        $this->assertFalse(
+            $tree->verifyConsistencyProof(-1, 3, $root, $root, $proof)
+        );
+
+        $this->assertFalse(
+            $tree->verifyConsistencyProof(-5, 3, $root, $root, $proof)
+        );
+
+        $this->assertTrue(
+            $tree->verifyConsistencyProof(0, 3, null, $root, $proof)
+        );
+    }
+
+    public function testGetSplitPointSmallValues(): void
+    {
+        $this->assertSame(0, Tree::getSplitPoint(0));
+        $this->assertSame(0, Tree::getSplitPoint(1));
+        $this->assertSame(1, Tree::getSplitPoint(2));
+        $this->assertSame(2, Tree::getSplitPoint(3));
+        $this->assertSame(2, Tree::getSplitPoint(4));
+        $this->assertSame(4, Tree::getSplitPoint(5));
+        $this->assertSame(4, Tree::getSplitPoint(6));
+        $this->assertSame(4, Tree::getSplitPoint(7));
+        $this->assertSame(4, Tree::getSplitPoint(8));
+        $this->assertSame(8, Tree::getSplitPoint(9));
+        // ... snip ...
+        $this->assertSame(8, Tree::getSplitPoint(14));
+        $this->assertSame(8, Tree::getSplitPoint(15));
+        $this->assertSame(8, Tree::getSplitPoint(16));
+        $this->assertSame(16, Tree::getSplitPoint(17));
+        // ... snip ...
+        $this->assertSame(16, Tree::getSplitPoint(32));
+        $this->assertSame(32, Tree::getSplitPoint(33));
+        // ... snip ...
+        $this->assertSame(32, Tree::getSplitPoint(64));
+        $this->assertSame(64, Tree::getSplitPoint(65));
+    }
+
+    public function testIsHashFunctionAllowedReturnType(): void
+    {
+        $resultValid = Tree::isHashFunctionAllowed('sha256');
+        $this->assertIsBool($resultValid);
+        $this->assertTrue($resultValid);
+
+        $resultInvalid = Tree::isHashFunctionAllowed('md5');
+        $this->assertIsBool($resultInvalid);
+        $this->assertFalse($resultInvalid);
+
+        $resultUnknown = Tree::isHashFunctionAllowed('not-a-hash');
+        $this->assertIsBool($resultUnknown);
+        $this->assertFalse($resultUnknown);
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testVerifyConsistencyProofFinalCheck(string $hashAlg): void
+    {
+        // Create two related trees
+        $smallTree = new Tree(['a', 'b', 'c'], $hashAlg);
+        $smallRoot = $smallTree->getRoot();
+        $this->assertNotNull($smallRoot);
+
+        $largeTree = new Tree(['a', 'b', 'c', 'd', 'e'], $hashAlg);
+        $largeRoot = $largeTree->getRoot();
+        $this->assertNotNull($largeRoot);
+
+        $proof = $largeTree->getConsistencyProof(3);
+
+        $this->assertTrue($largeTree->verifyConsistencyProof(3, 5, $smallRoot, $largeRoot, $proof));
+        $wrongOldRoot = str_repeat("\x00", strlen($smallRoot));
+        $this->assertFalse($largeTree->verifyConsistencyProof(3, 5, $wrongOldRoot, $largeRoot, $proof));
+        $wrongNewRoot = str_repeat("\x00", strlen($largeRoot));
+        $this->assertFalse($largeTree->verifyConsistencyProof(3, 5, $smallRoot, $wrongNewRoot, $proof));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testInclusionProofVerificationLoops(string $hashAlg): void
+    {
+        foreach ([2, 3, 4, 5, 6, 7, 8, 9] as $size) {
+            $leaves = array_map(fn($i) => "leaf$i", range(0, $size - 1));
+            $tree = new Tree($leaves, $hashAlg);
+            $root = $tree->getRoot();
+            $this->assertNotNull($root);
+
+            // Verify all leaves
+            for ($i = 0; $i < $size; $i++) {
+                $proof = $tree->getInclusionProof($leaves[$i]);
+                $this->assertTrue(
+                    $tree->verifyInclusionProof($root, $leaves[$i], $proof),
+                    "Failed for size=$size, index=$i"
+                );
+            }
+        }
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testConsistencyProofPowerOfTwoSizes(string $hashAlg): void
+    {
+        // Powers of two have special handling
+        foreach ([2, 4, 8, 16, 32] as $powerOfTwo) {
+            $leaves = array_map(fn($i) => "leaf$i", range(0, $powerOfTwo + 2));
+            $fullTree = new Tree($leaves, $hashAlg);
+            $fullRoot = $fullTree->getRoot();
+
+            $smallLeaves = array_slice($leaves, 0, $powerOfTwo);
+            $smallTree = new Tree($smallLeaves, $hashAlg);
+            $smallRoot = $smallTree->getRoot();
+
+            $proof = $fullTree->getConsistencyProof($powerOfTwo);
+            $this->assertTrue(
+                $fullTree->verifyConsistencyProof(
+                    $powerOfTwo,
+                    count($leaves),
+                    $smallRoot,
+                    $fullRoot,
+                    $proof
+                ),
+                "Failed for power of two: $powerOfTwo"
+            );
+        }
+    }
 }

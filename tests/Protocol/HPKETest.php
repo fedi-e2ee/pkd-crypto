@@ -220,4 +220,51 @@ class HPKETest extends TestCase
         $this->expectExceptionMessage('HPKE ciphertext must be base64url encoded without padding');
         (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey,'hpke:abcdefg:');
     }
+
+    /**
+     * @throws HPKEException
+     */
+    #[DataProvider("ciphersuites")]
+    public function testOpenWithExactlyPrefixLength(HPKE $ciphersuite): void
+    {
+        [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();
+        $this->expectException(HPKEException::class);
+        $this->expectExceptionMessage('HPKE ciphertext must be base64url encoded without padding');
+        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey, 'hpke:');
+    }
+
+    /**
+     * @throws HPKEException
+     */
+    #[DataProvider("ciphersuites")]
+    public function testOpenWithInvalidStartCharacter(HPKE $ciphersuite): void
+    {
+        [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();
+        $this->expectException(HPKEException::class);
+        $this->expectExceptionMessage('HPKE ciphertext must be base64url encoded without padding');
+        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey, 'hpke:!abcdef');
+    }
+
+    /**
+     * @throws HPKEException
+     */
+    #[DataProvider("ciphersuites")]
+    public function testOpenWithInvalidEndCharacter(HPKE $ciphersuite): void
+    {
+        [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();
+        $this->expectException(HPKEException::class);
+        $this->expectExceptionMessage('HPKE ciphertext must be base64url encoded without padding');
+        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey, 'hpke:abcdef!');
+    }
+
+    #[DataProvider("ciphersuites")]
+    public function testIsHpkeCiphertextBoundary(HPKE $ciphersuite): void
+    {
+        $adapter = new HPKEAdapter($ciphersuite);
+        $this->assertFalse($adapter->isHpkeCiphertext('hpke:'));
+        $this->assertTrue($adapter->isHpkeCiphertext('hpke:A'));
+        $this->assertFalse($adapter->isHpkeCiphertext('hpke:!A'));
+        $this->assertFalse($adapter->isHpkeCiphertext('hpke:A!'));
+        $this->assertTrue($adapter->isHpkeCiphertext('hpke:ABC123-_'));
+    }
 }
