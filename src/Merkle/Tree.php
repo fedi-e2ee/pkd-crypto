@@ -9,6 +9,8 @@ use FediE2EE\PKD\Crypto\{
 };
 use SodiumException;
 
+//= https://www.rfc-editor.org/rfc/rfc9162.txt#section-2.1
+//# Merkle Hash Trees: A Merkle tree is a binary hash tree.
 /**
  * This is a Merkle Tree implementation that follows RFC 9162.
  * @link https://datatracker.ietf.org/doc/html/rfc9162
@@ -62,6 +64,8 @@ class Tree
         return $this->root;
     }
 
+    //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#merkle-root-encoding
+    //# Merkle root encoded as base64url with prefix pkd-mr-v1:
     /**
      * @api
      */
@@ -292,6 +296,8 @@ class Tree
             && ($sn === 0);
     }
 
+    //= https://www.rfc-editor.org/rfc/rfc9162.txt#section-2.1.1
+    //# MTH({d(0)}) = HASH(0x00 || d(0)) for leaf nodes.
     /**
      * @throws SodiumException
      */
@@ -303,6 +309,8 @@ class Tree
         return hash($this->hashAlgo, "\x00" . $leaf, true);
     }
 
+    //= https://www.rfc-editor.org/rfc/rfc9162.txt#section-2.1.1
+    //# MTH(D[n]) = HASH(0x01 || MTH(D[0:k]) || MTH(D[k:n])) for internal nodes.
     /**
      * @throws SodiumException
      */

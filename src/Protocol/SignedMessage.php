@@ -13,6 +13,8 @@ use ParagonIE\ConstantTime\Base64UrlSafe;
 use Override;
 use SodiumException;
 
+//= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#protocol-signatures
+//# Protocol Signature Construction: Signatures are computed over Pre-Authentication Encoding.
 final class SignedMessage implements \JsonSerializable
 {
     use ToStringTrait;
@@ -54,11 +56,15 @@ final class SignedMessage implements \JsonSerializable
         ];
     }
 
+    //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#protocol-signatures
+    //# Signatures are calculated over a PAE encoding of four components.
     /**
      * @throws CryptoException
      */
     public function encodeForSigning(): string
     {
+        //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#protocol-signatures
+        //# The message component is the JSON-serialized message with keys sorted alphabetically.
         $encodedMessage = json_encode(
             $this->message,
             JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
@@ -66,6 +72,8 @@ final class SignedMessage implements \JsonSerializable
         if (!is_string($encodedMessage)) {
             throw new CryptoException("Could not encode message for signing");
         }
+        //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#protocol-signatures
+        //# PAE(!pkd-context, action, message, recent-merkle-root)
         return $this->preAuthEncode([
             '!pkd-context',
             self::PKD_CONTEXT,

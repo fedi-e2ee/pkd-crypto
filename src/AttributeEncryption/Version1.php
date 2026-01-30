@@ -9,6 +9,8 @@ use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use SodiumException;
 use Override;
 
+//= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-encryption-algorithm
+//# The Message Attribute Encryption Algorithm uses a committing authenticated encryption mode.
 /**
  * @api
  */
@@ -23,6 +25,8 @@ class Version1 implements AttributeVersionInterface
     public const MEM_LIMIT = 16777216; // 16 MiB
     public const OPS_LIMIT = 3;
 
+    //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-encryption-algorithm
+    //# Compute the plaintext commitment, Q, as the Argon2id output.
     /**
      * @throws SodiumException
      */
@@ -33,10 +37,14 @@ class Version1 implements AttributeVersionInterface
         string $merkleRoot,
         string $salt
     ): string {
+        //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-encryption-algorithm
+        //# l = len(m) || m || len(a) || a || len(p) || p
         $l = self::len($merkleRoot) . $merkleRoot .
             self::len($attributeName) . $attributeName .
             self::len($plaintext) . $plaintext;
 
+        //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-encryption-algorithm
+        //# Q = Argon2id(l, s, ops=3, mem=16MiB, para=1)
         return sodium_crypto_pwhash(
             32,
             $l,
@@ -47,6 +55,8 @@ class Version1 implements AttributeVersionInterface
         );
     }
 
+    //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-encryption-algorithm
+    //# Encrypt the plaintext attribute using Stream, with the nonce set to n, to obtain the ciphertext, c.
     /**
      * @throws SodiumException
      * @throws Exception
@@ -59,21 +69,34 @@ class Version1 implements AttributeVersionInterface
         string $merkleRoot
     ): string {
         $h = self::VERSION;
+        //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-encryption-algorithm
+        //# Generate a random 256-bit (32 byte) value, r.
         $r = random_bytes(32);
 
+        //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-encryption-algorithm
+        //# Derive the encryption key, Ek, and nonce, n, from the IKM using HKDF-SHA512.
         $encInfo = self::KDF_ENCRYPT_KEY . $h . $r . self::len($attributeName) . $attributeName;
         $encKeyNonce = hash_hkdf('sha512', $ikm->getBytes(), 56, $encInfo, '');
         $Ek = substr($encKeyNonce, 0, 32);
         $n = substr($encKeyNonce, 32, 24);
 
+        //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-encryption-algorithm
+        //# Derive the authentication key, Ak, from the IKM using HKDF-SHA512.
         $authInfo = self::KDF_AUTH_KEY . $h . $r . self::len($attributeName) . $attributeName;
         $Ak = hash_hkdf('sha512', $ikm->getBytes(), 32, $authInfo, '');
 
+        //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-encryption-algorithm
+        //# Derive the commitment salt, s, from the info string using SHA-512.
         $saltInfo = self::KDF_COMMIT_SALT . $h . $r . self::len($merkleRoot) . $merkleRoot . self::len($attributeName) . $attributeName;
         $s = substr(hash('sha512', $saltInfo, true), 0, 16);
 
         $Q = $this->getPlaintextCommitment($attributeName, $plaintext, $merkleRoot, $s);
+        //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-encryption-algorithm
+        //# Encrypt the plaintext attribute using Stream, with the nonce set to n.
         $c = sodium_crypto_stream_xor($plaintext, $n, $Ek);
+
+        //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-encryption-algorithm
+        //# Compute the authentication tag, t, as the first 32 bytes of HMAC-SHA512.
         $t = substr(
             hash_hmac(
                 'sha512',
@@ -85,6 +108,8 @@ class Version1 implements AttributeVersionInterface
             32
         );
 
+        //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-encryption-algorithm
+        //# Return h || r || Q || t || c.
         return $h . $r . $Q . $t . $c;
     }
 

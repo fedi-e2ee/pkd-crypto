@@ -5,17 +5,28 @@ namespace FediE2EE\PKD\Crypto;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 
+//= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revokekeythirdparty
+//# RevokeKeyThirdParty: Emergency key revocation using a revocation token.
 class Revocation
 {
+    //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revokekeythirdparty
+    //# The revocation token format is: "FediPKD1" || REVOCATION_CONSTANT || public_key || signature
     private const REVOKE_VERSION = 'FediPKD1';
     private const REVOKE_CONSTANT =
         "\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE" .
         "\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE" .
         'revoke-public-key';
 
+    //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revokekeythirdparty
+    //# Generate a revocation token that proves possession of the secret key.
     public function revokeThirdParty(SecretKey $sk): string
     {
+        //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revokekeythirdparty
+        //# tmp = "FediPKD1" || REVOCATION_CONSTANT || public_key
         $tmp = self::REVOKE_VERSION . self::REVOKE_CONSTANT . $sk->getPublicKey()->getBytes();
+
+        //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revokekeythirdparty
+        //# revocation_token = base64url(tmp || Ed25519.Sign(secret_key, tmp))
         return Base64UrlSafe::encodeUnpadded(
             $tmp .
             $sk->sign($tmp)
@@ -47,6 +58,8 @@ class Revocation
         return [$pk, $signed, $signature];
     }
 
+    //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revokekeythirdparty
+    //# Verify the signature on the revocation token to prove secret key possession.
     public function verifyRevocationToken(string $token, ?PublicKey $pk = null): bool
     {
         /** @var PublicKey $pkPrime */
