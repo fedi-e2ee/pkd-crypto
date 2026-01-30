@@ -23,7 +23,7 @@ use function
     strlen;
 
 //= https://www.rfc-editor.org/rfc/rfc9162.txt#section-2.1
-//# Merkle Hash Trees: A Merkle tree is a binary hash tree.
+//# it is a binary tree where each non-leaf node is a hash of its children.
 /**
  * This is a Merkle Tree implementation that follows RFC 9162.
  * @link https://datatracker.ietf.org/doc/html/rfc9162
@@ -78,7 +78,7 @@ class Tree
     }
 
     //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#merkle-root-encoding
-    //# Merkle root encoded as base64url with prefix pkd-mr-v1:
+    //# prefixed with a distinct prefix for the current protocol version followed by a colon
     /**
      * @api
      */
@@ -310,7 +310,7 @@ class Tree
     }
 
     //= https://www.rfc-editor.org/rfc/rfc9162.txt#section-2.1.1
-    //# MTH({d(0)}) = HASH(0x00 || d(0)) for leaf nodes.
+    //# MTH({d[0]}) = HASH(0x00 || d[0]).
     /**
      * @throws SodiumException
      */
@@ -323,7 +323,7 @@ class Tree
     }
 
     //= https://www.rfc-editor.org/rfc/rfc9162.txt#section-2.1.1
-    //# MTH(D[n]) = HASH(0x01 || MTH(D[0:k]) || MTH(D[k:n])) for internal nodes.
+    //# MTH(D_n) = HASH(0x01 || MTH(D[0:k]) || MTH(D[k:n])),
     /**
      * @throws SodiumException
      */

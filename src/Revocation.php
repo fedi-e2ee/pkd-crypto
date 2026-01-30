@@ -6,12 +6,12 @@ use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use function hash_equals, is_null, strlen, substr;
 
-//= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revokekeythirdparty
-//# RevokeKeyThirdParty: Emergency key revocation using a revocation token.
+//= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revocation-tokens
+//# A revocation token is a compact token that a user can issue at any time to revoke an existing public key.
 class Revocation
 {
-    //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revokekeythirdparty
-    //# The revocation token format is: "FediPKD1" || REVOCATION_CONSTANT || public_key || signature
+    //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revocation-tokens
+    //# `REVOCATION_CONSTANT` is a domain-separated constant for revoking an existing key.
     private const REVOKE_VERSION = 'FediPKD1';
     private const REVOKE_CONSTANT =
         "\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE" .
@@ -19,15 +19,15 @@ class Revocation
         'revoke-public-key';
 
     //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revokekeythirdparty
-    //# Generate a revocation token that proves possession of the secret key.
+    //# Since you need the secret key to generate the revocation token for a given public key
     public function revokeThirdParty(SecretKey $sk): string
     {
-        //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revokekeythirdparty
-        //# tmp = "FediPKD1" || REVOCATION_CONSTANT || public_key
+        //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revocation-tokens
+        //# tmp := version || REVOCATION_CONSTANT || public_key
         $tmp = self::REVOKE_VERSION . self::REVOKE_CONSTANT . $sk->getPublicKey()->getBytes();
 
-        //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revokekeythirdparty
-        //# revocation_token = base64url(tmp || Ed25519.Sign(secret_key, tmp))
+        //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revocation-tokens
+        //# revocation_token := base64url_encode(tmp || Sign(secret_key, tmp))
         return Base64UrlSafe::encodeUnpadded(
             $tmp .
             $sk->sign($tmp)
@@ -59,8 +59,8 @@ class Revocation
         return [$pk, $signed, $signature];
     }
 
-    //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revokekeythirdparty
-    //# Verify the signature on the revocation token to prove secret key possession.
+    //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revokekeythirdparty-validation-steps
+    //# Validate signature for  `version || REVOCATION_CONSTANT || public_key`, using `public_key`.
     public function verifyRevocationToken(string $token, ?PublicKey $pk = null): bool
     {
         /** @var PublicKey $pkPrime */

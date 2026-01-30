@@ -76,7 +76,7 @@ trait UtilTrait
     }
 
     //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#preauthencode
-    //# PAE is defined to encode an array of byte strings into a single byte string.
+    //# In order to canonicalize multi-part inputs to a hash function or signature algorithm, we will use the strategy from
     /**
      * @param array<int, string> $pieces
      * @return string
@@ -84,12 +84,12 @@ trait UtilTrait
     public static function preAuthEncode(array $pieces): string
     {
         //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#preauthencode
-        //# PAE(pieces) = LE64(len(pieces)) || PAE_ITEM(0) || PAE_ITEM(1) || ... || PAE_ITEM(n-1)
+        //# Append the LE64() of the number of pieces being encoded.
         $count = count($pieces);
         $output = self::LE64($count);
         for ($i = 0; $i < $count; ++$i) {
             //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#preauthencode
-            //# PAE_ITEM(i) = LE64(len(pieces[i])) || pieces[i]
+            //# Append the LE64() of the number of octets in this piece.
             $output .= self::LE64(strlen($pieces[$i]));
             $output .= $pieces[$i];
         }
@@ -107,7 +107,7 @@ trait UtilTrait
     }
 
     //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#preauthencode
-    //# LE64() encodes an unsigned 64-bit integer into 8 bytes in little-endian byte order.
+    //# LE64() function that accepts an unsigned 64-bit integer and returns an octet sequence in little endian byte order
     public static function LE64(int $n): string
     {
         return pack('P', $n);
