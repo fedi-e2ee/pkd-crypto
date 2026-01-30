@@ -2,13 +2,27 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto;
 
-use FediE2EE\PKD\Crypto\Exceptions\{CryptoException, HttpSignatureException, NotImplementedException};
+use FediE2EE\PKD\Crypto\Exceptions\{
+    HttpSignatureException,
+    NotImplementedException
+};
 use ParagonIE\ConstantTime\Base64;
 use Psr\Http\Message\{
     MessageInterface,
     RequestInterface
 };
 use SodiumException;
+use function
+    abs,
+    array_map,
+    implode,
+    is_null,
+    is_numeric,
+    preg_match,
+    preg_match_all,
+    preg_quote,
+    strtolower,
+    time;
 
 /**
  * @api

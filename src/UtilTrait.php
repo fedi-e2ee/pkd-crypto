@@ -5,6 +5,19 @@ namespace FediE2EE\PKD\Crypto;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\Exceptions\InputException;
 use ParagonIE_Sodium_Core_Util;
+use function
+    array_fill,
+    array_key_exists,
+    array_slice,
+    array_values,
+    count,
+    is_array,
+    ksort,
+    pack,
+    str_repeat,
+    str_replace,
+    strlen,
+    unpack;
 
 trait UtilTrait
 {

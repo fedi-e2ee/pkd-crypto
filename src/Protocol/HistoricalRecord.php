@@ -1,10 +1,12 @@
 <?php
-
+declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Protocol;
 
 use FediE2EE\PKD\Crypto\Exceptions\JsonException;
 use FediE2EE\PKD\Crypto\UtilTrait;
 use ParagonIE\ConstantTime\Base64UrlSafe;
+use SodiumException;
+use function array_key_exists, hash, sodium_hex2bin;
 
 /**
  * This class abstracts a historical record returned by a PKD instance.
@@ -19,6 +21,9 @@ class HistoricalRecord
         public readonly string $signature
     ) {}
 
+    /**
+     * @throws JsonException
+     */
     public static function fromArray(array $data): self
     {
         if (!array_key_exists('encrypted-message', $data)) {
@@ -35,6 +40,9 @@ class HistoricalRecord
         );
     }
 
+    /**
+     * @throws SodiumException
+     */
     public function serializeForMerkle(): string
     {
         return $this->preAuthEncode([

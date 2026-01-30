@@ -18,6 +18,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use JsonSerializable;
 use Override;
+use function is_null;
 
 class RevokeKey implements ProtocolMessageInterface, JsonSerializable
 {

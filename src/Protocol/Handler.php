@@ -9,14 +9,17 @@ use FediE2EE\PKD\Crypto\Exceptions\{
     JsonException,
     NotImplementedException
 };
-use FediE2EE\PKD\Crypto\{ActivityPub\WebFinger, SecretKey, UtilTrait};
-use ParagonIE\ConstantTime\Base64UrlSafe;
+use FediE2EE\PKD\Crypto\{
+    ActivityPub\WebFinger,
+    SecretKey,
+    UtilTrait
+};
 use ParagonIE\HPKE\{
     HPKE,
-    HPKEException,
     KEM\DHKEM\EncapsKey
 };
 use SodiumException;
+use function in_array, is_null;
 
 class Handler
 {

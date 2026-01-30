@@ -5,10 +5,20 @@ namespace FediE2EE\PKD\Crypto;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use ParagonIE\ConstantTime\Base64;
-use ParagonIE\ConstantTime\Base64UrlSafe;
 use ParagonIE\ConstantTime\Hex;
 use SensitiveParameter;
 use SodiumException;
+use function
+    chunk_split,
+    hash_equals,
+    is_string,
+    sodium_crypto_sign_detached,
+    sodium_crypto_sign_keypair,
+    sodium_crypto_sign_publickey_from_secretkey,
+    sodium_crypto_sign_secretkey,
+    str_replace,
+    strlen,
+    substr;
 
 /**
  * @api

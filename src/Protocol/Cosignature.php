@@ -11,6 +11,7 @@ use FediE2EE\PKD\Crypto\SecretKey;
 use FediE2EE\PKD\Crypto\UtilTrait;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use SodiumException;
+use function array_key_exists, hash_equals, is_array, is_string, json_decode, json_encode, json_last_error_msg, time;
 
 class Cosignature
 {

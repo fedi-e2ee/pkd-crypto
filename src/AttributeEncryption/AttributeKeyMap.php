@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\AttributeEncryption;
 
 use FediE2EE\PKD\Crypto\SymmetricKey;
+use function array_key_exists, array_keys, count;
 
 class AttributeKeyMap
 {
