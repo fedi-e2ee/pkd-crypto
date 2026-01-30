@@ -6,6 +6,11 @@ use ParagonIE\ConstantTime\Base64UrlSafe;
 use ParagonIE\ConstantTime\Binary;
 use Override;
 use SodiumException;
+use function
+    is_string,
+    random_bytes,
+    sodium_crypto_aead_xchacha20poly1305_ietf_decrypt,
+    sodium_crypto_aead_xchacha20poly1305_ietf_encrypt;
 
 class SymmetricKey implements \JsonSerializable
 {

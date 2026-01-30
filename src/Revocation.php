@@ -4,6 +4,7 @@ namespace FediE2EE\PKD\Crypto;
 
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
+use function hash_equals, is_null, strlen, substr;
 
 //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revokekeythirdparty
 //# RevokeKeyThirdParty: Emergency key revocation using a revocation token.

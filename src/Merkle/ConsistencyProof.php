@@ -6,6 +6,7 @@ use FediE2EE\PKD\Crypto\Exceptions\JsonException;
 use JsonSerializable;
 use Override;
 use ParagonIE\ConstantTime\Base64UrlSafe;
+use function is_array, json_decode, json_last_error_msg;
 
 class ConsistencyProof implements JsonSerializable
 {

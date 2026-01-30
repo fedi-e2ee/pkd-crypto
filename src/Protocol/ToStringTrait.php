@@ -2,6 +2,8 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Protocol;
 
+use function is_string, json_encode;
+
 /**
  * @method toArray(): array
  */

@@ -4,6 +4,7 @@ namespace FediE2EE\PKD\Crypto\Encoding;
 
 use FediE2EE\PKD\Crypto\Exceptions\EncodingException;
 use ParagonIE_Sodium_Core_Util;
+use function array_fill, count, floor, is_array, pack, strlen, unpack;
 
 /**
  * Variable-time base58 codec.

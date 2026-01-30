@@ -8,6 +8,17 @@ use FediE2EE\PKD\Crypto\UtilTrait;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use SodiumException;
 use Override;
+use function
+    hash,
+    hash_equals,
+    hash_hkdf,
+    hash_hmac,
+    pack,
+    random_bytes,
+    sodium_crypto_pwhash,
+    sodium_crypto_stream_xor,
+    strlen,
+    substr;
 
 //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-encryption-algorithm
 //# The Message Attribute Encryption Algorithm uses a committing authenticated encryption mode.

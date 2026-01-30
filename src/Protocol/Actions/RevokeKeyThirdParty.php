@@ -1,6 +1,5 @@
 <?php
 declare(strict_types=1);
-
 namespace FediE2EE\PKD\Crypto\Protocol\Actions;
 
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;

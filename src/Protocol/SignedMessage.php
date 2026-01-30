@@ -3,7 +3,6 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Protocol;
 
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
-use FediE2EE\PKD\Crypto\AttributeEncryption\Version1;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use FediE2EE\PKD\Crypto\PublicKey;
@@ -12,6 +11,7 @@ use FediE2EE\PKD\Crypto\UtilTrait;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use Override;
 use SodiumException;
+use function is_null, is_string, json_encode;
 
 //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#protocol-signatures
 //# Protocol Signature Construction: Signatures are computed over Pre-Authentication Encoding.

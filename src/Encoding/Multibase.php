@@ -4,6 +4,7 @@ namespace FediE2EE\PKD\Crypto\Encoding;
 
 use FediE2EE\PKD\Crypto\Exceptions\EncodingException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
+use function strlen, substr;
 
 class Multibase
 {

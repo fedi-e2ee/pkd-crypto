@@ -7,8 +7,8 @@ use ParagonIE\HPKE\HPKE;
 use ParagonIE\HPKE\HPKEException;
 use ParagonIE\HPKE\Interfaces\DecapsKeyInterface;
 use ParagonIE\HPKE\Interfaces\EncapsKeyInterface;
-use ParagonIE\HPKE\KEM\DHKEM\EncapsKey;
 use SensitiveParameter;
+use function hash_equals, hash_hmac, preg_match, strlen, substr;
 
 class HPKEAdapter
 {

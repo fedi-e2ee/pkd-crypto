@@ -37,6 +37,7 @@ use ParagonIE\HPKE\{
     KEM\DHKEM\EncapsKey
 };
 use SodiumException;
+use function array_key_exists, in_array, is_null;
 
 class Parser
 {
