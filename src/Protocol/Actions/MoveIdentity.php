@@ -5,11 +5,15 @@ namespace FediE2EE\PKD\Crypto\Protocol\Actions;
 use DateTimeImmutable;
 use DateTimeInterface;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
+use FediE2EE\PKD\Crypto\Exceptions\InputException;
+use FediE2EE\PKD\Crypto\Exceptions\JsonException;
+use FediE2EE\PKD\Crypto\Exceptions\NetworkException;
 use FediE2EE\PKD\Crypto\Protocol\Handler;
 use FediE2EE\PKD\Crypto\Protocol\ToStringTrait;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedMoveIdentity;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
+use GuzzleHttp\Exception\GuzzleException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use JsonSerializable;
 use Override;
@@ -22,14 +26,23 @@ class MoveIdentity implements ProtocolMessageInterface, JsonSerializable
     private string $newActor;
     private DateTimeImmutable $time;
 
+    /**
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws NetworkException
+     */
     public function __construct(string $oldActor, string $newActor, ?DateTimeInterface $time = null)
     {
         $this->oldActor = Handler::getWebFinger()->canonicalize($oldActor);
         $this->newActor = Handler::getWebFinger()->canonicalize($newActor);
         if (is_null($time)) {
-            $time = new DateTimeImmutable('NOW');
+            $this->time = new DateTimeImmutable('NOW');
+        } elseif ($time instanceof DateTimeImmutable) {
+            $this->time = $time;
+        } else {
+            $this->time = DateTimeImmutable::createFromInterface($time);
         }
-        $this->time = $time;
     }
 
     #[Override]
@@ -38,11 +51,17 @@ class MoveIdentity implements ProtocolMessageInterface, JsonSerializable
         return 'MoveIdentity';
     }
 
+    /**
+     * @api
+     */
     public function getOldActor(): string
     {
         return $this->oldActor;
     }
 
+    /**
+     * @api
+     */
     public function getNewActor(): string
     {
         return $this->newActor;

@@ -5,11 +5,15 @@ namespace FediE2EE\PKD\Crypto\Protocol\Actions;
 use DateTimeImmutable;
 use DateTimeInterface;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
+use FediE2EE\PKD\Crypto\Exceptions\InputException;
+use FediE2EE\PKD\Crypto\Exceptions\JsonException;
+use FediE2EE\PKD\Crypto\Exceptions\NetworkException;
 use FediE2EE\PKD\Crypto\Protocol\Handler;
 use FediE2EE\PKD\Crypto\Protocol\ToStringTrait;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedRevokeAuxData;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
+use GuzzleHttp\Exception\GuzzleException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use JsonSerializable;
 use Override;
@@ -24,16 +28,30 @@ class RevokeAuxData implements ProtocolMessageInterface, JsonSerializable
     private ?string $auxId;
     private DateTimeImmutable $time;
 
-    public function __construct(string $actor, string $auxType, ?string $auxData = null, ?string $auxId = null, ?DateTimeInterface $time = null)
-    {
+    /**
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws NetworkException
+     */
+    public function __construct(
+        string $actor,
+        string $auxType,
+        ?string $auxData = null,
+        ?string $auxId = null,
+        ?DateTimeInterface $time = null
+    ) {
         $this->actor = Handler::getWebFinger()->canonicalize($actor);
         $this->auxType = $auxType;
         $this->auxData = $auxData;
         $this->auxId = $auxId;
         if (is_null($time)) {
-            $time = new DateTimeImmutable('NOW');
+            $this->time = new DateTimeImmutable('NOW');
+        } elseif ($time instanceof DateTimeImmutable) {
+            $this->time = $time;
+        } else {
+            $this->time = DateTimeImmutable::createFromInterface($time);
         }
-        $this->time = $time;
     }
 
     #[Override]
@@ -42,21 +60,33 @@ class RevokeAuxData implements ProtocolMessageInterface, JsonSerializable
         return 'RevokeAuxData';
     }
 
+    /**
+     * @api
+     */
     public function getActor(): string
     {
         return $this->actor;
     }
 
+    /**
+     * @api
+     */
     public function getAuxType(): string
     {
         return $this->auxType;
     }
 
+    /**
+     * @api
+     */
     public function getAuxData(): ?string
     {
         return $this->auxData;
     }
 
+    /**
+     * @api
+     */
     public function getAuxId(): ?string
     {
         return $this->auxId;
@@ -70,10 +100,10 @@ class RevokeAuxData implements ProtocolMessageInterface, JsonSerializable
             'aux-type' => $this->auxType,
             'time' => $this->time->format(DateTimeInterface::ATOM),
         ];
-        if ($this->auxData) {
+        if ($this->auxData !== null) {
             $data['aux-data'] = $this->auxData;
         }
-        if ($this->auxId) {
+        if ($this->auxId !== null) {
             $data['aux-id'] = $this->auxId;
         }
         return $data;

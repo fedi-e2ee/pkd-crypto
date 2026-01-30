@@ -62,15 +62,21 @@ trait UtilTrait
         return str_replace("\r\n", "\n", $in);
     }
 
+    //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#preauthencode
+    //# PAE is defined to encode an array of byte strings into a single byte string.
     /**
      * @param array<int, string> $pieces
      * @return string
      */
     public static function preAuthEncode(array $pieces): string
     {
+        //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#preauthencode
+        //# PAE(pieces) = LE64(len(pieces)) || PAE_ITEM(0) || PAE_ITEM(1) || ... || PAE_ITEM(n-1)
         $count = count($pieces);
         $output = self::LE64($count);
         for ($i = 0; $i < $count; ++$i) {
+            //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#preauthencode
+            //# PAE_ITEM(i) = LE64(len(pieces[i])) || pieces[i]
             $output .= self::LE64(strlen($pieces[$i]));
             $output .= $pieces[$i];
         }
@@ -87,6 +93,8 @@ trait UtilTrait
         ksort($arr);
     }
 
+    //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#preauthencode
+    //# LE64() encodes an unsigned 64-bit integer into 8 bytes in little-endian byte order.
     public static function LE64(int $n): string
     {
         return pack('P', $n);
@@ -95,6 +103,9 @@ trait UtilTrait
     public function stringToByteArray(string $str): array
     {
         $values = unpack('C*', $str);
+        if ($values === false) {
+            return [];
+        }
         return array_values($values);
     }
 

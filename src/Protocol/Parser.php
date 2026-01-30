@@ -149,6 +149,9 @@ class Parser
         HPKE $hpke,
         ?PublicKey $publicKey = null
     ): ParsedMessage {
+        if (is_null($publicKey)) {
+            throw new ParserException('Public key is required for signature verification');
+        }
         $decrypted = (new HPKEAdapter($hpke))->open(
             decapsKey: $decapsKey,
             encapsKey: $encapsKey,

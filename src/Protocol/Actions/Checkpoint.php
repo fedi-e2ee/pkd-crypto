@@ -38,9 +38,12 @@ class Checkpoint implements ProtocolMessageInterface, JsonSerializable
         $this->toDirectory = $toDirectory;
         $this->toValidatedRoot = $toValidatedRoot;
         if (is_null($time)) {
-            $time = new DateTimeImmutable('NOW');
+            $this->time = new DateTimeImmutable('NOW');
+        } elseif ($time instanceof DateTimeImmutable) {
+            $this->time = $time;
+        } else {
+            $this->time = DateTimeImmutable::createFromInterface($time);
         }
-        $this->time = $time;
     }
 
     #[Override]
@@ -49,31 +52,49 @@ class Checkpoint implements ProtocolMessageInterface, JsonSerializable
         return 'Checkpoint';
     }
 
+    /**
+     * @api
+     */
     public function getTime(): DateTimeImmutable
     {
         return $this->time;
     }
 
+    /**
+     * @api
+     */
     public function getFromDirectory(): string
     {
         return $this->fromDirectory;
     }
 
+    /**
+     * @api
+     */
     public function getFromRoot(): string
     {
         return $this->fromRoot;
     }
 
+    /**
+     * @api
+     */
     public function getFromPublicKey(): PublicKey
     {
         return $this->fromPublicKey;
     }
 
+    /**
+     * @api
+     */
     public function getToDirectory(): string
     {
         return $this->toDirectory;
     }
 
+    /**
+     * @api
+     */
     public function getToValidatedRoot(): string
     {
         return $this->toValidatedRoot;

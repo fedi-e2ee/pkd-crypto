@@ -5,11 +5,15 @@ namespace FediE2EE\PKD\Crypto\Protocol\Actions;
 use DateTimeImmutable;
 use DateTimeInterface;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
+use FediE2EE\PKD\Crypto\Exceptions\InputException;
+use FediE2EE\PKD\Crypto\Exceptions\JsonException;
+use FediE2EE\PKD\Crypto\Exceptions\NetworkException;
 use FediE2EE\PKD\Crypto\Protocol\Handler;
 use FediE2EE\PKD\Crypto\Protocol\ToStringTrait;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedUndoFireproof;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
+use GuzzleHttp\Exception\GuzzleException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use JsonSerializable;
 use Override;
@@ -21,13 +25,22 @@ class UndoFireproof implements ProtocolMessageInterface, JsonSerializable
     private string $actor;
     private DateTimeImmutable $time;
 
+    /**
+     * @throws NetworkException
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws InputException
+     */
     public function __construct(string $actor, ?DateTimeInterface $time = null)
     {
         $this->actor = Handler::getWebFinger()->canonicalize($actor);
         if (is_null($time)) {
-            $time = new DateTimeImmutable('NOW');
+            $this->time = new DateTimeImmutable('NOW');
+        } elseif ($time instanceof DateTimeImmutable) {
+            $this->time = $time;
+        } else {
+            $this->time = DateTimeImmutable::createFromInterface($time);
         }
-        $this->time = $time;
     }
 
     #[Override]

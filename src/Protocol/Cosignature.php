@@ -37,6 +37,7 @@ class Cosignature
      * @param string $hostname HTTP Host of the PKD server to receive the cosignature
      * @return string
      *
+     * @throws JsonException
      * @throws NotImplementedException
      * @throws SodiumException
      */
@@ -57,10 +58,14 @@ class Cosignature
             ])
         );
         $payload['signature'] = Base64UrlSafe::encodeUnpadded($signature);
-        return json_encode(
+        $encoded = json_encode(
             $payload,
             JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
         );
+        if (!is_string($encoded)) {
+            throw new JsonException('Failed to encode JSON: ' . json_last_error_msg());
+        }
+        return $encoded;
     }
 
     /**

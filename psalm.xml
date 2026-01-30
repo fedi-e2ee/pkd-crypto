@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <psalm
     autoloader="vendor/autoload.php"
-    errorLevel="6"
+    errorLevel="2"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="https://getpsalm.org/schema/config"
     xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
@@ -13,12 +13,13 @@
         </ignoreFiles>
     </projectFiles>
     <issueHandlers>
+        <ClassMustBeFinal errorLevel="info" />
         <MissingDependency errorLevel="info" />
         <PossiblyUnusedMethod errorLevel="info" />
         <UndefinedClass errorLevel="info" />
         <UndefinedMethod errorLevel="info" />
         <UnusedClass errorLevel="info" />
         <UnusedParam errorLevel="info" />
-        <UnusedVariable errorLeel="info" /><!-- False positive -->
+        <UnusedVariable errorLevel="info" />
     </issueHandlers>
 </psalm>

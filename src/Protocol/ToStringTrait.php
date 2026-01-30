@@ -9,10 +9,14 @@ trait ToStringTrait
 {
     public function toString(): string
     {
-        return json_encode(
+        $encoded = json_encode(
             $this->toArray(),
             JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
         );
+        if (!is_string($encoded)) {
+            return '';
+        }
+        return $encoded;
     }
 
     public function __toString(): string

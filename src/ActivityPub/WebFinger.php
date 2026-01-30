@@ -77,7 +77,9 @@ class WebFinger
         if (!str_contains($actorUsernameOrUrl, '@')) {
             throw new InputException('Actor handle must contain exactly one @');
         }
-        [$username, $domain] = explode('@', $actorUsernameOrUrl, 2);
+        $parts = explode('@', $actorUsernameOrUrl, 2);
+        $username = $parts[0];
+        $domain = $parts[1] ?? '';
         if (empty($username) || empty($domain)) {
             throw new InputException('Invalid actor handle format');
         }
@@ -90,7 +92,8 @@ class WebFinger
 
         // Optional: Support internationalized domain names
         if (extension_loaded('intl')) {
-            $domain = idn_to_ascii($domain) ?? $domain;
+            $asciiDomain = idn_to_ascii($domain);
+            $domain = $asciiDomain !== false ? $asciiDomain : $domain;
         }
         $url = 'https://' . $domain . '/.well-known/webfinger?' . http_build_query([
             'resource' => 'acct:' . $username . '@' . $domain
