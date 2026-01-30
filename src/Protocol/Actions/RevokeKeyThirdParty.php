@@ -29,11 +29,17 @@ class RevokeKeyThirdParty implements ProtocolMessageInterface, JsonSerializable
         return 'RevokeKeyThirdParty';
     }
 
-    public static function forSecretKey(SecretKey $sk): static
+    /**
+     * @api
+     */
+    public static function forSecretKey(SecretKey $sk): self
     {
-        return new static($sk->getRevocationToken());
+        return new self($sk->getRevocationToken());
     }
 
+    /**
+     * @api
+     */
     public function getRevocationToken(): string
     {
         return $this->revocationToken;

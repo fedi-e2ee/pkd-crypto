@@ -46,11 +46,11 @@ class Base58BtcVarTime
         $zeroes = $begin;
 
         $expansionFactor = 1.365658237309761;
-        $size = (int)floor($end * $expansionFactor + 1);
+        $size = (int)floor((float)$end * $expansionFactor + 1.0);
         $baseValue = array_fill(0, $size, 0);
 
         $shift = (PHP_INT_SIZE << 3) - 1;
-        $count = $expansionFactor + 1;
+        $count = $expansionFactor + 1.0;
         for ($i = 0; $i < $end; ++$i) {
             // $mask = $i >= $begin ? 0xFF : 0;
             $mask = (($begin - $i - 1) >> $shift) & 0xff;
@@ -58,7 +58,7 @@ class Base58BtcVarTime
             $carry = $bytes[$i];
             $stop = $size - (int)floor($count);
             // $count only increases if $mask is 0xFF
-            $count += ($expansionFactor * ($mask & 1));
+            $count += $expansionFactor * (float)($mask & 1);
             for ($b = $size - 1; $stop <= $b; --$b) {
                 $carry += ($baseValue[$b] << 8);
                 [$div, $mod] = self::div58($carry);
@@ -123,19 +123,19 @@ class Base58BtcVarTime
         $sourceOffset = $zeroes = $acc;
 
         $contractionFactor = 0.7322476243909465;
-        $size = (int)floor(($sourceLength  * $contractionFactor) + 1);
+        $size = (int)floor((float)$sourceLength * $contractionFactor + 1.0);
         $decodedBytes = array_fill(0, $size, 0);
 
         $shift = (PHP_INT_SIZE << 3) - 1;
         $error = 0;
-        $count = $contractionFactor + 1;
+        $count = $contractionFactor + 1.0;
         for ($i = 0; $i < $sourceLength; ++$i) {
             $mask = (($sourceOffset - $i - 1) >> $shift) & 0xff;
 
             $carry = self::decodeByte($source[$i]);
             $error |= ($carry >> 31) & $mask;
             $stop = $size - (int)floor($count);
-            $count += ($contractionFactor * ($mask & 1));
+            $count += $contractionFactor * (float)($mask & 1);
             for ($b = $size - 1; $stop <= $b; --$b) {
                 $carry += (58 * $decodedBytes[$b]);
                 $decodedBytes[$b] ^= ($decodedBytes[$b] ^ $carry) & $mask;
@@ -261,6 +261,10 @@ class Base58BtcVarTime
      */
     protected static function ord(string $chr): int
     {
-        return unpack('C', $chr)[1];
+        $unpacked = unpack('C', $chr);
+        if (!is_array($unpacked)) {
+            return 0;
+        }
+        return $unpacked[1];
     }
 }

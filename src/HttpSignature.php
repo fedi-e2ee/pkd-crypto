@@ -230,12 +230,23 @@ final class HttpSignature
         $paramsStr = $matches[3];
 
         $coveredComponents = [];
-        if (preg_match_all('/"([^"]+)"/', $coveredComponentsStr, $componentMatches)) {
+        $matched = preg_match_all(
+            '/"([^"]+)"/',
+            $coveredComponentsStr,
+            $componentMatches
+        );
+        if ($matched !== false && $componentMatches[1]) {
             $coveredComponents = $componentMatches[1];
         }
 
         $params = [];
-        if (preg_match_all('/;([^=]+)=("([^"]+)"|([0-9]+))/', $paramsStr, $paramMatches, PREG_SET_ORDER)) {
+        $matched = preg_match_all(
+            '/;([^=]+)=("([^"]+)"|([0-9]+))/',
+            $paramsStr,
+            $paramMatches,
+            PREG_SET_ORDER
+        );
+        if ($matched !== false) {
             foreach ($paramMatches as $match) {
                 $params[$match[1]] = $match[2];
             }

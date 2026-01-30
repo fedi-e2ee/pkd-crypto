@@ -7,6 +7,7 @@ use ParagonIE\HPKE\HPKE;
 use ParagonIE\HPKE\HPKEException;
 use ParagonIE\HPKE\Interfaces\DecapsKeyInterface;
 use ParagonIE\HPKE\Interfaces\EncapsKeyInterface;
+use ParagonIE\HPKE\KEM\DHKEM\EncapsKey;
 use SensitiveParameter;
 
 class HPKEAdapter
@@ -76,13 +77,13 @@ class HPKEAdapter
         );
     }
 
+    /**
+     * @psalm-suppress NoInterfaceProperties
+     */
     public function keyId(EncapsKeyInterface $encapsKey): string
     {
-        return hash_hmac(
-            $this->hpke->kdf->hash->value,
-            self::KEY_ID_DOMAIN,
-            $encapsKey->bytes,
-            true
-        );
+        $hashAlgo = $this->hpke->kdf->hash->value;
+        $keyBytes = $encapsKey->bytes;
+        return hash_hmac($hashAlgo, self::KEY_ID_DOMAIN, $keyBytes, true);
     }
 }

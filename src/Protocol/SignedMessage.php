@@ -63,7 +63,7 @@ final class SignedMessage implements \JsonSerializable
             $this->message,
             JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
         );
-        if (!$encodedMessage) {
+        if (!is_string($encodedMessage)) {
             throw new CryptoException("Could not encode message for signing");
         }
         return $this->preAuthEncode([

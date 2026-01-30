@@ -140,21 +140,27 @@ class IncrementalTree extends Tree
         return $this->hashNode($left, $right);
     }
 
+    /**
+     * @throws JsonException
+     */
     public function toJson(): string
     {
-        $encodedNodes = [];
-        foreach ($this->nodes as $key => $hash) {
-            $encodedNodes[$key] = Base64UrlSafe::encode($hash);
-        }
+        $encodedNodes = array_map(function ($hash) {
+            return Base64UrlSafe::encode($hash);
+        }, $this->nodes);
         $state = [
             'size' => $this->size,
             'hashAlgo' => $this->hashAlgo,
             'nodes' => $encodedNodes,
         ];
-        return json_encode(
+        $encoded = json_encode(
             $state,
             JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
         );
+        if (!is_string($encoded)) {
+            throw new JsonException('Failed to encode JSON: ' . json_last_error_msg());
+        }
+        return $encoded;
     }
 
     /**
@@ -162,7 +168,7 @@ class IncrementalTree extends Tree
      * @throws JsonException
      * @throws SodiumException
      */
-    public static function fromJson(string $json): static
+    public static function fromJson(string $json): self
     {
         $state = json_decode($json, true);
         if (!is_array($state)) {
@@ -186,7 +192,7 @@ class IncrementalTree extends Tree
         if (!is_array($state['nodes'])) {
             throw new InputException('Nodes must be an array');
         }
-        $tree = new static([], $state['hashAlgo']);
+        $tree = new self([], $state['hashAlgo']);
         $tree->size = $state['size'];
         foreach ($state['nodes'] as $key => $hash) {
             $tree->nodes[$key] = Base64UrlSafe::decode($hash);

@@ -95,6 +95,9 @@ trait UtilTrait
     public function stringToByteArray(string $str): array
     {
         $values = unpack('C*', $str);
+        if ($values === false) {
+            return [];
+        }
         return array_values($values);
     }
 
