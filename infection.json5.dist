@@ -163,7 +163,7 @@
     },
     "threads": "max",
     "timeout": 600,
-    "minCoveredMsi": 90,
+    "minCoveredMsi": 95,
     "logs": {
         "text": "infection.log"
     }
