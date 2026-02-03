@@ -1,0 +1,10 @@
+parameters:
+	level: 5
+	paths:
+		- src
+
+	ignoreErrors:
+		-
+			identifier: function.alreadyNarrowedType
+		-
+			identifier: property.notFound

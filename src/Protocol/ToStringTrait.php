@@ -5,7 +5,7 @@ namespace FediE2EE\PKD\Crypto\Protocol;
 use function is_string, json_encode;
 
 /**
- * @method toArray(): array
+ * @method array toArray()
  */
 trait ToStringTrait
 {
