@@ -213,6 +213,24 @@ class HPKETest extends TestCase
     }
 
     #[DataProvider("ciphersuites")]
+    public function testInvalidPayloadDoubleColon(HPKE $ciphersuite): void
+    {
+        [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();
+        $this->expectException(HPKEException::class);
+        $this->expectExceptionMessage('HPKE ciphertext must be base64url encoded without padding');
+        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey,'hpke::abcdefg');
+    }
+
+    #[DataProvider("ciphersuites")]
+    public function testInvalidPayloadTotallyInvalid(HPKE $ciphersuite): void
+    {
+        [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();
+        $this->expectException(HPKEException::class);
+        $this->expectExceptionMessage('HPKE ciphertext must be base64url encoded without padding');
+        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey,'hpke:$!@^');
+    }
+
+    #[DataProvider("ciphersuites")]
     public function testInvalidPayloadSuffix(HPKE $ciphersuite): void
     {
         [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();

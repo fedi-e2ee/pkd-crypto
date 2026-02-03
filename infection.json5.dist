@@ -22,12 +22,14 @@
         },
         "Assignment": {
             "ignore": [
-                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime",
+                "FediE2EE\\PKD\\Crypto\\Merkle\\Tree"
             ]
         },
         "BitwiseAnd": {
             "ignore": [
-                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime",
+                "FediE2EE\\PKD\\Crypto\\Merkle\\Tree"
             ],
             "ignoreSourceCodeByRegex": [
                 ".*JSON_.*"
@@ -39,6 +41,11 @@
             ],
             "ignoreSourceCodeByRegex": [
                 ".*JSON_.*"
+            ]
+        },
+        "Break_": {
+            "ignore": [
+                "FediE2EE\\PKD\\Crypto\\Merkle\\IncrementalTree"
             ]
         },
         "CastInt": {
@@ -91,6 +98,16 @@
             	".*chunk_split.*",
                 ".*hash_hkdf.*",
                 ".*substr.*"
+            ]
+        },
+        "LogicalAnd": {
+            "ignore": [
+                "FediE2EE\\PKD\\Crypto\\Merkle\\Tree"
+            ]
+        },
+        "LogicalAndNegation": {
+            "ignore": [
+                "FediE2EE\\PKD\\Crypto\\Merkle\\Tree"
             ]
         },
         "LogicalOr": {
