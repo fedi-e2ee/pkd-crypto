@@ -1,6 +1,5 @@
 <?php
 declare(strict_types=1);
-
 namespace FediE2EE\PKD\Crypto\Tests\Protocol;
 
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
@@ -340,5 +339,59 @@ class BundleTest extends TestCase
 
         $this->expectException(InputException::class);
         Bundle::fromJson(json_encode($decoded));
+    }
+
+    /**
+     * @throws BundleException
+     * @throws InputException
+     */
+    public function testFromJsonWithKeyMapMissingAction(): void
+    {
+        $keyMap = new AttributeKeyMap();
+        $json = json_encode([
+            // Missing 'action' key
+            'message' => ['actor' => 'test', 'public-key' => 'test'],
+            'recent-merkle-root' => 'pkd-mr-v1:test',
+            'signature' => Base64UrlSafe::encodeUnpadded('test'),
+        ]);
+
+        $this->expectException(InputException::class);
+        Bundle::fromJson($json, $keyMap);
+    }
+
+    /**
+     * @throws BundleException
+     * @throws InputException
+     */
+    public function testFromJsonWithKeyMapMissingMessage(): void
+    {
+        $keyMap = new AttributeKeyMap();
+        $json = json_encode([
+            'action' => 'AddKey',
+            // Missing 'message' key
+            'recent-merkle-root' => 'pkd-mr-v1:test',
+            'signature' => Base64UrlSafe::encodeUnpadded('test'),
+        ]);
+
+        $this->expectException(InputException::class);
+        Bundle::fromJson($json, $keyMap);
+    }
+
+    /**
+     * @throws BundleException
+     * @throws InputException
+     */
+    public function testFromJsonWithKeyMapMissingMerkleRoot(): void
+    {
+        $keyMap = new AttributeKeyMap();
+        $json = json_encode([
+            'action' => 'AddKey',
+            'message' => ['actor' => 'test', 'public-key' => 'test'],
+            'signature' => Base64UrlSafe::encodeUnpadded('test'),
+            // Missing 'recent-merkle-root' key
+        ]);
+
+        $this->expectException(InputException::class);
+        Bundle::fromJson($json, $keyMap);
     }
 }

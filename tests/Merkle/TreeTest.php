@@ -6,6 +6,7 @@ use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\Merkle\ConsistencyProof;
 use FediE2EE\PKD\Crypto\Merkle\InclusionProof;
 use FediE2EE\PKD\Crypto\Merkle\Tree;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -1159,5 +1160,91 @@ class TreeTest extends TestCase
                 "Failed for power of two: $powerOfTwo"
             );
         }
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    public function testGetEncodedRootHashLengths(): void
+    {
+        $treeSha256 = new Tree([], 'sha256');
+        $encoded256 = $treeSha256->getEncodedRoot();
+        $this->assertStringStartsWith('pkd-mr-v1:', $encoded256);
+        $encodedPart256 = substr($encoded256, 10);
+        $decoded256 = Base64UrlSafe::decodeNoPadding($encodedPart256);
+        $this->assertSame(32, strlen($decoded256), 'sha256 should produce 32-byte hash');
+
+        $treeSha384 = new Tree([], 'sha384');
+        $encoded384 = $treeSha384->getEncodedRoot();
+        $this->assertStringStartsWith('pkd-mr-v1:', $encoded384);
+        $encodedPart384 = substr($encoded384, 10);
+        $decoded384 = Base64UrlSafe::decodeNoPadding($encodedPart384);
+        $this->assertSame(48, strlen($decoded384), 'sha384 should produce 48-byte hash');
+
+        $treeSha512 = new Tree([], 'sha512');
+        $encoded512 = $treeSha512->getEncodedRoot();
+        $this->assertStringStartsWith('pkd-mr-v1:', $encoded512);
+        $encodedPart512 = substr($encoded512, 10);
+        $decoded512 = Base64UrlSafe::decodeNoPadding($encodedPart512);
+        $this->assertSame(64, strlen($decoded512), 'sha512 should produce 64-byte hash');
+
+        $treeBlake = new Tree([], 'blake2b');
+        $encodedBlake = $treeBlake->getEncodedRoot();
+        $this->assertStringStartsWith('pkd-mr-v1:', $encodedBlake);
+        $encodedPartBlake = substr($encodedBlake, 10);
+        $decodedBlake = Base64UrlSafe::decodeNoPadding($encodedPartBlake);
+        $this->assertSame(32, strlen($decodedBlake), 'blake2b should produce 32-byte hash');
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    public function testVerifyInclusionProofIndexEqualToSize(): void
+    {
+        $leaves = ['a', 'b', 'c'];
+        $tree = new Tree($leaves);
+        $root = $tree->getRoot();
+        $this->assertNotNull($root);
+        $invalidProof = new InclusionProof(3, []); // index 3 for size 3
+        $result = $tree->verifyInclusionProof($root, 'a', $invalidProof);
+        $this->assertFalse($result, 'Proof with index === size should be rejected');
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    public function testVerifyInclusionProofIndexGreaterThanSize(): void
+    {
+        $leaves = ['a', 'b'];
+        $tree = new Tree($leaves);
+        $root = $tree->getRoot();
+        $this->assertNotNull($root);
+        $invalidProof = new InclusionProof(5, []);
+        $result = $tree->verifyInclusionProof($root, 'a', $invalidProof);
+        $this->assertFalse($result, 'Proof with index > size should be rejected');
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    public function testConsistencyProofOldSizeEqualsNewSize(): void
+    {
+        $leaves = ['a', 'b', 'c'];
+        $tree = new Tree($leaves);
+        $proof = $tree->getConsistencyProof(3);
+        $this->assertInstanceOf(ConsistencyProof::class, $proof);
+        $this->assertEmpty($proof->proof, 'Consistency proof should be empty when old size === new size');
+    }
+
+    /**
+     * @throws SodiumException
+     */
+    public function testConsistencyProofOldSizeGreaterThanNewSize(): void
+    {
+        $leaves = ['a', 'b'];
+        $tree = new Tree($leaves);
+        $proof = $tree->getConsistencyProof(5);
+        $this->assertInstanceOf(ConsistencyProof::class, $proof);
+        $this->assertEmpty($proof->proof, 'Consistency proof should be empty when old size > new size');
     }
 }
