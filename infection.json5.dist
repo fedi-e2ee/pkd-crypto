@@ -43,10 +43,16 @@
         },
         "CastInt": {
             "ignore": [
+                "FediE2EE\\PKD\\Crypto\\HttpSignature",
                 "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
         },
         "Division": {
+            "ignore": [
+                "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
+            ]
+        },
+        "CastFloat": {
             "ignore": [
                 "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
@@ -60,10 +66,11 @@
         "ConcatOperandRemoval": false,
         "DecrementInteger": {
             "ignore": [
-                "FediE2EE\\PKD\\Merkle\\Tree",
-                "FediE2EE\\PKD\\Merkle\\IncrementalTree",
-                "FediE2EE\\PKD\\PublicKey::encodePem",
-                "FediE2EE\\PKD\\UtilTrait::stripNewlines",
+                "FediE2EE\\PKD\\Crypto\\HttpSignature",
+                "FediE2EE\\PKD\\Crypto\\Merkle\\Tree",
+                "FediE2EE\\PKD\\Crypto\\Merkle\\IncrementalTree",
+                "FediE2EE\\PKD\\Crypto\\PublicKey::encodePem",
+                "FediE2EE\\PKD\\Crypto\\UtilTrait::stripNewlines",
                 "*::stripNewlines",
                 "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ],
@@ -73,10 +80,10 @@
         },
         "IncrementInteger": {
             "ignore": [
-                "FediE2EE\\PKD\\Merkle\\Tree",
-                "FediE2EE\\PKD\\Merkle\\IncrementalTree",
-                "FediE2EE\\PKD\\PublicKey::encodePem",
-                "FediE2EE\\PKD\\UtilTrait::stripNewlines",
+                "FediE2EE\\PKD\\Crypto\\Merkle\\Tree",
+                "FediE2EE\\PKD\\Crypto\\Merkle\\IncrementalTree",
+                "FediE2EE\\PKD\\Crypto\\PublicKey::encodePem",
+                "FediE2EE\\PKD\\Crypto\\UtilTrait::stripNewlines",
                 "*::stripNewlines",
                 "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ],
@@ -88,7 +95,7 @@
         },
         "LogicalOr": {
             "ignore": [
-                "FediE2EE\\PKD\\Merkle\\Tree",
+                "FediE2EE\\PKD\\Crypto\\Merkle\\Tree",
                 "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
         },
@@ -114,10 +121,12 @@
         },
         "ReturnRemoval": {
             "ignore": [
-                "FediE2EE\\PKD\\Merkle\\Tree",
-                "FediE2EE\\PKD\\Merkle\\IncrementalTree"
+                "FediE2EE\\PKD\\Crypto\\Merkle\\Tree",
+                "FediE2EE\\PKD\\Crypto\\Merkle\\IncrementalTree"
             ],
             "ignoreSourceCodeByRegex": [
+                ".*return '';.*",
+                ".*return null;.*",
             	".*chunk_split.*",
                 ".*hash_hkdf.*",
                 ".*substr.*"
