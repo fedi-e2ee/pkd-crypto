@@ -1,10 +1,8 @@
 name: Semgrep
 on:
   pull_request:
-  workflow_dispatch: {}
   push:
-    branches:
-      - main
+  workflow_dispatch: {}
   schedule:
     - cron: '52 13 * * *' # Sets Semgrep to scan every day at 09:41 UTC.
     # Time chosen randomly.
