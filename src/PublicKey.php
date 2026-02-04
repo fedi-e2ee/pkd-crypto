@@ -3,12 +3,16 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto;
 
 use FediE2EE\PKD\Crypto\Encoding\Multibase;
-use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
-use FediE2EE\PKD\Crypto\Exceptions\EncodingException;
-use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
-use ParagonIE\ConstantTime\Base64;
-use ParagonIE\ConstantTime\Base64UrlSafe;
-use ParagonIE\ConstantTime\Hex;
+use FediE2EE\PKD\Crypto\Exceptions\{
+    CryptoException,
+    EncodingException,
+    NotImplementedException
+};
+use ParagonIE\ConstantTime\{
+    Base64,
+    Base64UrlSafe,
+    Hex
+};
 use SensitiveParameter;
 use SodiumException;
 use function

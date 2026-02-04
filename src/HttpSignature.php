@@ -45,6 +45,8 @@ final class HttpSignature
     }
 
     /**
+     * Sign an HTTP message (request or response), using RFC 9421.
+     *
      * @throws NotImplementedException
      * @throws SodiumException
      *
@@ -75,6 +77,8 @@ final class HttpSignature
     }
 
     /**
+     * Verify an HTTP Signal message, returning false if the signature is not valid.
+     *
      * @throws NotImplementedException
      * @throws HttpSignatureException
      * @throws SodiumException
@@ -87,6 +91,7 @@ final class HttpSignature
     }
 
     /**
+     * Verify an HTTP Signal message, throwing an HttpSignatureException if there is no valid signature.
      * @api
      *
      * @throws HttpSignatureException
@@ -101,6 +106,8 @@ final class HttpSignature
     }
 
     /**
+     * Internal function for the two public verify methods.
+     *
      * @throws HttpSignatureException
      * @throws NotImplementedException
      * @throws SodiumException

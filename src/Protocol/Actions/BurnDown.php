@@ -5,18 +5,24 @@ namespace FediE2EE\PKD\Crypto\Protocol\Actions;
 use DateTimeImmutable;
 use DateTimeInterface;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
-use FediE2EE\PKD\Crypto\Exceptions\InputException;
-use FediE2EE\PKD\Crypto\Exceptions\JsonException;
-use FediE2EE\PKD\Crypto\Exceptions\NetworkException;
-use FediE2EE\PKD\Crypto\Protocol\Handler;
-use FediE2EE\PKD\Crypto\Protocol\ToStringTrait;
-use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedBurnDown;
-use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
-use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
+use FediE2EE\PKD\Crypto\Exceptions\{
+    InputException,
+    JsonException,
+    NetworkException
+};
+use FediE2EE\PKD\Crypto\Protocol\{
+    EncryptedActions\EncryptedBurnDown,
+    EncryptedProtocolMessageInterface,
+    Handler,
+    ProtocolMessageInterface,
+    ToStringTrait
+};
 use GuzzleHttp\Exception\GuzzleException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use JsonSerializable;
 use Override;
+use Random\RandomException;
+use SodiumException;
 use function is_null;
 
 class BurnDown implements ProtocolMessageInterface, JsonSerializable
@@ -34,8 +40,12 @@ class BurnDown implements ProtocolMessageInterface, JsonSerializable
      * @throws JsonException
      * @throws NetworkException
      */
-    public function __construct(string $actor, string $operator, ?DateTimeInterface $time = null, ?string $otp = null)
-    {
+    public function __construct(
+        string $actor,
+        string $operator,
+        ?DateTimeInterface $time = null,
+        ?string $otp = null
+    ) {
         $this->actor = Handler::getWebFinger()->canonicalize($actor);
         $this->operator = $operator;
         if (is_null($time)) {
@@ -98,6 +108,10 @@ class BurnDown implements ProtocolMessageInterface, JsonSerializable
         return $this->toArray();
     }
 
+    /**
+     * @throws RandomException
+     * @throws SodiumException
+     */
     #[Override]
     public function encrypt(AttributeKeyMap $keyMap): EncryptedProtocolMessageInterface
     {

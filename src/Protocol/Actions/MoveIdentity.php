@@ -5,18 +5,24 @@ namespace FediE2EE\PKD\Crypto\Protocol\Actions;
 use DateTimeImmutable;
 use DateTimeInterface;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
-use FediE2EE\PKD\Crypto\Exceptions\InputException;
-use FediE2EE\PKD\Crypto\Exceptions\JsonException;
-use FediE2EE\PKD\Crypto\Exceptions\NetworkException;
-use FediE2EE\PKD\Crypto\Protocol\Handler;
-use FediE2EE\PKD\Crypto\Protocol\ToStringTrait;
-use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedMoveIdentity;
-use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
-use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
+use FediE2EE\PKD\Crypto\Exceptions\{
+    InputException,
+    JsonException,
+    NetworkException
+};
+use FediE2EE\PKD\Crypto\Protocol\{
+    EncryptedActions\EncryptedMoveIdentity,
+    EncryptedProtocolMessageInterface,
+    Handler,
+    ProtocolMessageInterface,
+    ToStringTrait
+};
 use GuzzleHttp\Exception\GuzzleException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use JsonSerializable;
 use Override;
+use Random\RandomException;
+use SodiumException;
 use function is_null;
 
 class MoveIdentity implements ProtocolMessageInterface, JsonSerializable
@@ -84,6 +90,10 @@ class MoveIdentity implements ProtocolMessageInterface, JsonSerializable
         return $this->toArray();
     }
 
+    /**
+     * @throws RandomException
+     * @throws SodiumException
+     */
     #[Override]
     public function encrypt(AttributeKeyMap $keyMap): EncryptedProtocolMessageInterface
     {

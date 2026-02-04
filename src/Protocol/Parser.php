@@ -2,13 +2,13 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Protocol;
 
-use FediE2EE\PKD\Crypto\Exceptions\{
-    BundleException,
+use FediE2EE\PKD\Crypto\Exceptions\{BundleException,
     CryptoException,
     InputException,
+    JsonException,
+    NetworkException,
     NotImplementedException,
-    ParserException
-};
+    ParserException};
 use FediE2EE\PKD\Crypto\Protocol\Actions\{
     BurnDown,
     Checkpoint,
@@ -24,12 +24,12 @@ use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\{
     EncryptedRevokeKey,
     EncryptedUndoFireproof
 };
-use Exception;
 use FediE2EE\PKD\Crypto\{
     AttributeEncryption\AttributeKeyMap,
     PublicKey,
     UtilTrait
 };
+use GuzzleHttp\Exception\GuzzleException;
 use ParagonIE\HPKE\{
     HPKE,
     HPKEException,
@@ -46,6 +46,8 @@ class Parser
     const UNENCRYPTED_ACTIONS = ['BurnDown', 'Checkpoint', 'RevokeKeyThirdParty'];
 
     /**
+     * Extract a message with encrypted attributes from a Bundle.
+     *
      * @throws CryptoException
      */
     public function getEncryptedMessage(Bundle $message): EncryptedProtocolMessageInterface
@@ -71,8 +73,14 @@ class Parser
     }
 
     /**
+     * Extract an unencrypted message from the Bundle. If the bundle is encrypted, this automatically
+     * decrypts the protocol message's attributes for you.
+     *
      * @throws CryptoException
-     * @throws Exception
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws NetworkException
      */
     public function getUnencryptedMessage(Bundle $bundle): ProtocolMessageInterface
     {
@@ -135,6 +143,8 @@ class Parser
     }
 
     /**
+     * HPKE decrypt a payload and then parse the message.
+     *
      * @api
      *
      * @throws CryptoException
@@ -162,9 +172,16 @@ class Parser
     }
 
     /**
+     * Parse a JSON blob into a ParsedMessage. This verifies the signature on the Protocol Message.
+     *
+     * @throws BundleException
      * @throws CryptoException
-     * @throws ParserException
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws NetworkException
      * @throws NotImplementedException
+     * @throws ParserException
      * @throws SodiumException
      */
     public function parse(
@@ -188,9 +205,14 @@ class Parser
 
     /**
      * @api
+     * This parses a message without verifying the Protocol Message signature.
      *
      * @throws BundleException
      * @throws CryptoException
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws NetworkException
      */
     public function parseUnverified(string $json): ParsedMessage
     {
@@ -207,8 +229,14 @@ class Parser
 
     /**
      * @api
+     * This parses a message for use in ActivityPub. Rejects BurnDown.
      *
+     * @throws BundleException
      * @throws CryptoException
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws NetworkException
      * @throws NotImplementedException
      * @throws ParserException
      * @throws SodiumException
@@ -226,9 +254,14 @@ class Parser
 
     /**
      * @api
+     * Skip signature verification but still reject BurnDown.
      *
      * @throws BundleException
      * @throws CryptoException
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws NetworkException
      * @throws ParserException
      */
     public function parseUnverifiedForActivityPub(string $json): ParsedMessage
@@ -241,8 +274,12 @@ class Parser
     }
 
     /**
+     * Decrypt a Protocol Message using HPKE. The attributes should still be encrypted, but you
+     * might have the keys stored in the "symmetric-keys" index.
+     *
      * @throws BundleException
      * @throws HPKEException
+     * @throws InputException
      */
     public function hpkeDecrypt(
         string $encrypted,

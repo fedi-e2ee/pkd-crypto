@@ -3,11 +3,15 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Protocol;
 
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
-use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
-use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
-use FediE2EE\PKD\Crypto\PublicKey;
-use FediE2EE\PKD\Crypto\SecretKey;
-use FediE2EE\PKD\Crypto\UtilTrait;
+use FediE2EE\PKD\Crypto\Exceptions\{
+    CryptoException,
+    NotImplementedException
+};
+use FediE2EE\PKD\Crypto\{
+    PublicKey,
+    SecretKey,
+    UtilTrait
+};
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use Override;
 use SodiumException;
@@ -165,6 +169,9 @@ final class SignedMessage implements \JsonSerializable
         return $key->verify($this->signature, $this->encodeForSigning());
     }
 
+    /**
+     * @throws CryptoException
+     */
     public function toArray(): array
     {
         return [

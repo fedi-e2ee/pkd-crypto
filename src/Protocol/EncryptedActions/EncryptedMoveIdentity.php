@@ -3,12 +3,19 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Protocol\EncryptedActions;
 
 use DateTimeImmutable;
-use Exception;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
-use FediE2EE\PKD\Crypto\Protocol\Actions\MoveIdentity;
-use FediE2EE\PKD\Crypto\Protocol\ToStringTrait;
-use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
-use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
+use GuzzleHttp\Exception\GuzzleException;
+use FediE2EE\PKD\Crypto\Exceptions\{
+    InputException,
+    JsonException,
+    NetworkException
+};
+use FediE2EE\PKD\Crypto\Protocol\{
+    Actions\MoveIdentity,
+    EncryptedProtocolMessageInterface,
+    ProtocolMessageInterface,
+    ToStringTrait
+};
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use JsonSerializable;
 use Override;
@@ -52,8 +59,11 @@ class EncryptedMoveIdentity implements EncryptedProtocolMessageInterface, JsonSe
     }
 
     /**
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws NetworkException
      * @throws SodiumException
-     * @throws Exception
      */
     #[Override]
     public function decrypt(AttributeKeyMap $keyMap): ProtocolMessageInterface

@@ -4,6 +4,7 @@ namespace FediE2EE\PKD\Crypto;
 
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
+use SodiumException;
 use function hash_equals, is_null, strlen, substr;
 
 //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revocation-tokens
@@ -18,6 +19,13 @@ class Revocation
         "\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE" .
         'revoke-public-key';
 
+    /**
+     * Calculate a Third-Party revocation token for the given Secret Key.
+     *
+     * @throws CryptoException
+     * @throws Exceptions\NotImplementedException
+     * @throws SodiumException
+     */
     //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revokekeythirdparty
     //# Since you need the secret key to generate the revocation token for a given public key
     public function revokeThirdParty(SecretKey $sk): string
@@ -34,6 +42,11 @@ class Revocation
         );
     }
 
+    /**
+     * Decode a Revocation token into its constinuent pieces for verification.
+     *
+     * @throws CryptoException
+     */
     public function decode(string $token): array
     {
         $decoded = Base64UrlSafe::decodeNoPadding($token);
@@ -59,6 +72,14 @@ class Revocation
         return [$pk, $signed, $signature];
     }
 
+    /**
+     * Verify a revocation token.
+     *
+     * @throws CryptoException
+     * @throws Exceptions\NotImplementedException
+     * @throws SodiumException
+     *
+     */
     //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revokekeythirdparty-validation-steps
     //# Validate signature for  `version || REVOCATION_CONSTANT || public_key`, using `public_key`.
     public function verifyRevocationToken(string $token, ?PublicKey $pk = null): bool

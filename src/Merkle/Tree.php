@@ -39,6 +39,8 @@ class Tree
     /**
      * @param string[] $leaves Leaves to insert
      * @param string $hashAlgo Hash function algorithm
+     *
+     * @throws CryptoException
      * @throws SodiumException
      */
     public function __construct(
@@ -67,6 +69,9 @@ class Tree
         $this->root = $this->getRootForSubtree(0, count($this->leaves));
     }
 
+    /**
+     * @throws SodiumException
+     */
     public function updateRoot(): void
     {
         $this->root = $this->getRootForSubtree(0, count($this->leaves));
