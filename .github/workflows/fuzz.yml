@@ -19,7 +19,7 @@ jobs:
       FUZZ_RUNS: ${{ startsWith(github.ref, 'refs/tags/') && '500000' || '50000' }}
       FUZZ_RUNS_AE: ${{ startsWith(github.ref, 'refs/tags/') && '10000' || '5000' }}
     steps:
-      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955  # v4.3.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
         with:
           persist-credentials: false
 
