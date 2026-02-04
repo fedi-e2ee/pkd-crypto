@@ -58,6 +58,21 @@ jobs:
           php-fuzzer fuzz --max-runs "$FUZZ_RUNS_AE" fuzzing/FuzzAttributeEncryption.php
           shopt -s nullglob; for f in crash-*.txt; do [ -e "$f" ] && mv "$f" "${f/crash-/fuzzed-FuzzAttributeEncryption-}"; done
 
+      - name: Run FuzzHttpSignature
+        run: |
+          php-fuzzer fuzz --max-runs "$FUZZ_RUNS" fuzzing/FuzzHttpSignature.php
+          shopt -s nullglob; for f in crash-*.txt; do [ -e "$f" ] && mv "$f" "${f/crash-/fuzzed-FuzzHttpSignature-}"; done
+
+      - name: Run FuzzRevocation
+        run: |
+          php-fuzzer fuzz --max-runs "$FUZZ_RUNS" fuzzing/FuzzRevocation.php
+          shopt -s nullglob; for f in crash-*.txt; do [ -e "$f" ] && mv "$f" "${f/crash-/fuzzed-FuzzRevocation-}"; done
+
+      - name: Run FuzzKeys
+        run: |
+          php-fuzzer fuzz --max-runs "$FUZZ_RUNS" fuzzing/FuzzKeys.php
+          shopt -s nullglob; for f in crash-*.txt; do [ -e "$f" ] && mv "$f" "${f/crash-/fuzzed-FuzzKeys-}"; done
+
       - name: Check for crashes
         if: always()
         run: |
