@@ -47,6 +47,11 @@ final class SecretKey
     }
 
     /**
+     * Generate a random secret key.
+     *
+     * The default (and currently only supported) algorithm is Ed25519.
+     *
+     * @throws CryptoException
      * @throws NotImplementedException
      * @throws SodiumException
      */
@@ -63,6 +68,9 @@ final class SecretKey
         }
     }
 
+    /**
+     * Returns a PEM-encoded string representing the secret key.
+     */
     public function encodePem(): string
     {
         $encoded = Base64::encode(
@@ -74,6 +82,8 @@ final class SecretKey
     }
 
     /**
+     * Load a secret key from a PEM-encoded string.
+     *
      * @param string $pem
      * @param string $algo
      * @return self
@@ -104,6 +114,8 @@ final class SecretKey
     }
 
     /**
+     * Get the raw key bytes.
+     *
      * @api
      */
     public function getBytes(): string
@@ -112,6 +124,8 @@ final class SecretKey
     }
 
     /**
+     * Get the secret key algorithm.
+     *
      * @api
      */
     public function getAlgo(): string
@@ -120,6 +134,9 @@ final class SecretKey
     }
 
     /**
+     * Get the public key that corresponds to this secret key.
+     *
+     * @throws CryptoException
      * @throws NotImplementedException
      * @throws SodiumException
      */
@@ -135,12 +152,19 @@ final class SecretKey
         }
     }
 
+    /**
+     * Calculate a revocation token from a secret key.
+     */
     public function getRevocationToken(): string
     {
         return (new Revocation())->revokeThirdParty($this);
     }
 
     /**
+     * Sign a message using the secret key.
+     *
+     * This is preferred over exporting the raw key bytes and using those bytes directly.
+     *
      * @param string $message
      * @return string
      * @throws NotImplementedException

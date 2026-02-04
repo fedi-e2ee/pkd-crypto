@@ -6,9 +6,11 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
-use FediE2EE\PKD\Crypto\Protocol\ToStringTrait;
-use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
-use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
+use FediE2EE\PKD\Crypto\Protocol\{
+    ToStringTrait,
+    EncryptedProtocolMessageInterface,
+    ProtocolMessageInterface,
+};
 use FediE2EE\PKD\Crypto\PublicKey;
 use JsonSerializable;
 use Override;

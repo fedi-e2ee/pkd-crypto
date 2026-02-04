@@ -8,15 +8,15 @@ use Override;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use function is_object, json_decode, json_last_error_msg;
 
-class InclusionProof implements JsonSerializable
+final readonly class InclusionProof implements JsonSerializable
 {
     /**
      * @param int $index
      * @param string[] $proof
      */
     public function __construct(
-        public readonly int $index,
-        public readonly array $proof
+        public int   $index,
+        public array $proof
     ) {}
 
     /**f

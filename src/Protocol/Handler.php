@@ -1,6 +1,5 @@
 <?php
 declare(strict_types=1);
-
 namespace FediE2EE\PKD\Crypto\Protocol;
 
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
@@ -35,6 +34,9 @@ class Handler
     }
 
     /**
+     * Handle a message: Encrypt its attributes with the AttributeKeyMap, then sign it.
+     * Returns a Bundle that wraps the signed message.
+     *
      * @throws CryptoException
      * @throws NotImplementedException
      * @throws SodiumException

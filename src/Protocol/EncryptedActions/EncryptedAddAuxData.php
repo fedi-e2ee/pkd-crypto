@@ -3,12 +3,19 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Protocol\EncryptedActions;
 
 use DateTimeImmutable;
-use Exception;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
-use FediE2EE\PKD\Crypto\Protocol\Actions\AddAuxData;
-use FediE2EE\PKD\Crypto\Protocol\ToStringTrait;
-use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
-use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
+use FediE2EE\PKD\Crypto\Exceptions\{
+    InputException,
+    JsonException,
+    NetworkException
+};
+use FediE2EE\PKD\Crypto\Protocol\{
+    Actions\AddAuxData,
+    EncryptedProtocolMessageInterface,
+    ProtocolMessageInterface,
+    ToStringTrait
+};
+use GuzzleHttp\Exception\GuzzleException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use JsonSerializable;
 use Override;
@@ -50,8 +57,11 @@ class EncryptedAddAuxData implements EncryptedProtocolMessageInterface, JsonSeri
     }
 
     /**
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws NetworkException
      * @throws SodiumException
-     * @throws Exception
      */
     #[Override]
     public function decrypt(AttributeKeyMap $keyMap): ProtocolMessageInterface

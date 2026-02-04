@@ -2,13 +2,17 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Protocol;
 
-use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
-use FediE2EE\PKD\Crypto\Exceptions\JsonException;
-use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
-use FediE2EE\PKD\Crypto\Merkle\IncrementalTree;
-use FediE2EE\PKD\Crypto\PublicKey;
-use FediE2EE\PKD\Crypto\SecretKey;
-use FediE2EE\PKD\Crypto\UtilTrait;
+use FediE2EE\PKD\Crypto\Exceptions\{
+    CryptoException,
+    JsonException,
+    NotImplementedException
+};
+use FediE2EE\PKD\Crypto\{
+    Merkle\IncrementalTree,
+    PublicKey,
+    SecretKey,
+    UtilTrait
+};
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use SodiumException;
 use function array_key_exists, hash_equals, is_array, is_string, json_decode, json_encode, json_last_error_msg, time;
@@ -22,6 +26,12 @@ class Cosignature
     public function __construct(protected IncrementalTree $state)
     {}
 
+    /**
+     * Return a new instance of Cosignature with the new record appended.
+     *
+     * @throws CryptoException
+     * @throws SodiumException
+     */
     public function append(HistoricalRecord $record, string $expectedMerkleRoot): self
     {
         $clone = clone $this->state;
@@ -34,6 +44,8 @@ class Cosignature
     }
 
     /**
+     * Cosign this Merkle Tree root.
+     *
      * @param SecretKey $sk My signing key for this cosignature
      * @param string $hostname HTTP Host of the PKD server to receive the cosignature
      * @return string
@@ -70,6 +82,8 @@ class Cosignature
     }
 
     /**
+     * Verify a cosignature.
+     *
      * @param PublicKey $pk
      * @param string $json
      * @return array

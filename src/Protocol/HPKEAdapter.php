@@ -5,8 +5,10 @@ namespace FediE2EE\PKD\Crypto\Protocol;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use ParagonIE\HPKE\HPKE;
 use ParagonIE\HPKE\HPKEException;
-use ParagonIE\HPKE\Interfaces\DecapsKeyInterface;
-use ParagonIE\HPKE\Interfaces\EncapsKeyInterface;
+use ParagonIE\HPKE\Interfaces\{
+    DecapsKeyInterface,
+    EncapsKeyInterface
+};
 use SensitiveParameter;
 use function hash_equals, hash_hmac, preg_match, strlen, substr;
 
@@ -22,6 +24,8 @@ class HPKEAdapter
     ) {}
 
     /**
+     * Is this string an HPKE-encrypted ciphertext with the hpke: prefix?
+     *
      * @api
      */
     public function isHpkeCiphertext(string $message): bool
@@ -37,6 +41,8 @@ class HPKEAdapter
     }
 
     /**
+     * Decrypt the payload.
+     *
      * @throws HPKEException
      */
     public function open(
@@ -63,6 +69,11 @@ class HPKEAdapter
         );
     }
 
+    /**
+     * Encrypt a message using the Encapsulation Key.
+     *
+     * @throws HPKEException
+     */
     public function seal(
         EncapsKeyInterface $encapsKey,
         #[SensitiveParameter] string $plaintext,
@@ -78,6 +89,8 @@ class HPKEAdapter
     }
 
     /**
+     * Calculate the Key-ID deterministically from an HPKE Encapsulation Key and the configured hash function.
+     *
      * @psalm-suppress NoInterfaceProperties
      */
     public function keyId(EncapsKeyInterface $encapsKey): string

@@ -4,9 +4,11 @@ namespace FediE2EE\PKD\Crypto\Protocol\Actions;
 
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
-use FediE2EE\PKD\Crypto\Protocol\ToStringTrait;
-use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
-use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
+use FediE2EE\PKD\Crypto\Protocol\{
+    EncryptedProtocolMessageInterface,
+    ProtocolMessageInterface,
+    ToStringTrait
+};
 use FediE2EE\PKD\Crypto\SecretKey;
 use JsonSerializable;
 use Override;

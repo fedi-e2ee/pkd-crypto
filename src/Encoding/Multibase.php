@@ -8,6 +8,9 @@ use function strlen, substr;
 
 class Multibase
 {
+    /**
+     * @throws EncodingException
+     */
     public static function decode(string $encoded): string
     {
         if (strlen($encoded) < 1) {
@@ -21,9 +24,12 @@ class Multibase
         };
     }
 
-    public static function encode(string $binary, bool $useUnsafe = false): string
+    /**
+     * Unlike what the blockchainiacs recommend, we default to Base64url, not Base58Btc.
+     */
+    public static function encode(string $binary, bool $useBase58VarTIme = false): string
     {
-        if ($useUnsafe) {
+        if ($useBase58VarTIme) {
             return 'z' . Base58BtcVarTime::encode($binary);
         }
         return 'u' . Base64UrlSafe::encodeUnpadded($binary);

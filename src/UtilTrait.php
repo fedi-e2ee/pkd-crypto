@@ -22,6 +22,9 @@ use function
 trait UtilTrait
 {
     /**
+     * This method throws an InputException if any of the expected keys are absent.
+     * It does not return anything.
+     *
      * @throws InputException
      */
     public static function assertAllArrayKeysExist(array $target, string ...$arrayKeys): void
@@ -31,6 +34,12 @@ trait UtilTrait
         }
     }
 
+    /**
+     * This method returns true if every expected array key is found in the target array.
+     * Otherwise, it returns false.
+     *
+     * This is useful for input validation.
+     */
     public static function allArrayKeysExist(array $target, string ...$arrayKeys): bool
     {
         $allExist = true;
@@ -41,6 +50,14 @@ trait UtilTrait
     }
 
     /**
+     * This is a constant-time conditional select. It should be read like a ternary operation.
+     *
+     * $result = ClassWithTrait::constantTimeSelect(1, $left, $right);
+     *  -> $result === $left.
+     *
+     * $result = ClassWithTrait::constantTimeSelect(0, $left, $right);
+     *  -> $result === $right.
+     *
      * @param int $select 1 -> returns left, 0 -> returns right
      *
      * @throws CryptoException
@@ -67,6 +84,8 @@ trait UtilTrait
     /**
      * Normalize line-endings to UNIX-style (LF rather than CRLF).
      *
+     * This is mostly used for PEM-encoded strings.
+     *
      * @param string $in
      * @return string
      */
@@ -78,6 +97,16 @@ trait UtilTrait
     //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#preauthencode
     //# In order to canonicalize multi-part inputs to a hash function or signature algorithm, we will use the strategy from
     /**
+     * This is an implementation of PAE() from PASETO. It encodes an array of strings into a flat string consisting of:
+     *
+     * 1. The number of pieces.
+     * 2. For each piece:
+     *    1. The length of the piece (in bytes).
+     *    2. The contents of the piece.
+     *
+     * This allows multipart messages to have an injective canonical representation before passing ot a hash function
+     * (or other cryptographic function).
+     *
      * @param array<int, string> $pieces
      * @return string
      */
@@ -96,6 +125,11 @@ trait UtilTrait
         return $output;
     }
 
+    /**
+     * This sorts the target array in-place, by its keys, including child arrays.
+     *
+     * Used for ensuring arrays are sorted before JSON encoding.
+     */
     public static function sortByKey(array &$arr): void
     {
         foreach ($arr as &$value) {
@@ -108,11 +142,17 @@ trait UtilTrait
 
     //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#preauthencode
     //# LE64() function that accepts an unsigned 64-bit integer and returns an octet sequence in little endian byte order
+    /**
+     * Mostly used by preAuthEncode() above. This packs an integer as 8 bytes.
+     */
     public static function LE64(int $n): string
     {
         return pack('P', $n);
     }
 
+    /**
+     * Get an array of bytes representing the input string.
+     */
     public function stringToByteArray(string $str): array
     {
         $values = unpack('C*', $str);

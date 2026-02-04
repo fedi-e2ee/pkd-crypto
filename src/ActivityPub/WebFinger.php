@@ -2,14 +2,18 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\ActivityPub;
 
-use FediE2EE\PKD\Crypto\Exceptions\InputException;
-use FediE2EE\PKD\Crypto\Exceptions\JsonException;
-use FediE2EE\PKD\Crypto\Exceptions\NetworkException;
+use FediE2EE\PKD\Crypto\Exceptions\{
+    InputException,
+    JsonException,
+    NetworkException
+};
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
-use ParagonIE\Certainty\Exception\CertaintyException;
-use ParagonIE\Certainty\Fetch;
-use ParagonIE\Certainty\RemoteFetch;
+use ParagonIE\Certainty\{
+    Exception\CertaintyException,
+    Fetch,
+    RemoteFetch
+};
 use SodiumException;
 use function
     array_key_exists,
@@ -35,7 +39,6 @@ class WebFinger
 {
     protected Client $http;
     protected Fetch $caCertFetcher;
-
     protected array $webFingerCache = [];
 
     /**
@@ -67,6 +70,9 @@ class WebFinger
     }
 
     /**
+     * Canonicalize an ActivityPub user handle (@user@domain or user@domain) into the Actor ID
+     * (e.g., https://domain/users/username)
+     *
      * @throws InputException
      * @throws NetworkException
      * @throws GuzzleException
