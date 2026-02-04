@@ -1,9 +1,11 @@
 # Public Key Directory - Cryptography Algorithms
 
 [![CI](https://github.com/fedi-e2ee/pkd-crypto/actions/workflows/ci.yml/badge.svg)](https://github.com/fedi-e2ee/pkd-crypto/actions/workflows/ci.yml)
-[![Psalm](https://github.com/fedi-e2ee/pkd-crypto/actions/workflows/psalm.yml/badge.svg)](https://github.com/fedi-e2ee/pkd-crypto/actions/workflows/psalm.yml)
 [![Fuzzing](https://github.com/fedi-e2ee/pkd-crypto/actions/workflows/fuzz.yml/badge.svg)](https://github.com/fedi-e2ee/pkd-crypto/actions/workflows/fuzz.yml)
 [![Mutation Testing](https://github.com/fedi-e2ee/pkd-crypto/actions/workflows/infection.yml/badge.svg)](https://github.com/fedi-e2ee/pkd-crypto/actions/workflows/infection.yml)
+[![Psalm](https://github.com/fedi-e2ee/pkd-crypto/actions/workflows/psalm.yml/badge.svg)](https://github.com/fedi-e2ee/pkd-crypto/actions/workflows/psalm.yml)
+[![PHPStan](https://github.com/fedi-e2ee/pkd-crypto/actions/workflows/phpstan.yml/badge.svg)](https://github.com/fedi-e2ee/pkd-crypto/actions/workflows/phpstan.yml)
+[![Semgrep](https://github.com/fedi-e2ee/pkd-crypto/actions/workflows/semgrep.yml/badge.svg)](https://github.com/fedi-e2ee/pkd-crypto/actions/workflows/semgrep.yml)  
 [![Latest Stable Version](https://poser.pugx.org/fedi-e2ee/pkd-crypto/v/stable)](https://packagist.org/packages/fedi-e2ee/pkd-crypto)
 [![License](https://poser.pugx.org/fedi-e2ee/pkd-crypto/license)](https://packagist.org/packages/fedi-e2ee/pkd-crypto)
 [![Downloads](https://img.shields.io/packagist/dt/fedi-e2ee/pkd-crypto.svg)](https://packagist.org/packages/fedi-e2ee/pkd-crypto)
