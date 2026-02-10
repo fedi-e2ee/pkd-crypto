@@ -37,7 +37,7 @@ class HPKEAdapter
         if (!hash_equals($header, self::HPKE_PREFIX)) {
             return false;
         }
-        return preg_match('#^[A-Za-z0-9-_]+$#', substr($message, 5)) === 1;
+        return preg_match('#^[A-Za-z0-9-_]+\z#', substr($message, 5)) === 1;
     }
 
     /**
@@ -58,7 +58,7 @@ class HPKEAdapter
             throw new HPKEException('Invalid payload header');
         }
         $remainder = substr($payload, 5);
-        if (!preg_match('#^[A-Za-z0-9-_]+$#', $remainder)) {
+        if (!preg_match('#^[A-Za-z0-9-_]+\z#', $remainder)) {
             throw new HPKEException('HPKE ciphertext must be base64url encoded without padding');
         }
         return $this->hpke->openBase(
