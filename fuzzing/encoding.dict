@@ -1,0 +1,32 @@
+# Multibase prefix characters
+"u"
+"z"
+"f"
+"b"
+"m"
+
+# Base64url alphabet
+"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+"="
+"=="
+
+# Base58btc alphabet
+"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+
+# Leading zero bytes (important edge case for Base58)
+"\x00"
+"\x00\x00"
+"\x00\x00\x00"
+
+# Base58 leading '1' (represents zero byte)
+"1"
+"11"
+"111"
+
+# Base16 (hex) tokens
+"0123456789abcdef"
+
+# Padding edge cases
+"AA"
+"AAA"
+"AAAA"
