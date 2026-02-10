@@ -1,0 +1,39 @@
+# IncrementalTree JSON deserialization tokens
+"{"
+"}"
+"["
+"]"
+":"
+","
+"null"
+"true"
+"false"
+
+# IncrementalTree::fromJson keys
+"hashAlgo"
+"size"
+"nodes"
+"root"
+
+# Hash algorithm names
+"sha512"
+"sha256"
+"sha384"
+"blake2b"
+
+# InclusionProof/ConsistencyProof keys
+"index"
+"proof"
+
+# Boundary values for tree sizes
+"0"
+"1"
+"2"
+"3"
+"4"
+"7"
+"8"
+"15"
+"16"
+"255"
+"256"

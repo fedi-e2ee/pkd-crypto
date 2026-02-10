@@ -1,0 +1,30 @@
+# Version byte
+"\x01"
+"\x00"
+"\x02"
+"\xff"
+
+# KDF info string prefixes
+"FediE2EE-v1-Compliance-Encryption-Key"
+"FediE2EE-v1-Compliance-Message-Auth-Key"
+"FediE2EE-v1-Compliance-KDF-Salt"
+
+# Common attribute names from PKD protocol
+"actor"
+"public-key"
+"operator"
+"otp"
+"new-actor"
+"old-actor"
+"aux-type"
+"aux-data"
+"aux-id"
+
+# Boundary-length plaintexts
+""
+"a"
+"ab"
+
+# 32-byte blocks (key/hash/nonce size boundaries)
+"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"

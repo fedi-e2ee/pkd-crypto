@@ -1,0 +1,58 @@
+# RFC 9421 HTTP Message Signatures tokens
+
+# Signature-Input structure
+"sig1="
+"("
+")"
+";"
+"="
+":"
+
+# Covered component identifiers
+"\"@method\""
+"\"@path\""
+"\"host\""
+"\"content-type\""
+"\"content-digest\""
+"\"content-length\""
+"\"date\""
+"\"@authority\""
+"\"@scheme\""
+"\"@target-uri\""
+"\"@request-target\""
+
+# Signature parameters
+"alg="
+"keyid="
+"created="
+"expires="
+"nonce="
+
+# Algorithm values
+"\"ed25519\""
+"\"rsa-pss-sha512\""
+"\"hmac-sha256\""
+"\"ecdsa-p256-sha256\""
+
+# HTTP methods
+"GET"
+"POST"
+"PUT"
+"DELETE"
+"PATCH"
+
+# Base64 signature wrapper
+"sig1=:"
+":,"
+
+# Well-formed Signature-Input example
+"sig1=(\"@method\" \"@path\");alg=\"ed25519\";keyid=\"test\";created="
+
+# Common header values
+"application/json"
+"example.com"
+
+# Timestamp tokens
+"1700000000"
+"9999999999"
+"0"

@@ -1,0 +1,63 @@
+# PKD Protocol Bundle JSON structure tokens
+"{"
+"}"
+"["
+"]"
+":"
+","
+"null"
+"true"
+"false"
+
+# Top-level Bundle keys
+"!pkd-context"
+"action"
+"message"
+"recent-merkle-root"
+"signature"
+"symmetric-keys"
+
+# PKD context value
+"https://github.com/fedi-e2ee/public-key-directory/v1"
+
+# Protocol action types (unencrypted)
+"BurnDown"
+"Checkpoint"
+"RevokeKeyThirdParty"
+
+# Protocol action types (encrypted)
+"AddKey"
+"RevokeKey"
+"AddAuxData"
+"RevokeAuxData"
+"Fireproof"
+"UndoFireproof"
+"MoveIdentity"
+
+# Message field names
+"actor"
+"public-key"
+"time"
+"operator"
+"otp"
+"revocation-token"
+"from-directory"
+"from-root"
+"from-public-key"
+"to-directory"
+"to-validated-root"
+"aux-type"
+"aux-data"
+"aux-id"
+"new-actor"
+"old-actor"
+
+# Common field values
+"ed25519"
+"ed25519:"
+
+# ISO 8601 date tokens
+"2025-01-01T00:00:00+00:00"
+"T"
+"+00:00"
+"Z"
