@@ -52,7 +52,7 @@ $config->setTarget(function (string $input): void {
             $bundle = Bundle::fromJson($input);
 
             // Test message type detection
-            if (in_array($bundle->getAction(), Parser::UNENCRYPTED_ACTIONS, true)) {
+            if (in_array($bundle->getAction(), Parser::PLAINTEXT_ACTIONS, true)) {
                 $message = $parser->getUnencryptedMessage($bundle);
                 assert(is_string($message->getAction()));
             } else {
@@ -107,7 +107,7 @@ $config->setTarget(function (string $input): void {
             $bundle = Bundle::fromJson($testJson);
             $parser = new Parser();
 
-            if (in_array($bundle->getAction(), Parser::UNENCRYPTED_ACTIONS, true)) {
+            if (in_array($bundle->getAction(), Parser::PLAINTEXT_ACTIONS, true)) {
                 $parser->getUnencryptedMessage($bundle);
             }
         }

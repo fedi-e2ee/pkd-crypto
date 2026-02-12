@@ -44,7 +44,7 @@ class BundleTest extends TestCase
             $addKey->getAction(),
             $addKey->jsonSerialize(),
             $recent,
-            $signature,
+            Base64UrlSafe::decodeNoPadding($signature),
             new AttributeKeyMap()
         );
 
@@ -95,7 +95,7 @@ class BundleTest extends TestCase
             $addKey->getAction(),
             $addKey->jsonSerialize(),
             $recent,
-            $signature,
+            Base64UrlSafe::decodeNoPadding($signature),
             new AttributeKeyMap()
         );
 
@@ -149,7 +149,7 @@ class BundleTest extends TestCase
             $addKey->getAction(),
             $addKey->jsonSerialize(),
             $recent,
-            $signature,
+            Base64UrlSafe::decodeNoPadding($signature),
             new AttributeKeyMap()
         );
 
@@ -298,7 +298,7 @@ class BundleTest extends TestCase
             $addKey->getAction(),
             $addKey->jsonSerialize(),
             $recent,
-            $signature,
+            Base64UrlSafe::decodeNoPadding($signature),
             new AttributeKeyMap()
         );
 

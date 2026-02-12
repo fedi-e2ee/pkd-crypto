@@ -18,6 +18,7 @@ use DateTimeImmutable;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\{
     EncryptedAddAuxData,
     EncryptedAddKey,
+    EncryptedBurnDown,
     EncryptedFireproof,
     EncryptedMoveIdentity,
     EncryptedRevokeAuxData,
@@ -43,7 +44,11 @@ class Parser
 {
     use UtilTrait;
 
+    /** Actions that are NOT wrapped with HPKE transport encryption. */
     const UNENCRYPTED_ACTIONS = ['BurnDown', 'Checkpoint', 'RevokeKeyThirdParty'];
+
+    /** Actions with no attribute encryption (truly plaintext fields). */
+    const PLAINTEXT_ACTIONS = ['Checkpoint', 'RevokeKeyThirdParty'];
 
     /**
      * Extract a message with encrypted attributes from a Bundle.
@@ -57,6 +62,8 @@ class Parser
                 new EncryptedAddKey($message->getMessage()),
             'AddAuxData' =>
                 new EncryptedAddAuxData($message->getMessage()),
+            'BurnDown' =>
+                new EncryptedBurnDown($message->getMessage()),
             'Fireproof' =>
                 new EncryptedFireproof($message->getMessage()),
             'MoveIdentity' =>
@@ -90,7 +97,12 @@ class Parser
         } elseif (is_null($components['time'])) {
             $time = null;
         } else {
-            $time = new DateTimeImmutable($components['time'] );
+            $timeStr = (string) $components['time'];
+            if (ctype_digit($timeStr)) {
+                $time = new DateTimeImmutable('@' . $timeStr);
+            } else {
+                $time = new DateTimeImmutable($timeStr);
+            }
         }
         $action = $bundle->getAction();
         if ($action === 'BurnDown') {
@@ -189,14 +201,17 @@ class Parser
         PublicKey $publicKey
     ): ParsedMessage {
         $message = static::fromJson($json);
-        if (in_array($message->getAction(), self::UNENCRYPTED_ACTIONS, true)) {
+        if (in_array($message->getAction(), self::PLAINTEXT_ACTIONS, true)) {
             $encrypted = $this->getUnencryptedMessage($message);
         } else {
-            // These fields have encryption
             $encrypted = $this->getEncryptedMessage($message);
         }
-        $signedMessage = new SignedMessage($encrypted, $message->getRecentMerkleRoot());
-        if (!$signedMessage->verify($publicKey, $message->getSignature())) {
+        $signedMessage = new SignedMessage(
+            $encrypted,
+            $message->getRecentMerkleRoot(),
+            $message->getSignature()
+        );
+        if (!$signedMessage->verify($publicKey)) {
             throw new ParserException('Signature verification failed');
         }
         $keyMap = $message->getSymmetricKeys();
@@ -217,10 +232,9 @@ class Parser
     public function parseUnverified(string $json): ParsedMessage
     {
         $message = static::fromJson($json);
-        if (in_array($message->getAction(), self::UNENCRYPTED_ACTIONS, true)) {
+        if (in_array($message->getAction(), self::PLAINTEXT_ACTIONS, true)) {
             $encrypted = $this->getUnencryptedMessage($message);
         } else {
-            // These fields have encryption
             $encrypted = $this->getEncryptedMessage($message);
         }
         $keyMap = $message->getSymmetricKeys();

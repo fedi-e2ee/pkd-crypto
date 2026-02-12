@@ -140,7 +140,7 @@ class Bundle
     public function toSignedMessage(): SignedMessage
     {
         $parser = new Parser();
-        if (in_array($this->getAction(), Parser::UNENCRYPTED_ACTIONS, true)) {
+        if (in_array($this->getAction(), Parser::PLAINTEXT_ACTIONS, true)) {
             $message = $parser->getUnencryptedMessage($this);
         } else {
             $message = $parser->getEncryptedMessage($this);
@@ -149,7 +149,7 @@ class Bundle
         return new SignedMessage(
             $message,
             $this->getRecentMerkleRoot(),
-            Base64UrlSafe::decodeNoPadding($this->getSignature())
+            $this->signature
         );
     }
 

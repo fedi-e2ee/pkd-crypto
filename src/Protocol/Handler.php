@@ -13,6 +13,7 @@ use FediE2EE\PKD\Crypto\{
     SecretKey,
     UtilTrait
 };
+use ParagonIE\ConstantTime\Base64UrlSafe;
 use ParagonIE\HPKE\{
     HPKE,
     KEM\DHKEM\EncapsKey
@@ -49,7 +50,7 @@ class Handler
         string $recentMerkleRoot = ''
     ): Bundle {
         if (!($message instanceof EncryptedProtocolMessageInterface)) {
-            if (!in_array($message->getAction(), Parser::UNENCRYPTED_ACTIONS, true)) {
+            if (!in_array($message->getAction(), Parser::PLAINTEXT_ACTIONS, true)) {
                 $message = $message->encrypt($keyMap);
             }
         }
@@ -60,7 +61,7 @@ class Handler
             $message->getAction(),
             $message->toArray(),
             $recentMerkleRoot,
-            $signature,
+            Base64UrlSafe::decodeNoPadding($signature),
             $keyMap
         );
     }

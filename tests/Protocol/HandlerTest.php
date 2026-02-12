@@ -219,7 +219,7 @@ class HandlerTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    public function testHandleUnencryptedAction(): void
+    public function testHandleBurnDownEncryptsAttributes(): void
     {
         $secretKey = SecretKey::generate();
         $keyMap = (new AttributeKeyMap())
@@ -242,8 +242,13 @@ class HandlerTest extends TestCase
         $this->assertArrayHasKey('actor', $message);
         $this->assertArrayHasKey('operator', $message);
         $this->assertArrayHasKey('time', $message);
-        $this->assertSame('https://example.com/users/foo', $message['actor']);
-        $this->assertSame('https://pkd.example.org', $message['operator']);
+        // actor and operator are attribute-encrypted
+        $this->assertNotSame(
+            'https://example.com/users/foo', $message['actor']
+        );
+        $this->assertNotSame(
+            'https://pkd.example.org', $message['operator']
+        );
     }
 
     /**
