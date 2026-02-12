@@ -108,6 +108,9 @@ class Version1 implements AttributeVersionInterface
         //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-encryption-algorithm
         //# ciphertext, `c`.
         $c = openssl_encrypt($plaintext, 'aes-256-ctr', $Ek, OPENSSL_RAW_DATA, $n);
+        if (!is_string($c)) {
+            throw new CryptoException('Could not encrypt using OpenSSL');
+        }
 
         //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-encryption-algorithm
         //# Truncate the HMAC output to the rightmost 32 bytes (256 bits)
@@ -171,7 +174,10 @@ class Version1 implements AttributeVersionInterface
         $encKeyNonce = hash_hkdf('sha512', $ikm->getBytes(), 48, $encInfo, '');
         $Ek = substr($encKeyNonce, 0, 32);
         $n = substr($encKeyNonce, 32, 16);
-        $p = openssl_encrypt($c, 'aes-256-ctr', $Ek, OPENSSL_RAW_DATA, $n);
+        $p = openssl_decrypt($c, 'aes-256-ctr', $Ek, OPENSSL_RAW_DATA, $n);
+        if (!is_string($p)) {
+            throw new CryptoException('Could not decrypt using OpenSSL');
+        }
 
         $saltInfo = self::KDF_COMMIT_SALT . $h . $r . self::len($merkleRoot) . $merkleRoot . self::len($attributeName) . $attributeName;
         //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-decryption-algorithm
