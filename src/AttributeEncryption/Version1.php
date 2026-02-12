@@ -174,7 +174,7 @@ class Version1 implements AttributeVersionInterface
         $encKeyNonce = hash_hkdf('sha512', $ikm->getBytes(), 48, $encInfo, '');
         $Ek = substr($encKeyNonce, 0, 32);
         $n = substr($encKeyNonce, 32, 16);
-        $p = openssl_decrypt($c, 'aes-256-ctr', $Ek, OPENSSL_RAW_DATA, $n);
+        $p = openssl_encrypt($c, 'aes-256-ctr', $Ek, OPENSSL_RAW_DATA, $n);
         if (!is_string($p)) {
             throw new CryptoException('Could not decrypt using OpenSSL');
         }
