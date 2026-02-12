@@ -607,6 +607,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -620,6 +621,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -639,6 +641,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -669,6 +672,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -691,6 +695,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -710,6 +715,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -724,6 +730,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -741,5 +748,47 @@ class IncrementalTreeTest extends TestCase
                 "Mismatch after adding leaf $i"
             );
         }
+    }
+
+    /**
+     * @throws InputException
+     * @throws JsonException
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testFromJsonRejectsInvalidNodeKeys(string $hashAlg): void
+    {
+        // Build a valid tree and get its JSON
+        $tree = new IncrementalTree(['a', 'b'], $hashAlg);
+        $json = $tree->toJson();
+        $data = json_decode($json, true);
+
+        // Inject an invalid node key
+        $data['nodes']['abc'] = $data['nodes']['0-0'];
+        $badJson = json_encode($data);
+
+        $this->expectException(InputException::class);
+        $this->expectExceptionMessage('Invalid node key format');
+        IncrementalTree::fromJson($badJson);
+    }
+
+    /**
+     * @throws InputException
+     * @throws JsonException
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testFromJsonRejectsNegativeNodeKeys(string $hashAlg): void
+    {
+        $tree = new IncrementalTree(['a', 'b'], $hashAlg);
+        $json = $tree->toJson();
+        $data = json_decode($json, true);
+
+        $data['nodes']['-1-0'] = $data['nodes']['0-0'];
+        $badJson = json_encode($data);
+
+        $this->expectException(InputException::class);
+        $this->expectExceptionMessage('Invalid node key format');
+        IncrementalTree::fromJson($badJson);
     }
 }

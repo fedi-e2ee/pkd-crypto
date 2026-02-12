@@ -163,10 +163,15 @@ final class SignedMessage implements \JsonSerializable
             if (is_null($this->signature)) {
                 throw new CryptoException('Protocol Message is not signed');
             }
+            $sig = $this->signature;
         } else {
-            $this->signature = Base64UrlSafe::decodeNoPadding($signature);
+            $sig = Base64UrlSafe::decodeNoPadding($signature);
         }
-        return $key->verify($this->signature, $this->encodeForSigning());
+        $valid = $key->verify($sig, $this->encodeForSigning());
+        if ($valid && !is_null($signature)) {
+            $this->signature = $sig;
+        }
+        return $valid;
     }
 
     /**

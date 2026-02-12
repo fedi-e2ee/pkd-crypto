@@ -13,10 +13,11 @@ use function
     hash_equals,
     hash_hkdf,
     hash_hmac,
+    openssl_decrypt,
+    openssl_encrypt,
     pack,
     random_bytes,
     sodium_crypto_pwhash,
-    sodium_crypto_stream_xor,
     strlen,
     substr;
 
@@ -87,9 +88,9 @@ class Version1 implements AttributeVersionInterface
         //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-encryption-algorithm
         //# Derive an encryption key, `Ek`, and nonce, `n`, through [`KDF`](#version-1-functions)
         $encInfo = self::KDF_ENCRYPT_KEY . $h . $r . self::len($attributeName) . $attributeName;
-        $encKeyNonce = hash_hkdf('sha512', $ikm->getBytes(), 56, $encInfo, '');
+        $encKeyNonce = hash_hkdf('sha512', $ikm->getBytes(), 48, $encInfo, '');
         $Ek = substr($encKeyNonce, 0, 32);
-        $n = substr($encKeyNonce, 32, 24);
+        $n = substr($encKeyNonce, 32, 16);
 
         //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-encryption-algorithm
         //# Derive an authentication key, `Ak`, through [`KDF`](#version-1-functions)
@@ -99,15 +100,20 @@ class Version1 implements AttributeVersionInterface
         //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-encryption-algorithm
         //# Derive a commitment salt, `s`, as the [`Hash`](#version-1-functions)
         $saltInfo = self::KDF_COMMIT_SALT . $h . $r . self::len($merkleRoot) . $merkleRoot . self::len($attributeName) . $attributeName;
-        $s = substr(hash('sha512', $saltInfo, true), 0, 16);
+        //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-encryption-algorithm
+        //# truncated to 128 bits (big endian / the least significant bits).
+        $s = substr(hash('sha512', $saltInfo, true), 48, 16);
 
         $Q = $this->getPlaintextCommitment($attributeName, $plaintext, $merkleRoot, $s);
         //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-encryption-algorithm
         //# ciphertext, `c`.
-        $c = sodium_crypto_stream_xor($plaintext, $n, $Ek);
+        $c = openssl_encrypt($plaintext, 'aes-256-ctr', $Ek, OPENSSL_RAW_DATA, $n);
+        if (!is_string($c)) {
+            throw new CryptoException('Could not encrypt using OpenSSL');
+        }
 
         //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-encryption-algorithm
-        //# Calculate the [`MAC`](#version-1-functions)
+        //# Truncate the HMAC output to the rightmost 32 bytes (256 bits)
         $t = substr(
             hash_hmac(
                 'sha512',
@@ -115,7 +121,7 @@ class Version1 implements AttributeVersionInterface
                 $Ak,
                 true
             ),
-            0,
+            32,
             32
         );
 
@@ -147,6 +153,8 @@ class Version1 implements AttributeVersionInterface
         $authInfo = self::KDF_AUTH_KEY . $h . $r . self::len($attributeName) . $attributeName;
         $Ak = hash_hkdf('sha512', $ikm->getBytes(), 32, $authInfo, '');
 
+        //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-decryption-algorithm
+        //# Truncate the HMAC output to the rightmost 32 bytes (256 bits)
         $t2 = substr(
             hash_hmac(
                 'sha512',
@@ -154,7 +162,7 @@ class Version1 implements AttributeVersionInterface
                 $Ak,
                 true
             ),
-            0,
+            32,
             32
         );
 
@@ -163,13 +171,18 @@ class Version1 implements AttributeVersionInterface
         }
 
         $encInfo = self::KDF_ENCRYPT_KEY . $h . $r . self::len($attributeName) . $attributeName;
-        $encKeyNonce = hash_hkdf('sha512', $ikm->getBytes(), 56, $encInfo, '');
+        $encKeyNonce = hash_hkdf('sha512', $ikm->getBytes(), 48, $encInfo, '');
         $Ek = substr($encKeyNonce, 0, 32);
-        $n = substr($encKeyNonce, 32, 24);
-        $p = sodium_crypto_stream_xor($c, $n, $Ek);
+        $n = substr($encKeyNonce, 32, 16);
+        $p = openssl_encrypt($c, 'aes-256-ctr', $Ek, OPENSSL_RAW_DATA, $n);
+        if (!is_string($p)) {
+            throw new CryptoException('Could not decrypt using OpenSSL');
+        }
 
         $saltInfo = self::KDF_COMMIT_SALT . $h . $r . self::len($merkleRoot) . $merkleRoot . self::len($attributeName) . $attributeName;
-        $s = substr(hash('sha512', $saltInfo, true), 0, 16);
+        //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-decryption-algorithm
+        //# truncated to 128 bits (big endian / the least significant bits).
+        $s = substr(hash('sha512', $saltInfo, true), 48, 16);
 
         $Q2 = $this->getPlaintextCommitment($attributeName, $p, $merkleRoot, $s);
 

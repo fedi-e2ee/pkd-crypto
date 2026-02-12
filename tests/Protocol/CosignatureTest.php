@@ -5,11 +5,8 @@ namespace FediE2EE\PKD\Crypto\Tests\Protocol;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\Exceptions\JsonException;
 use FediE2EE\PKD\Crypto\Merkle\IncrementalTree;
-use FediE2EE\PKD\Crypto\Protocol\Bundle;
 use FediE2EE\PKD\Crypto\Protocol\Cosignature;
 use FediE2EE\PKD\Crypto\Protocol\HistoricalRecord;
-use FediE2EE\PKD\Crypto\Protocol\Parser;
-use FediE2EE\PKD\Crypto\Protocol\SignedMessage;
 use FediE2EE\PKD\Crypto\SecretKey;
 use PHPUnit\Framework\TestCase;
 use SodiumException;
@@ -82,6 +79,7 @@ class CosignatureTest extends TestCase
 
     /**
      * @throws JsonException
+     * @throws SodiumException
      */
     public function testAppendWithWrongRootDoesNotModifyState(): void
     {

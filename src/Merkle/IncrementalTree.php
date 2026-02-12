@@ -23,6 +23,7 @@ use function
     json_encode,
     json_last_error_msg,
     log,
+    preg_match,
     sodium_crypto_generichash;
 
 /**
@@ -40,6 +41,8 @@ class IncrementalTree extends Tree
     /**
      * @param string[] $leaves Leaves to insert
      * @param string $hashAlgo Hash function algorithm
+     *
+     * @throws CryptoException
      * @throws SodiumException
      */
     public function __construct(
@@ -211,6 +214,11 @@ class IncrementalTree extends Tree
         $tree = new self([], $state['hashAlgo']);
         $tree->size = $state['size'];
         foreach ($state['nodes'] as $key => $hash) {
+            if (!is_string($key) || !preg_match('/^\d+-\d+$/', $key)) {
+                throw new InputException(
+                    'Invalid node key format: ' . (string) $key
+                );
+            }
             $tree->nodes[$key] = Base64UrlSafe::decode($hash);
         }
         $tree->updateRoot();

@@ -157,7 +157,37 @@ final class HttpSignature
             return false;
         }
 
-        $signatureBase = $this->getSignatureBase($message, $headersToSign, $signatureInput);
+        // Validate all covered components are present
+        foreach ($headersToSign as $component) {
+            $lower = strtolower($component);
+            if ($lower === '@method' || $lower === '@path') {
+                if (!$message instanceof RequestInterface) {
+                    if ($throwIfInvalid) {
+                        throw new HttpSignatureException(
+                            'Covered component "' . $lower
+                            . '" requires a request message'
+                        );
+                    }
+                    return false;
+                }
+                continue;
+            }
+            if (!$message->hasHeader($lower)) {
+                if ($throwIfInvalid) {
+                    throw new HttpSignatureException(
+                        'Covered component header missing: '
+                        . $lower
+                    );
+                }
+                return false;
+            }
+        }
+
+        $signatureBase = $this->getSignatureBase(
+            $message,
+            $headersToSign,
+            $signatureInput
+        );
         $label = preg_quote($this->label, '/');
         preg_match('/' . $label . '=:([^:]+):/', $signatureHeader, $matches);
         if (!isset($matches[1])) {

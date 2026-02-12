@@ -4,6 +4,9 @@ namespace FediE2EE\PKD\Crypto\Tests\Protocol;
 
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
+use FediE2EE\PKD\Crypto\Exceptions\InputException;
+use FediE2EE\PKD\Crypto\Exceptions\JsonException;
+use FediE2EE\PKD\Crypto\Exceptions\NetworkException;
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use FediE2EE\PKD\Crypto\Protocol\Actions\AddKey;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
@@ -11,6 +14,7 @@ use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\Protocol\SignedMessage;
 use FediE2EE\PKD\Crypto\SecretKey;
 use FediE2EE\PKD\Crypto\SymmetricKey;
+use GuzzleHttp\Exception\GuzzleException;
 use JsonSerializable;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -396,5 +400,47 @@ class SignedMessageTest extends TestCase
         $this->assertNotEmpty($encodedRoot);
 
         $this->assertGreaterThan(70, strlen($encodedRoot));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws NetworkException
+     * @throws NotImplementedException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    public function testVerifyDoesNotMutateOnFailure(): void
+    {
+        $recent = 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(random_bytes(32));
+        $sk1 = SecretKey::generate();
+        $sk2 = SecretKey::generate();
+        $pk2 = $sk2->getPublicKey();
+
+        // Sign with sk1
+        $sm = SignedMessage::init(
+            new AddKey('https://example.com/@alice', $pk2),
+            $recent,
+            $sk1
+        );
+        $sig = $sm->getSignature();
+
+        // Create unsigned message, try to verify with wrong key
+        $sm2 = new SignedMessage(
+            new AddKey('https://example.com/@alice', $pk2),
+            $recent
+        );
+
+        // Verify with an explicit signature from sk1 using pk2
+        // This should fail since sk1 != sk2
+        $result = $sm2->verify($pk2, $sig);
+        $this->assertFalse($result);
+
+        // The object should NOT have the signature set
+        $this->expectException(CryptoException::class);
+        $this->expectExceptionMessage('Protocol Message is not signed');
+        $sm2->getSignature();
     }
 }
