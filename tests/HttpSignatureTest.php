@@ -1161,7 +1161,7 @@ class HttpSignatureTest extends TestCase
      * @throws NotImplementedException
      * @throws SodiumException
      */
-    public function testMissingHeaderSkippedNotIncluded(): void
+    public function testMissingCoveredHeaderRejectsVerify(): void
     {
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('missing header skipped')
@@ -1187,23 +1187,94 @@ class HttpSignatureTest extends TestCase
             'key'
         );
 
-        // Signature should still verify because x-missing is just skipped
-        $this->assertTrue($httpSignature->verify($pk, $signed));
+        // Verification must fail: x-missing is in covered components
+        // but absent from the message
+        $this->assertFalse($httpSignature->verify($pk, $signed));
+    }
 
-        // Now test that verification fails if a specified header is present but different
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testVerifyThrowMissingCoveredHeader(): void
+    {
+        $keypair = sodium_crypto_sign_seed_keypair(
+            sodium_crypto_generichash('missing header throw')
+        );
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $pk = $sk->getPublicKey();
+
+        $httpSignature = new HttpSignature();
+        $request = new Request(
+            'POST',
+            '/test',
+            ['Host' => 'example.com'],
+            'body'
+        );
+
+        // Sign with x-absent listed in covered components
+        $signed = $httpSignature->sign(
+            $sk,
+            $request,
+            ['host', 'x-absent'],
+            'key'
+        );
+
+        $this->expectException(HttpSignatureException::class);
+        $this->expectExceptionMessage(
+            'Covered component header missing: x-absent'
+        );
+        $httpSignature->verifyThrow($pk, $signed);
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testVerifyRejectsTamperedHeaderValue(): void
+    {
+        $keypair = sodium_crypto_sign_seed_keypair(
+            sodium_crypto_generichash('tampered header test')
+        );
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $pk = $sk->getPublicKey();
+
+        $httpSignature = new HttpSignature();
+        $request = new Request(
+            'POST',
+            '/test',
+            ['Host' => 'example.com', 'X-Present' => 'value'],
+            'body'
+        );
+
+        $signed = $httpSignature->sign(
+            $sk,
+            $request,
+            ['host', 'x-present'],
+            'key'
+        );
+
+        // Tamper with X-Present header value
         $differentRequest = new Request(
             'POST',
             '/test',
             ['Host' => 'example.com', 'X-Present' => 'different-value'],
             'body'
         );
-
-        // Manually apply the signature headers to the different request
         $signedDifferent = $differentRequest
-            ->withHeader('Signature-Input', $signed->getHeaderLine('Signature-Input'))
-            ->withHeader('Signature', $signed->getHeaderLine('Signature'));
+            ->withHeader(
+                'Signature-Input',
+                $signed->getHeaderLine('Signature-Input')
+            )
+            ->withHeader(
+                'Signature',
+                $signed->getHeaderLine('Signature')
+            );
 
-        // This should fail because x-present has different value
         $this->assertFalse($httpSignature->verify($pk, $signedDifferent));
     }
 
