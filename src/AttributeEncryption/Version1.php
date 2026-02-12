@@ -171,7 +171,7 @@ class Version1 implements AttributeVersionInterface
         $encKeyNonce = hash_hkdf('sha512', $ikm->getBytes(), 48, $encInfo, '');
         $Ek = substr($encKeyNonce, 0, 32);
         $n = substr($encKeyNonce, 32, 16);
-        $p = openssl_decrypt($c, 'aes-256-ctr', $Ek, OPENSSL_RAW_DATA, $n);
+        $p = openssl_encrypt($c, 'aes-256-ctr', $Ek, OPENSSL_RAW_DATA, $n);
 
         $saltInfo = self::KDF_COMMIT_SALT . $h . $r . self::len($merkleRoot) . $merkleRoot . self::len($attributeName) . $attributeName;
         //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-decryption-algorithm
