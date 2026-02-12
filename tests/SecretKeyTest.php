@@ -38,7 +38,7 @@ class SecretKeyTest extends TestCase
         $skPem = $sk->encodePem();
         $pkPem = $pk->encodePem();
 
-        $expected = "-----BEGIN EC PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIJCCGFPBH8jcE67DdjDPEzNaT3XMLih6iL88gDnSC3eF\n895bv6cvVy1h85m+bt0CG2sjvHpwHb9EyTWXmEZeAKg=\n-----END EC PRIVATE KEY-----";
+        $expected = "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIJCCGFPBH8jcE67DdjDPEzNaT3XMLih6iL88gDnSC3eF\n-----END PRIVATE KEY-----";
         $this->assertSame($expected, $skPem);
         $expected = "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA895bv6cvVy1h85m+bt0CG2sjvHpwHb9EyTWXmEZeAKg=\n-----END PUBLIC KEY-----";
         $this->assertSame($expected, $pkPem);
@@ -58,7 +58,7 @@ class SecretKeyTest extends TestCase
     public function importPemBadOID(): void
     {
         $this->expectException(CryptoException::class);
-        SecretKey::importPem("-----BEGIN EC PRIVATE KEY-----\nMC4DAQAwBQYDK2VwBCIEIJCCGFPBH8jcE67DdjDPEzNaT3XMLih6iL88gDnSC3eF\n895bv6cvVy1h85m+bt0CG2sjvHpwHb9EyTWXmEZeAKg=\n-----END EC PRIVATE KEY-----");
+        SecretKey::importPem("-----BEGIN PRIVATE KEY-----\nMC4DAQAwBQYDK2VwBCIEIJCCGFPBH8jcE67DdjDPEzNaT3XMLih6iL88gDnSC3eF\n-----END PRIVATE KEY-----");
     }
 
     public function importPublicKeyPemBadOID(): void

@@ -16,6 +16,7 @@ use function
     sodium_crypto_sign_keypair,
     sodium_crypto_sign_publickey_from_secretkey,
     sodium_crypto_sign_secretkey,
+    sodium_crypto_sign_seed_keypair,
     str_replace,
     strlen,
     substr;
@@ -70,15 +71,17 @@ final class SecretKey
 
     /**
      * Returns a PEM-encoded string representing the secret key.
+     * Uses PKCS#8 format with only the 32-byte seed.
      */
     public function encodePem(): string
     {
+        $seed = substr($this->bytes, 0, 32);
         $encoded = Base64::encode(
-            Hex::decode(self::PEM_PREFIX_ED25519) . $this->bytes
+            Hex::decode(self::PEM_PREFIX_ED25519) . $seed
         );
-        return "-----BEGIN EC PRIVATE KEY-----\n" .
+        return "-----BEGIN PRIVATE KEY-----\n" .
             self::dos2unix(chunk_split($encoded, 64)).
-            "-----END EC PRIVATE KEY-----";
+            "-----END PRIVATE KEY-----";
     }
 
     /**
@@ -89,14 +92,15 @@ final class SecretKey
      * @return self
      *
      * @throws CryptoException
+     * @throws SodiumException
      */
     public static function importPem(string $pem, string $algo = 'ed25519'): SecretKey
     {
         if (!hash_equals('ed25519', $algo)) {
             throw new CryptoException('Only ed25519 keys are supported');
         }
-        $formattedKey = str_replace('-----BEGIN EC PRIVATE KEY-----', '', $pem);
-        $formattedKey = str_replace('-----END EC PRIVATE KEY-----', '', $formattedKey);
+        $formattedKey = str_replace('-----BEGIN PRIVATE KEY-----', '', $pem);
+        $formattedKey = str_replace('-----END PRIVATE KEY-----', '', $formattedKey);
         /**
          * @psalm-suppress DocblockTypeContradiction
          * PHP 8.4 updated the docblock return for str_replace, which makes this check required
@@ -110,7 +114,12 @@ final class SecretKey
         if (!hash_equals(substr($key, 0, strlen($prefix)), $prefix)) {
             throw new CryptoException('Invalid PEM prefix');
         }
-        return new SecretKey(substr($key, strlen($prefix)), $algo);
+        $seed = substr($key, strlen($prefix));
+        $keypair = sodium_crypto_sign_seed_keypair($seed);
+        return new SecretKey(
+            sodium_crypto_sign_secretkey($keypair),
+            $algo
+        );
     }
 
     /**
