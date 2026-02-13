@@ -3,25 +3,35 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests\Protocol;
 
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
-use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
-use FediE2EE\PKD\Crypto\Exceptions\InputException;
-use FediE2EE\PKD\Crypto\Exceptions\JsonException;
-use FediE2EE\PKD\Crypto\Exceptions\NetworkException;
-use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
-use FediE2EE\PKD\Crypto\Protocol\Actions\AddKey;
-use FediE2EE\PKD\Crypto\Protocol\Actions\RevokeKey;
-use FediE2EE\PKD\Crypto\Protocol\Actions\Fireproof;
-use FediE2EE\PKD\Crypto\Protocol\Actions\UndoFireproof;
-use FediE2EE\PKD\Crypto\Protocol\Actions\MoveIdentity;
-use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedAddKey;
-use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedRevokeKey;
-use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedFireproof;
-use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedUndoFireproof;
-use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\EncryptedMoveIdentity;
-use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
-use FediE2EE\PKD\Crypto\Protocol\SignedMessage;
-use FediE2EE\PKD\Crypto\SecretKey;
-use FediE2EE\PKD\Crypto\SymmetricKey;
+use FediE2EE\PKD\Crypto\Exceptions\{
+    CryptoException,
+    InputException,
+    JsonException,
+    NetworkException,
+    NotImplementedException
+};
+use FediE2EE\PKD\Crypto\Protocol\Actions\{
+    AddKey,
+    MoveIdentity,
+    Fireproof,
+    RevokeKey,
+    UndoFireproof
+};
+use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\{
+    EncryptedAddKey,
+    EncryptedFireproof,
+    EncryptedMoveIdentity,
+    EncryptedRevokeKey,
+    EncryptedUndoFireproof
+};
+use FediE2EE\PKD\Crypto\Protocol\{
+    EncryptedProtocolMessageInterface,
+    SignedMessage
+};
+use FediE2EE\PKD\Crypto\{
+    SecretKey,
+    SymmetricKey
+};
 use GuzzleHttp\Exception\GuzzleException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use PHPUnit\Framework\Attributes\CoversClass;

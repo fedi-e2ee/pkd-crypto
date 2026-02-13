@@ -3,12 +3,14 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests\Encoding;
 
 use FediE2EE\PKD\Crypto\Encoding\Base58BtcVarTime;
+use FediE2EE\PKD\Crypto\Exceptions\EncodingException;
 use ParagonIE\ConstantTime\Hex;
 use PHPUnit\Framework\Attributes\{
     CoversClass,
     DataProvider
 };
 use PHPUnit\Framework\TestCase;
+use Random\RandomException;
 
 #[CoversClass(Base58BtcVarTime::class)]
 class Base58BtcVarTimeTest extends TestCase
@@ -52,7 +54,9 @@ class Base58BtcVarTimeTest extends TestCase
         ];
     }
 
-
+    /**
+     * @throws EncodingException
+     */
     #[DataProvider("vectorProvider")]
     public function testVectors(string $input, string $expected): void
     {
@@ -78,6 +82,11 @@ class Base58BtcVarTimeTest extends TestCase
             $this->assertSame($i, Base58BtcVarTime::decodeByte($a[$i]), 'index = '. $i);
         }
     }
+
+    /**
+     * @throws EncodingException
+     * @throws RandomException
+     */
     public function testEncodeDecode(): void
     {
         for ($i = 1; $i < 100; ++$i) {
@@ -293,7 +302,7 @@ class Base58BtcVarTimeTest extends TestCase
     }
 
     /**
-     * Test that invalid decode characters return -1 consistently
+     * Test that invalid characters return -1 consistently from decodeByte()
      */
     public function testInvalidDecodeCharacters(): void
     {

@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests\AttributeEncryption;
 
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
+use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\SymmetricKey;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -10,6 +11,9 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(AttributeKeyMap::class)]
 class AttributeKeyMapTest extends TestCase
 {
+    /**
+     * @throws CryptoException
+     */
     public function testAddKey(): void
     {
         $keyMap = new AttributeKeyMap();

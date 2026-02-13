@@ -1,28 +1,41 @@
 <?php
 declare(strict_types=1);
-
 namespace FediE2EE\PKD\Crypto\Tests\Protocol;
+
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
-use FediE2EE\PKD\Crypto\Exceptions\BundleException;
-use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
-use FediE2EE\PKD\Crypto\Exceptions\InputException;
-use FediE2EE\PKD\Crypto\Exceptions\JsonException;
-use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
-use FediE2EE\PKD\Crypto\Exceptions\ParserException;
-use FediE2EE\PKD\Crypto\Merkle\Tree;
-use FediE2EE\PKD\Crypto\Protocol\Actions\AddKey;
-use FediE2EE\PKD\Crypto\Protocol\Actions\BurnDown;
-use FediE2EE\PKD\Crypto\Protocol\Handler;
-use FediE2EE\PKD\Crypto\Protocol\Bundle;
-use FediE2EE\PKD\Crypto\Protocol\Parser;
-use FediE2EE\PKD\Crypto\SecretKey;
-use FediE2EE\PKD\Crypto\SymmetricKey;
+use FediE2EE\PKD\Crypto\Exceptions\{
+    BundleException,
+    CryptoException,
+    InputException,
+    JsonException,
+    NotImplementedException,
+    ParserException,
+};
+use FediE2EE\PKD\Crypto\Protocol\Actions\{
+    AddKey,
+    BurnDown
+};
+use GuzzleHttp\Exception\GuzzleException;
+use FediE2EE\PKD\Crypto\Protocol\{
+    Handler,
+    Bundle,
+    Parser
+};
+use FediE2EE\PKD\Crypto\{
+    Merkle\Tree,
+    SecretKey,
+    SymmetricKey
+};
 use Mdanter\Ecc\Exception\InsecureCurveException;
-use ParagonIE\HPKE\Factory;
-use ParagonIE\HPKE\HPKE;
+use ParagonIE\HPKE\{
+    Factory,
+    HPKE
+};
 use ParagonIE\HPKE\HPKEException;
-use ParagonIE\HPKE\KEM\DHKEM\Curve;
-use ParagonIE\HPKE\KEM\DHKEM\DecapsKey;
+use ParagonIE\HPKE\KEM\DHKEM\{
+    Curve,
+    DecapsKey
+};
 use PHPUnit\Framework\TestCase;
 use Random\RandomException;
 use SodiumException;
@@ -32,6 +45,7 @@ class HandlerTest extends TestCase
     /**
      * @throws BundleException
      * @throws CryptoException
+     * @throws GuzzleException
      * @throws JsonException
      * @throws NotImplementedException
      * @throws ParserException
@@ -75,6 +89,7 @@ class HandlerTest extends TestCase
     /**
      * @throws BundleException
      * @throws CryptoException
+     * @throws GuzzleException
      * @throws HPKEException
      * @throws JsonException
      * @throws NotImplementedException
@@ -111,6 +126,7 @@ class HandlerTest extends TestCase
     /**
      * @throws BundleException
      * @throws CryptoException
+     * @throws GuzzleException
      * @throws InputException
      * @throws JsonException
      * @throws NotImplementedException
@@ -141,6 +157,7 @@ class HandlerTest extends TestCase
 
     /**
      * @throws CryptoException
+     * @throws GuzzleException
      * @throws NotImplementedException
      * @throws RandomException
      * @throws SodiumException
@@ -172,6 +189,7 @@ class HandlerTest extends TestCase
 
     /**
      * @throws CryptoException
+     * @throws GuzzleException
      * @throws HPKEException
      * @throws InsecureCurveException
      * @throws JsonException
@@ -253,6 +271,7 @@ class HandlerTest extends TestCase
 
     /**
      * @throws CryptoException
+     * @throws GuzzleException
      * @throws NotImplementedException
      * @throws RandomException
      * @throws SodiumException
@@ -285,6 +304,7 @@ class HandlerTest extends TestCase
 
     /**
      * @throws CryptoException
+     * @throws GuzzleException
      * @throws NotImplementedException
      * @throws RandomException
      * @throws SodiumException

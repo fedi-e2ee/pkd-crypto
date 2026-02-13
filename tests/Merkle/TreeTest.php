@@ -3,12 +3,16 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests\Merkle;
 
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
-use FediE2EE\PKD\Crypto\Merkle\ConsistencyProof;
-use FediE2EE\PKD\Crypto\Merkle\InclusionProof;
-use FediE2EE\PKD\Crypto\Merkle\Tree;
+use FediE2EE\PKD\Crypto\Merkle\{
+    ConsistencyProof,
+    InclusionProof,
+    Tree
+};
 use ParagonIE\ConstantTime\Base64UrlSafe;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\{
+    CoversClass,
+    DataProvider
+};
 use PHPUnit\Framework\TestCase;
 use SodiumException;
 
@@ -43,6 +47,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -100,7 +105,6 @@ class TreeTest extends TestCase
     /**
      * @throws CryptoException
      * @throws SodiumException
-     * @dataProvider hashAlgProvider
      */
     #[DataProvider("hashAlgProvider")]
     public function testInclusionProofWithOddLeaves(string $hashAlg): void
@@ -135,8 +139,8 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
-     * @dataProvider hashAlgProvider
      */
     #[DataProvider("hashAlgProvider")]
     public function testConsistencyProof(string $hashAlg): void
@@ -158,8 +162,8 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
-     * @dataProvider hashAlgProvider
      */
     #[DataProvider("hashAlgProvider")]
     public function testConsistencyProofForEmptySubtree(string $hashAlg): void
@@ -180,8 +184,8 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
-     * @dataProvider hashAlgProvider
      */
     #[DataProvider("hashAlgProvider")]
     public function testEmptyTree(string $hashAlg): void
@@ -192,8 +196,8 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
-     * @dataProvider hashAlgProvider
      */
     #[DataProvider("hashAlgProvider")]
     public function testSingleLeafTree(string $hashAlg): void
@@ -349,6 +353,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -368,6 +373,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -401,6 +407,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -416,6 +423,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -431,6 +439,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -446,6 +455,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -465,6 +475,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -484,6 +495,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -499,6 +511,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -518,6 +531,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -537,6 +551,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -557,6 +572,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -593,6 +609,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -620,6 +637,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -634,6 +652,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -657,6 +676,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -685,6 +705,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     public function testHashAlgorithmSpecificEncoding(): void
@@ -942,6 +963,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -959,6 +981,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -975,6 +998,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -995,6 +1019,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -1017,6 +1042,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -1085,6 +1111,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -1133,6 +1160,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -1163,6 +1191,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     public function testGetEncodedRootHashLengths(): void
@@ -1197,6 +1226,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     public function testVerifyInclusionProofIndexEqualToSize(): void
@@ -1211,6 +1241,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     public function testVerifyInclusionProofIndexGreaterThanSize(): void
@@ -1225,6 +1256,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     public function testConsistencyProofOldSizeEqualsNewSize(): void
@@ -1237,6 +1269,7 @@ class TreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     public function testConsistencyProofOldSizeGreaterThanNewSize(): void

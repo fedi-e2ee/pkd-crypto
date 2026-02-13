@@ -6,7 +6,6 @@ use Eris\Generators;
 use Eris\TestTrait;
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 use FediE2EE\PKD\Crypto\Exceptions\BundleException;
-use FediE2EE\PKD\Crypto\Exceptions\ParserException;
 use FediE2EE\PKD\Crypto\Protocol\Bundle;
 use FediE2EE\PKD\Crypto\Protocol\Parser;
 use FediE2EE\PKD\Crypto\SecretKey;

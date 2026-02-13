@@ -2,24 +2,34 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests\Protocol;
 
-use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
-use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
-use ParagonIE\ConstantTime\Binary;
+use FediE2EE\PKD\Crypto\Exceptions\{
+    CryptoException,
+    NotImplementedException
+};
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
-use FediE2EE\PKD\Crypto\Protocol\Actions\AddKey;
-use FediE2EE\PKD\Crypto\Protocol\SignedMessage;
-use FediE2EE\PKD\Crypto\SecretKey;
-use FediE2EE\PKD\Crypto\SymmetricKey;
+use FediE2EE\PKD\Crypto\Protocol\{
+    Actions\AddKey,
+    SignedMessage
+};
+use FediE2EE\PKD\Crypto\{
+    SecretKey,
+    SymmetricKey
+};
+use GuzzleHttp\Exception\GuzzleException;
+use ParagonIE\ConstantTime\Binary;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use PHPUnit\Framework\TestCase;
+use Random\RandomException;
 use SodiumException;
 
 class EncryptedMessageTest extends TestCase
 {
     /**
      * @throws CryptoException
+     * @throws GuzzleException
      * @throws NotImplementedException
      * @throws SodiumException
+     * @throws RandomException
      */
     public function testSignVerifyEncrypted(): void
     {

@@ -3,19 +3,26 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests\Protocol;
 
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
-use FediE2EE\PKD\Crypto\Exceptions\BundleException;
-use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
-use FediE2EE\PKD\Crypto\Exceptions\InputException;
-use FediE2EE\PKD\Crypto\Exceptions\JsonException;
-use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
-use FediE2EE\PKD\Crypto\Protocol\Actions\AddKey;
-use FediE2EE\PKD\Crypto\Protocol\Bundle;
-use FediE2EE\PKD\Crypto\Protocol\Handler;
-use FediE2EE\PKD\Crypto\Protocol\SignedMessage;
+use FediE2EE\PKD\Crypto\Exceptions\{
+    BundleException,
+    CryptoException,
+    InputException,
+    JsonException,
+    NotImplementedException
+};
+use FediE2EE\PKD\Crypto\Protocol\{
+    Actions\AddKey,
+    Bundle,
+    Handler,
+    SignedMessage
+};
 use FediE2EE\PKD\Crypto\SecretKey;
+use GuzzleHttp\Exception\GuzzleException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\{
+    CoversClass,
+    DataProvider
+};
 use PHPUnit\Framework\TestCase;
 use Random\RandomException;
 use SodiumException;
@@ -25,6 +32,7 @@ class BundleTest extends TestCase
 {
     /**
      * @throws CryptoException
+     * @throws GuzzleException
      * @throws NotImplementedException
      * @throws RandomException
      * @throws SodiumException
@@ -65,7 +73,7 @@ class BundleTest extends TestCase
 
     /**
      * @throws BundleException
-     * @throws InputException
+     * @throws CryptoException
      */
     #[DataProvider("invalidFromFuzzer")]
     public function testInvalidInput(string $input): void
@@ -76,6 +84,7 @@ class BundleTest extends TestCase
 
     /**
      * @throws CryptoException
+     * @throws GuzzleException
      * @throws JsonException
      * @throws NotImplementedException
      * @throws RandomException
@@ -129,6 +138,7 @@ class BundleTest extends TestCase
     /**
      * @throws BundleException
      * @throws CryptoException
+     * @throws GuzzleException
      * @throws InputException
      * @throws JsonException
      * @throws NotImplementedException
@@ -164,7 +174,7 @@ class BundleTest extends TestCase
 
     /**
      * @throws BundleException
-     * @throws InputException
+     * @throws CryptoException
      */
     public function testFromJsonMissingSymmetricKeys(): void
     {
@@ -181,7 +191,7 @@ class BundleTest extends TestCase
 
     /**
      * @throws BundleException
-     * @throws InputException
+     * @throws CryptoException
      */
     public function testFromJsonMissingAction(): void
     {
@@ -198,7 +208,7 @@ class BundleTest extends TestCase
 
     /**
      * @throws BundleException
-     * @throws InputException
+     * @throws CryptoException
      */
     public function testFromJsonMissingMessage(): void
     {
@@ -215,7 +225,7 @@ class BundleTest extends TestCase
 
     /**
      * @throws BundleException
-     * @throws InputException
+     * @throws CryptoException
      */
     public function testFromJsonMissingMerkleRoot(): void
     {
@@ -232,7 +242,7 @@ class BundleTest extends TestCase
 
     /**
      * @throws BundleException
-     * @throws InputException
+     * @throws CryptoException
      */
     public function testFromJsonInvalidJson(): void
     {
@@ -242,7 +252,7 @@ class BundleTest extends TestCase
 
     /**
      * @throws BundleException
-     * @throws InputException
+     * @throws CryptoException
      */
     public function testFromJsonEmptyString(): void
     {
@@ -252,7 +262,8 @@ class BundleTest extends TestCase
     }
 
     /**
-     * @throws InputException
+     * @throws BundleException
+     * @throws CryptoException
      */
     public function testFromJsonInvalidJsonContainsErrorMessage(): void
     {
@@ -269,7 +280,7 @@ class BundleTest extends TestCase
 
     /**
      * @throws BundleException
-     * @throws InputException
+     * @throws CryptoException
      */
     public function testFromJsonNotObject(): void
     {
@@ -279,6 +290,7 @@ class BundleTest extends TestCase
 
     /**
      * @throws CryptoException
+     * @throws GuzzleException
      * @throws JsonException
      * @throws NotImplementedException
      * @throws RandomException
@@ -310,6 +322,7 @@ class BundleTest extends TestCase
     /**
      * @throws BundleException
      * @throws CryptoException
+     * @throws GuzzleException
      * @throws InputException
      * @throws JsonException
      * @throws NotImplementedException
@@ -343,7 +356,7 @@ class BundleTest extends TestCase
 
     /**
      * @throws BundleException
-     * @throws InputException
+     * @throws CryptoException
      */
     public function testFromJsonWithKeyMapMissingAction(): void
     {
@@ -361,7 +374,7 @@ class BundleTest extends TestCase
 
     /**
      * @throws BundleException
-     * @throws InputException
+     * @throws CryptoException
      */
     public function testFromJsonWithKeyMapMissingMessage(): void
     {
@@ -379,7 +392,7 @@ class BundleTest extends TestCase
 
     /**
      * @throws BundleException
-     * @throws InputException
+     * @throws CryptoException
      */
     public function testFromJsonWithKeyMapMissingMerkleRoot(): void
     {
