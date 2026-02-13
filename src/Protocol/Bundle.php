@@ -75,8 +75,14 @@ class Bundle
                 'message',
                 'recent-merkle-root',
             );
+            if (!is_array($data['symmetric-keys'])) {
+                throw new BundleException('symmetric-keys must be an array');
+            }
             $symmetricKeys = new AttributeKeyMap();
             foreach ($data['symmetric-keys'] as $attribute => $key) {
+                if (!is_string($key)) {
+                    throw new BundleException('Each symmetric-key must be a string');
+                }
                 $symmetricKeys->addKey(
                     $attribute,
                     new SymmetricKey(
