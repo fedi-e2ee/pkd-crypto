@@ -69,7 +69,7 @@ final class SignedMessage implements \JsonSerializable
             '!pkd-context' => self::PKD_CONTEXT,
             'action' => $this->message->getAction(),
             'message' => $toArray,
-            'recent-merkle-root' => $this->recentMerkleRoot
+            'recent-merkle-root' => $this->getRecentMerkleRoot()
         ];
     }
 
