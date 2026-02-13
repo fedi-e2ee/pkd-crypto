@@ -74,6 +74,7 @@ class Bundle
                 'symmetric-keys',
                 'message',
                 'recent-merkle-root',
+                'signature'
             );
             $symmetricKeys = new AttributeKeyMap();
             foreach ($data['symmetric-keys'] as $attribute => $key) {
@@ -89,6 +90,7 @@ class Bundle
                 $data,
                 'message',
                 'recent-merkle-root',
+                'signature'
             );
         }
 
