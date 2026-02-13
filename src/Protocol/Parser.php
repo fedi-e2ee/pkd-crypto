@@ -106,7 +106,7 @@ class Parser
         }
         $action = $bundle->getAction();
         if ($action === 'BurnDown') {
-            self::assertAllArrayKeysExist($components, 'actor', 'operator', 'otp');
+            self::assertAllArrayKeysExist($components, 'actor', 'operator');
         } elseif ($action === 'Checkpoint') {
             self::assertAllArrayKeysExist(
                 $components,
@@ -116,8 +116,6 @@ class Parser
                 'to-directory',
                 'to-validated-root',
             );
-        } elseif ($action === 'RevokeKeyThirdParty') {
-            self::assertAllArrayKeysExist($components, 'revocation-token');
         }
         return match ($action) {
             'BurnDown' =>
@@ -125,7 +123,7 @@ class Parser
                     $components['actor'],
                     $components['operator'],
                     $time,
-                    $components['otp'],
+                    $bundle->getOtp(),
                 ),
             'Checkpoint' =>
                 new Checkpoint(
@@ -135,10 +133,6 @@ class Parser
                         $components['to-directory'],
                         $components['to-validated-root'],
                     $time
-                ),
-            'RevokeKeyThirdParty' =>
-                new RevokeKeyThirdParty(
-                    $components['revocation-token']
                 ),
             default =>
                 throw new CryptoException('Unknown action: ' . $bundle->getAction()),
@@ -201,6 +195,12 @@ class Parser
         PublicKey $publicKey
     ): ParsedMessage {
         $message = static::fromJson($json);
+        if ($message->getAction() === 'RevokeKeyThirdParty') {
+            return new ParsedMessage(
+                new RevokeKeyThirdParty($message->getRevocationToken()),
+                new AttributeKeyMap()
+            );
+        }
         if (in_array($message->getAction(), self::PLAINTEXT_ACTIONS, true)) {
             $encrypted = $this->getUnencryptedMessage($message);
         } else {
@@ -232,6 +232,12 @@ class Parser
     public function parseUnverified(string $json): ParsedMessage
     {
         $message = static::fromJson($json);
+        if ($message->getAction() === 'RevokeKeyThirdParty') {
+            return new ParsedMessage(
+                new RevokeKeyThirdParty($message->getRevocationToken()),
+                new AttributeKeyMap()
+            );
+        }
         if (in_array($message->getAction(), self::PLAINTEXT_ACTIONS, true)) {
             $encrypted = $this->getUnencryptedMessage($message);
         } else {

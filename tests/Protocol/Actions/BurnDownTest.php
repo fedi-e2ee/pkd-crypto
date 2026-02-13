@@ -45,14 +45,13 @@ class BurnDownTest extends TestCase
      * @throws JsonException
      * @throws NetworkException
      */
-    public function testToArrayWithNonNullOtpIncludesOtpKey(): void
+    public function testToArrayExcludesOtpEvenWhenSet(): void
     {
-        $otpValue = 'test-otp-123';
         $burnDown = new BurnDown(
             'https://example.com/@bob',
             'operator@example.com',
             new DateTimeImmutable('2024-01-01T00:00:00Z'),
-            $otpValue
+            'test-otp-123'
         );
 
         $array = $burnDown->toArray();
@@ -60,34 +59,26 @@ class BurnDownTest extends TestCase
         $this->assertArrayHasKey('actor', $array);
         $this->assertArrayHasKey('operator', $array);
         $this->assertArrayHasKey('time', $array);
-
-        // CRITICAL: otp SHOULD be in the array when it's not null
-        $this->assertArrayHasKey('otp', $array);
-        $this->assertSame($otpValue, $array['otp']);
+        // otp is a top-level protocol field, not in the message map
+        $this->assertArrayNotHasKey('otp', $array);
+        // But accessible via getter
+        $this->assertSame('test-otp-123', $burnDown->getOtp());
     }
 
-    public function testJsonSerializeOtpBehavior(): void
+    public function testJsonSerializeNeverIncludesOtp(): void
     {
-        // With null OTP
-        $burnDownNull = new BurnDown(
-            'https://example.com/@alice',
-            'operator@example.com',
-            null,
-            null
-        );
-        $jsonNull = $burnDownNull->jsonSerialize();
-        $this->assertArrayNotHasKey('otp', $jsonNull);
-
-        // With non-null OTP
-        $burnDownWithOtp = new BurnDown(
+        $burnDown = new BurnDown(
             'https://example.com/@alice',
             'operator@example.com',
             null,
             'otp-value-456'
         );
-        $jsonWithOtp = $burnDownWithOtp->jsonSerialize();
-        $this->assertArrayHasKey('otp', $jsonWithOtp);
-        $this->assertSame('otp-value-456', $jsonWithOtp['otp']);
+        $json = $burnDown->jsonSerialize();
+        // otp is a top-level protocol field, never in the message map
+        $this->assertArrayNotHasKey('otp', $json);
+        $this->assertArrayHasKey('actor', $json);
+        $this->assertArrayHasKey('operator', $json);
+        $this->assertArrayHasKey('time', $json);
     }
 
     /**
