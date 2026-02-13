@@ -196,8 +196,12 @@ class Parser
     ): ParsedMessage {
         $message = static::fromJson($json);
         if ($message->getAction() === 'RevokeKeyThirdParty') {
+            $rt = $message->getRevocationToken();
+            if (is_null($rt)) {
+                throw new ParserException('No revocation token');
+            }
             return new ParsedMessage(
-                new RevokeKeyThirdParty($message->getRevocationToken()),
+                new RevokeKeyThirdParty($rt),
                 new AttributeKeyMap()
             );
         }
@@ -233,8 +237,12 @@ class Parser
     {
         $message = static::fromJson($json);
         if ($message->getAction() === 'RevokeKeyThirdParty') {
+            $rt = $message->getRevocationToken();
+            if (is_null($rt)) {
+                throw new ParserException('No revocation token');
+            }
             return new ParsedMessage(
-                new RevokeKeyThirdParty($message->getRevocationToken()),
+                new RevokeKeyThirdParty($rt),
                 new AttributeKeyMap()
             );
         }
