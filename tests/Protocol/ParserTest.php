@@ -12,12 +12,6 @@ use FediE2EE\PKD\Crypto\Exceptions\{
 };
 use FediE2EE\PKD\Crypto\Protocol\{
     Actions\AddKey,
-    Actions\AddAuxData,
-    Actions\Fireproof,
-    Actions\MoveIdentity,
-    Actions\RevokeAuxData,
-    Actions\RevokeKey,
-    Actions\UndoFireproof,
     Bundle,
     EncryptedActions\EncryptedAddKey,
     EncryptedActions\EncryptedAddAuxData,
@@ -30,6 +24,8 @@ use FediE2EE\PKD\Crypto\Protocol\{
     ParsedMessage,
     Parser
 };
+use GuzzleHttp\Exception\GuzzleException;
+use Mdanter\Ecc\Exception\InsecureCurveException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use FediE2EE\PKD\Crypto\{
     Merkle\Tree,
@@ -46,6 +42,7 @@ use ParagonIE\HPKE\{
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Random\RandomException;
 use SodiumException;
 
 #[CoversClass(Parser::class)]
@@ -53,10 +50,12 @@ class ParserTest extends TestCase
 {
     /**
      * @throws CryptoException
+     * @throws GuzzleException
+     * @throws HPKEException
      * @throws JsonException
      * @throws NotImplementedException
      * @throws ParserException
-     * @throws HPKEException
+     * @throws RandomException
      * @throws SodiumException
      */
     public function testParser(): void
@@ -95,6 +94,17 @@ class ParserTest extends TestCase
     }
 
 
+    /**
+     * @throws CryptoException
+     * @throws GuzzleException
+     * @throws HPKEException
+     * @throws JsonException
+     * @throws NotImplementedException
+     * @throws ParserException
+     * @throws RandomException
+     * @throws SodiumException
+     * @throws InsecureCurveException
+     */
     public function testAdditionalParse(): void
     {
         // Generate a keypair
@@ -132,6 +142,9 @@ class ParserTest extends TestCase
         $this->assertInstanceOf(ParsedMessage::class, $parsed);
     }
 
+    /**
+     * @throws SodiumException
+     */
     public static function invalidFromFuzzer(): array
     {
         return [
@@ -140,6 +153,10 @@ class ParserTest extends TestCase
         ];
     }
 
+    /**
+     * @throws BundleException
+     * @throws CryptoException
+     */
     #[DataProvider("invalidFromFuzzer")]
     public function testInvalidInput(string $input): void
     {
@@ -147,6 +164,13 @@ class ParserTest extends TestCase
         Parser::fromJson($input);
     }
 
+    /**
+     * @throws BundleException
+     * @throws CryptoException
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws ParserException
+     */
     #[DataProvider("invalidFromFuzzer")]
     public function testInvalidInputForActivityPub(string $input): void
     {
@@ -171,6 +195,10 @@ class ParserTest extends TestCase
         ];
     }
 
+    /**
+     * @throws CryptoException
+     * @throws RandomException
+     */
     #[DataProvider("actionTypeProvider")]
     public function testGetEncryptedMessageForActionType(string $action, string $expectedClass): void
     {
@@ -190,6 +218,10 @@ class ParserTest extends TestCase
         $this->assertInstanceOf($expectedClass, $encrypted);
     }
 
+    /**
+     * @throws CryptoException
+     * @throws RandomException
+     */
     public function testGetEncryptedMessageUnknownAction(): void
     {
         $keyMap = new AttributeKeyMap();

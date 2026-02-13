@@ -3,19 +3,25 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests\ActivityPub;
 
 use FediE2EE\PKD\Crypto\ActivityPub\WebFinger;
-use FediE2EE\PKD\Crypto\Exceptions\InputException;
-use FediE2EE\PKD\Crypto\Exceptions\JsonException;
-use FediE2EE\PKD\Crypto\Exceptions\NetworkException;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\Handler\MockHandler;
-use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Middleware;
-use GuzzleHttp\Psr7\Response;
+use FediE2EE\PKD\Crypto\Exceptions\{
+    InputException,
+    JsonException,
+    NetworkException
+};
+use GuzzleHttp\{
+    Client,
+    Exception\GuzzleException,
+    Handler\MockHandler,
+    HandlerStack,
+    Middleware,
+    Psr7\Response
+};
 use ParagonIE\Certainty\Exception\CertaintyException;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\{
+    CoversClass,
+    DataProvider,
+    Group
+};
 use PHPUnit\Framework\TestCase;
 use SodiumException;
 
@@ -78,6 +84,7 @@ class WebFingerTest extends TestCase
     /**
      * @throws CertaintyException
      * @throws GuzzleException
+     * @throws InputException
      * @throws JsonException
      * @throws NetworkException
      * @throws SodiumException

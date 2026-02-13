@@ -40,6 +40,11 @@ final class SignedMessage implements \JsonSerializable
         $this->signature = $signature;
     }
 
+    /**
+     * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
     public static function init(
         ProtocolMessageInterface $message,
         string $recentMerkleRoot,
@@ -144,6 +149,9 @@ final class SignedMessage implements \JsonSerializable
         return Base64UrlSafe::encodeUnpadded($this->recentMerkleRoot);
     }
 
+    /**
+     * @throws CryptoException
+     */
     public function getSignature(): string
     {
         if (is_null($this->signature)) {
@@ -188,6 +196,9 @@ final class SignedMessage implements \JsonSerializable
         ];
     }
 
+    /**
+     * @throws CryptoException
+     */
     #[Override]
     public function jsonSerialize(): array
     {

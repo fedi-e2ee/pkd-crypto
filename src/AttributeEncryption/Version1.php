@@ -13,7 +13,6 @@ use function
     hash_equals,
     hash_hkdf,
     hash_hmac,
-    openssl_decrypt,
     openssl_encrypt,
     pack,
     random_bytes,

@@ -66,6 +66,8 @@ class CrossCompatibilityTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
+     * @throws RandomException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -79,6 +81,7 @@ class CrossCompatibilityTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws RandomException
      * @throws SodiumException
      */

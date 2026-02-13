@@ -7,10 +7,16 @@ use FediE2EE\PKD\Crypto\Exceptions\EncodingException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Random\RandomException;
+use SodiumException;
 
 #[CoversClass(Multibase::class)]
 class MultibaseTest extends TestCase
 {
+    /**
+     * @throws EncodingException
+     * @throws SodiumException
+     */
     public function testKnownInput(): void
     {
         $seed = sodium_crypto_generichash('Soatok is a gay nerd');
@@ -24,6 +30,9 @@ class MultibaseTest extends TestCase
         $this->assertSame(Multibase::decode($base58), Multibase::decode($default));
     }
 
+    /**
+     * @throws RandomException
+     */
     public function testPublicFacingApi(): void
     {
         $random = random_bytes(16);
@@ -37,6 +46,9 @@ class MultibaseTest extends TestCase
         $this->assertSame('z', $encoded[0]);
     }
 
+    /**
+     * @throws EncodingException
+     */
     public function testDecodeEmptyStringThrows(): void
     {
         $this->expectException(EncodingException::class);

@@ -3,11 +3,13 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests\Protocol;
 
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
-use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
-use FediE2EE\PKD\Crypto\Exceptions\InputException;
-use FediE2EE\PKD\Crypto\Exceptions\JsonException;
-use FediE2EE\PKD\Crypto\Exceptions\NetworkException;
-use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
+use FediE2EE\PKD\Crypto\Exceptions\{
+    CryptoException,
+    InputException,
+    JsonException,
+    NetworkException,
+    NotImplementedException
+};
 use FediE2EE\PKD\Crypto\Protocol\Actions\AddKey;
 use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
 use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
@@ -27,6 +29,7 @@ class SignedMessageTest extends TestCase
 {
     /**
      * @throws CryptoException
+     * @throws GuzzleException
      * @throws NotImplementedException
      * @throws RandomException
      * @throws SodiumException
@@ -50,6 +53,7 @@ class SignedMessageTest extends TestCase
 
     /**
      * @throws CryptoException
+     * @throws GuzzleException
      * @throws NotImplementedException
      * @throws RandomException
      * @throws SodiumException
@@ -90,6 +94,8 @@ class SignedMessageTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
+     * @throws GuzzleException
      * @throws NotImplementedException
      * @throws RandomException
      * @throws SodiumException
@@ -127,6 +133,8 @@ class SignedMessageTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
+     * @throws GuzzleException
      * @throws NotImplementedException
      * @throws RandomException
      * @throws SodiumException
@@ -147,6 +155,8 @@ class SignedMessageTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
+     * @throws GuzzleException
      * @throws NotImplementedException
      * @throws RandomException
      * @throws SodiumException
@@ -183,6 +193,7 @@ class SignedMessageTest extends TestCase
 
     /**
      * @throws CryptoException
+     * @throws GuzzleException
      * @throws NotImplementedException
      * @throws RandomException
      * @throws SodiumException
@@ -205,6 +216,7 @@ class SignedMessageTest extends TestCase
 
     /**
      * @throws CryptoException
+     * @throws GuzzleException
      * @throws NotImplementedException
      * @throws RandomException
      * @throws SodiumException
@@ -227,6 +239,7 @@ class SignedMessageTest extends TestCase
 
     /**
      * @throws CryptoException
+     * @throws GuzzleException
      * @throws NotImplementedException
      * @throws RandomException
      * @throws SodiumException
@@ -254,6 +267,8 @@ class SignedMessageTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
+     * @throws GuzzleException
      * @throws NotImplementedException
      * @throws RandomException
      * @throws SodiumException
@@ -272,6 +287,7 @@ class SignedMessageTest extends TestCase
 
     /**
      * @throws CryptoException
+     * @throws GuzzleException
      * @throws NotImplementedException
      * @throws RandomException
      * @throws SodiumException
@@ -297,6 +313,7 @@ class SignedMessageTest extends TestCase
 
     /**
      * @throws CryptoException
+     * @throws GuzzleException
      * @throws NotImplementedException
      * @throws RandomException
      * @throws SodiumException
@@ -320,6 +337,8 @@ class SignedMessageTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
+     * @throws GuzzleException
      * @throws NotImplementedException
      * @throws RandomException
      * @throws SodiumException
@@ -380,6 +399,8 @@ class SignedMessageTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
+     * @throws GuzzleException
      * @throws NotImplementedException
      * @throws RandomException
      * @throws SodiumException

@@ -3,29 +3,39 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests\Protocol;
 
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
-use FediE2EE\PKD\Crypto\Exceptions\BundleException;
-use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
-use FediE2EE\PKD\Crypto\Exceptions\InputException;
-use FediE2EE\PKD\Crypto\Exceptions\JsonException;
-use FediE2EE\PKD\Crypto\Exceptions\NetworkException;
-use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
+use FediE2EE\PKD\Crypto\Exceptions\{
+    BundleException,
+    CryptoException,
+    InputException,
+    JsonException,
+    NetworkException,
+    NotImplementedException
+};
 use FediE2EE\PKD\Crypto\Merkle\Tree;
-use FediE2EE\PKD\Crypto\Protocol\Actions\AddKey;
-use FediE2EE\PKD\Crypto\Protocol\Actions\RevokeKey;
-use FediE2EE\PKD\Crypto\Protocol\Bundle;
-use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
-use FediE2EE\PKD\Crypto\Protocol\Handler;
-use FediE2EE\PKD\Crypto\Protocol\HPKEAdapter;
-use FediE2EE\PKD\Crypto\Protocol\Parser;
-use FediE2EE\PKD\Crypto\Protocol\SignedMessage;
-use FediE2EE\PKD\Crypto\SecretKey;
-use FediE2EE\PKD\Crypto\SymmetricKey;
+use FediE2EE\PKD\Crypto\Protocol\{
+    Actions\AddKey,
+    Actions\RevokeKey,
+    Bundle,
+    EncryptedProtocolMessageInterface,
+    Handler,
+    HPKEAdapter,
+    Parser,
+    SignedMessage
+};
+use FediE2EE\PKD\Crypto\{
+    SecretKey,
+    SymmetricKey
+};
 use GuzzleHttp\Exception\GuzzleException;
-use ParagonIE\HPKE\Factory;
-use ParagonIE\HPKE\HPKE;
-use ParagonIE\HPKE\HPKEException;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\DataProvider;
+use ParagonIE\HPKE\{
+    Factory,
+    HPKE,
+    HPKEException
+};
+use PHPUnit\Framework\Attributes\{
+    CoversClass,
+    DataProvider
+};
 use PHPUnit\Framework\TestCase;
 use Random\RandomException;
 use SodiumException;

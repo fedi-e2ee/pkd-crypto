@@ -33,6 +33,7 @@ use PHPUnit\Framework\Attributes\{
     CoversClass,
     DataProvider
 };
+use GuzzleHttp\Exception\GuzzleException;
 use Mdanter\Ecc\Exception\InsecureCurveException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use PHPUnit\Framework\TestCase;
@@ -71,6 +72,7 @@ class HPKETest extends TestCase
     /**
      * @throws BundleException
      * @throws CryptoException
+     * @throws GuzzleException
      * @throws HPKEException
      * @throws JsonException
      * @throws NotImplementedException
@@ -140,6 +142,7 @@ class HPKETest extends TestCase
 
     /**
      * @throws CryptoException
+     * @throws GuzzleException
      * @throws HPKEException
      * @throws JsonException
      * @throws NotImplementedException
@@ -175,6 +178,9 @@ class HPKETest extends TestCase
         (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey, $encrypted);
     }
 
+    /**
+     * @throws HPKEException
+     */
     #[DataProvider("ciphersuites")]
     public function testShortPayload(HPKE $ciphersuite): void
     {
@@ -184,6 +190,9 @@ class HPKETest extends TestCase
         (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey,'abcd');
     }
 
+    /**
+     * @throws HPKEException
+     */
     #[DataProvider("ciphersuites")]
     public function testNotAsShortPayload(HPKE $ciphersuite): void
     {
@@ -194,6 +203,9 @@ class HPKETest extends TestCase
         (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey,'abcde');
     }
 
+    /**
+     * @throws HPKEException
+     */
     #[DataProvider("ciphersuites")]
     public function testOnlyHeader(HPKE $ciphersuite): void
     {
@@ -203,6 +215,9 @@ class HPKETest extends TestCase
         (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey,'hpke:');
     }
 
+    /**
+     * @throws HPKEException
+     */
     #[DataProvider("ciphersuites")]
     public function testInvalidPayloadExtra(HPKE $ciphersuite): void
     {
@@ -212,6 +227,9 @@ class HPKETest extends TestCase
         (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey,'hpke:abcd:efg');
     }
 
+    /**
+     * @throws HPKEException
+     */
     #[DataProvider("ciphersuites")]
     public function testInvalidPayloadDoubleColon(HPKE $ciphersuite): void
     {
@@ -221,6 +239,9 @@ class HPKETest extends TestCase
         (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey,'hpke::abcdefg');
     }
 
+    /**
+     * @throws HPKEException
+     */
     #[DataProvider("ciphersuites")]
     public function testInvalidPayloadTotallyInvalid(HPKE $ciphersuite): void
     {
@@ -230,6 +251,9 @@ class HPKETest extends TestCase
         (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey,'hpke:$!@^');
     }
 
+    /**
+     * @throws HPKEException
+     */
     #[DataProvider("ciphersuites")]
     public function testInvalidPayloadSuffix(HPKE $ciphersuite): void
     {

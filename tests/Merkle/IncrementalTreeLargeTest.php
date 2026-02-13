@@ -237,6 +237,7 @@ class IncrementalTreeLargeTest extends TestCase
     /**
      * Consistency proof boundary: oldSize == newSize should return empty proof.
      *
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -269,6 +270,7 @@ class IncrementalTreeLargeTest extends TestCase
     /**
      * Consistency proof with oldSize > newSize should return empty proof.
      *
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]

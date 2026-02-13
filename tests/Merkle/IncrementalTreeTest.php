@@ -2,15 +2,21 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests\Merkle;
 
-use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
-use FediE2EE\PKD\Crypto\Exceptions\InputException;
-use FediE2EE\PKD\Crypto\Exceptions\JsonException;
-use FediE2EE\PKD\Crypto\Merkle\ConsistencyProof;
-use FediE2EE\PKD\Crypto\Merkle\InclusionProof;
-use FediE2EE\PKD\Crypto\Merkle\IncrementalTree;
-use FediE2EE\PKD\Crypto\Merkle\Tree;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\DataProvider;
+use FediE2EE\PKD\Crypto\Exceptions\{
+    CryptoException,
+    InputException,
+    JsonException
+};
+use FediE2EE\PKD\Crypto\Merkle\{
+    ConsistencyProof,
+    InclusionProof,
+    IncrementalTree,
+    Tree
+};
+use PHPUnit\Framework\Attributes\{
+    CoversClass,
+    DataProvider
+};
 use PHPUnit\Framework\TestCase;
 use Random\RandomException;
 use SodiumException;
@@ -29,6 +35,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws RandomException
      * @throws SodiumException
      */
@@ -121,6 +128,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -139,6 +147,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws InputException
      * @throws JsonException
      * @throws SodiumException
@@ -226,6 +235,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -241,6 +251,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -255,6 +266,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -266,6 +278,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -291,6 +304,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -311,6 +325,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -384,6 +399,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -410,6 +426,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -429,6 +446,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -459,6 +477,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -490,6 +509,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -542,6 +562,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -554,6 +575,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -569,6 +591,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     #[DataProvider("hashAlgProvider")]
@@ -751,6 +774,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws InputException
      * @throws JsonException
      * @throws SodiumException
@@ -773,6 +797,7 @@ class IncrementalTreeTest extends TestCase
     }
 
     /**
+     * @throws CryptoException
      * @throws InputException
      * @throws JsonException
      * @throws SodiumException

@@ -2,13 +2,15 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Protocol;
 
-use FediE2EE\PKD\Crypto\Exceptions\{BundleException,
+use FediE2EE\PKD\Crypto\Exceptions\{
+    BundleException,
     CryptoException,
     InputException,
     JsonException,
     NetworkException,
     NotImplementedException,
-    ParserException};
+    ParserException
+};
 use FediE2EE\PKD\Crypto\Protocol\Actions\{
     BurnDown,
     Checkpoint,
@@ -43,9 +45,6 @@ use function array_key_exists, in_array, is_null;
 class Parser
 {
     use UtilTrait;
-
-    /** Actions that are NOT wrapped with HPKE transport encryption. */
-    const UNENCRYPTED_ACTIONS = ['BurnDown', 'Checkpoint', 'RevokeKeyThirdParty'];
 
     /** Actions with no attribute encryption (truly plaintext fields). */
     const PLAINTEXT_ACTIONS = ['Checkpoint', 'RevokeKeyThirdParty'];
@@ -141,6 +140,7 @@ class Parser
 
     /**
      * @throws BundleException
+     * @throws CryptoException
      * @throws InputException
      */
     public static function fromJson(string $json, ?AttributeKeyMap $symmetricKeys = null): Bundle
@@ -154,6 +154,7 @@ class Parser
      * @api
      *
      * @throws CryptoException
+     * @throws GuzzleException
      * @throws HPKEException
      * @throws NotImplementedException
      * @throws ParserException
@@ -306,6 +307,7 @@ class Parser
      * might have the keys stored in the "symmetric-keys" index.
      *
      * @throws BundleException
+     * @throws CryptoException
      * @throws HPKEException
      * @throws InputException
      */

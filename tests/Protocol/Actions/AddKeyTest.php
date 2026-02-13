@@ -23,6 +23,7 @@ use SodiumException;
 class AddKeyTest extends TestCase
 {
     /**
+     * @throws CryptoException
      * @throws GuzzleException
      * @throws InputException
      * @throws JsonException
