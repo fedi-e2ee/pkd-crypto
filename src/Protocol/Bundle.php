@@ -7,8 +7,10 @@ use FediE2EE\PKD\Crypto\Exceptions\BundleException;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\Exceptions\InputException;
 use FediE2EE\PKD\Crypto\Exceptions\JsonException;
+use FediE2EE\PKD\Crypto\Exceptions\NetworkException;
 use FediE2EE\PKD\Crypto\SymmetricKey;
 use FediE2EE\PKD\Crypto\UtilTrait;
+use GuzzleHttp\Exception\GuzzleException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use function in_array, is_array, is_null, is_string, json_decode, json_encode, json_last_error, json_last_error_msg;
 
@@ -22,11 +24,14 @@ class Bundle
         private readonly string          $recentMerkleRoot,
         private readonly string          $signature,
         private readonly AttributeKeyMap $symmetricKeys,
-        private readonly string          $pkdContext = 'https://github.com/fedi-e2ee/public-key-directory/v1'
+        private readonly string          $pkdContext = 'https://github.com/fedi-e2ee/public-key-directory/v1',
+        private readonly ?string         $otp = null,
+        private readonly ?string         $revocationToken = null,
     ) {}
 
     /**
      * @throws BundleException
+     * @throws CryptoException
      * @throws InputException
      */
     public static function fromJson(string $json, ?AttributeKeyMap $symmetricKeys = null): self
@@ -38,11 +43,24 @@ class Bundle
         if (!is_array($data)) {
             throw new BundleException('Invalid JSON string: ' . json_last_error_msg());
         }
+        self::assertAllArrayKeysExist($data, 'action');
+
+        if ($data['action'] === 'RevokeKeyThirdParty') {
+            self::assertAllArrayKeysExist($data, 'revocation-token');
+            return new self(
+                action: $data['action'],
+                message: [],
+                recentMerkleRoot: '',
+                signature: '',
+                symmetricKeys: new AttributeKeyMap(),
+                revocationToken: $data['revocation-token'],
+            );
+        }
+
         if (is_null($symmetricKeys)) {
             self::assertAllArrayKeysExist(
                 $data,
                 'symmetric-keys',
-                'action',
                 'message',
                 'recent-merkle-root',
             );
@@ -58,10 +76,15 @@ class Bundle
         } else {
             self::assertAllArrayKeysExist(
                 $data,
-                'action',
                 'message',
                 'recent-merkle-root',
             );
+        }
+
+        // BurnDown has otp at the top level (not in the message map).
+        $otp = null;
+        if ($data['action'] === 'BurnDown') {
+            $otp = $data['otp'] ?? null;
         }
 
         return new self(
@@ -69,7 +92,8 @@ class Bundle
             $data['message'],
             $data['recent-merkle-root'],
             Base64UrlSafe::decodeNoPadding($data['signature']),
-            $symmetricKeys
+            $symmetricKeys,
+            otp: $otp,
         );
     }
 
@@ -78,6 +102,25 @@ class Bundle
      */
     public function toJson(): string
     {
+        $flags = JSON_PRESERVE_ZERO_FRACTION
+            | JSON_UNESCAPED_SLASHES
+            | JSON_UNESCAPED_UNICODE;
+
+        // RevokeKeyThirdParty has a minimal structure.
+        if ($this->action === 'RevokeKeyThirdParty') {
+            $encoded = json_encode([
+                'action' => $this->action,
+                'revocation-token' => $this->revocationToken,
+            ], $flags);
+            if (!is_string($encoded)) {
+                throw new JsonException(
+                    json_last_error_msg(),
+                    json_last_error()
+                );
+            }
+            return $encoded;
+        }
+
         $symmetricKeys = [];
         foreach ($this->symmetricKeys->getAttributes() as $attribute) {
             $key = $this->symmetricKeys->getKey($attribute);
@@ -88,23 +131,25 @@ class Bundle
             }
         }
 
-        $flags = JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
-        $encoded = json_encode([
-            '!pkd-context' =>
-                $this->pkdContext,
-            'action' =>
-                $this->action,
-            'message' =>
-                $this->message,
-            'recent-merkle-root' =>
-                $this->recentMerkleRoot,
+        $data = [
+            '!pkd-context' => $this->pkdContext,
+            'action' => $this->action,
+            'message' => $this->message,
+            'recent-merkle-root' => $this->recentMerkleRoot,
             'signature' =>
                 Base64UrlSafe::encodeUnpadded($this->signature),
-            'symmetric-keys' =>
-                $symmetricKeys,
-        ], $flags);
+            'symmetric-keys' => $symmetricKeys,
+        ];
+        if ($this->otp !== null) {
+            $data['otp'] = $this->otp;
+        }
+
+        $encoded = json_encode($data, $flags);
         if (!is_string($encoded)) {
-            throw new JsonException(json_last_error_msg(), json_last_error());
+            throw new JsonException(
+                json_last_error_msg(),
+                json_last_error()
+            );
         }
         return $encoded;
     }
@@ -134,8 +179,22 @@ class Bundle
         return $this->symmetricKeys;
     }
 
+    public function getOtp(): ?string
+    {
+        return $this->otp;
+    }
+
+    public function getRevocationToken(): ?string
+    {
+        return $this->revocationToken;
+    }
+
     /**
      * @throws CryptoException
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws NetworkException
      */
     public function toSignedMessage(): SignedMessage
     {

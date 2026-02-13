@@ -91,15 +91,11 @@ class BurnDown implements ProtocolMessageInterface, JsonSerializable
     #[Override]
     public function toArray(): array
     {
-        $data = [
+        return [
             'actor' => $this->actor,
             'operator' => $this->operator,
             'time' => $this->time->format(DateTimeInterface::ATOM),
         ];
-        if ($this->otp !== null) {
-            $data['otp'] = $this->otp;
-        }
-        return $data;
     }
 
     #[Override]
