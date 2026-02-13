@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Protocol;
 
+use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use function is_string, json_encode;
 
 /**
@@ -9,6 +10,9 @@ use function is_string, json_encode;
  */
 trait ToStringTrait
 {
+    /**
+     * @throws CryptoException
+     */
     public function toString(): string
     {
         $encoded = json_encode(

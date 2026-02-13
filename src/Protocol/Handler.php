@@ -16,6 +16,7 @@ use FediE2EE\PKD\Crypto\{
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use ParagonIE\HPKE\{
     HPKE,
+    HPKEException,
     KEM\DHKEM\EncapsKey
 };
 use SodiumException;
@@ -38,10 +39,10 @@ class Handler
      * Handle a message: Encrypt its attributes with the AttributeKeyMap, then sign it.
      * Returns a Bundle that wraps the signed message.
      *
+     * @api
      * @throws CryptoException
      * @throws NotImplementedException
      * @throws SodiumException
-     * @api
      */
     public function handle(
         ProtocolMessageInterface $message,
@@ -67,8 +68,9 @@ class Handler
     }
 
     /**
-     * @throws JsonException
      * @api
+     * @throws HPKEException
+     * @throws JsonException
      */
     public function hpkeEncrypt(
         Bundle    $bundle,
