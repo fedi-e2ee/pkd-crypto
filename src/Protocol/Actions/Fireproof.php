@@ -67,10 +67,12 @@ class Fireproof implements ProtocolMessageInterface, JsonSerializable
     #[Override]
     public function toArray(): array
     {
-        return [
+        $data = [
             'actor' => $this->actor,
             'time' => $this->time->format(DateTimeInterface::ATOM),
         ];
+        ksort($data);
+        return $data;
     }
 
     #[Override]

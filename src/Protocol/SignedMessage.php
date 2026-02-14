@@ -65,12 +65,14 @@ final class SignedMessage implements \JsonSerializable
         } else {
             $toArray = $this->toArray();
         }
-        return [
+        $data = [
             '!pkd-context' => self::PKD_CONTEXT,
             'action' => $this->message->getAction(),
             'message' => $toArray,
             'recent-merkle-root' => $this->recentMerkleRoot
         ];
+        ksort($data);
+        return $data;
     }
 
     //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#protocol-signatures
@@ -187,13 +189,15 @@ final class SignedMessage implements \JsonSerializable
      */
     public function toArray(): array
     {
-        return [
+        $data = [
             '!pkd-context' => self::PKD_CONTEXT,
             'action' => $this->message->getAction(),
             'message' => $this->message->toArray(),
             'recent-merkle-root' => $this->getRecentMerkleRoot(),
             'signature' => $this->getSignature(),
         ];
+        ksort($data);
+        return $data;
     }
 
     /**

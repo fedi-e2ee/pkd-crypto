@@ -77,11 +77,13 @@ class MoveIdentity implements ProtocolMessageInterface, JsonSerializable
     #[Override]
     public function toArray(): array
     {
-        return [
+        $data = [
             'old-actor' => $this->oldActor,
             'new-actor' => $this->newActor,
             'time' => $this->time->format(DateTimeInterface::ATOM),
         ];
+        ksort($data);
+        return $data;
     }
 
     #[Override]

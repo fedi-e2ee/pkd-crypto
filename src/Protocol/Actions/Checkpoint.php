@@ -106,7 +106,7 @@ class Checkpoint implements ProtocolMessageInterface, JsonSerializable
     #[Override]
     public function toArray(): array
     {
-        return [
+        $data = [
             'time' => $this->time->format(DateTimeInterface::ATOM),
             'from-directory' => $this->fromDirectory,
             'from-root' => $this->fromRoot,
@@ -114,6 +114,8 @@ class Checkpoint implements ProtocolMessageInterface, JsonSerializable
             'to-directory' => $this->toDirectory,
             'to-validated-root' => $this->toValidatedRoot,
         ];
+        ksort($data);
+        return $data;
     }
 
     #[Override]
