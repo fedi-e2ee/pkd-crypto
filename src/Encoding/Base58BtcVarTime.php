@@ -166,7 +166,7 @@ class Base58BtcVarTime
         // Iterate over the full length again, writing to [0] if outside the range of $decodedOffset..$size.
         // And then writing to [$j] (and incrementing $j) when the value is in range.
         for ($i = 0; $i < $size; ++$i) {
-            $mask = (($decodedOffset - $i - 1) >> 8); // $i >= $decodedOffset ? -1 : 0
+            $mask = (($decodedOffset - $i - 1) >> $shift); // $i >= $decodedOffset ? -1 : 0
             $gte = $mask & 1;
             $j += $gte;
             /** @psalm-suppress InvalidArrayOffset */
