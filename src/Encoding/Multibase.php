@@ -29,7 +29,7 @@ class Multibase
      */
     public static function encode(string $binary, bool $useBase58VarTime = false): string
     {
-        if ($useBase58VarTIme) {
+        if ($useBase58VarTime) {
             return 'z' . Base58BtcVarTime::encode($binary);
         }
         return 'u' . Base64UrlSafe::encodeUnpadded($binary);
