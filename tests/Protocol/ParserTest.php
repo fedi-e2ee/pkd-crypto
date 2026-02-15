@@ -15,6 +15,7 @@ use FediE2EE\PKD\Crypto\Protocol\{
     Bundle,
     EncryptedActions\EncryptedAddKey,
     EncryptedActions\EncryptedAddAuxData,
+    EncryptedActions\EncryptedBurnDown,
     EncryptedActions\EncryptedFireproof,
     EncryptedActions\EncryptedMoveIdentity,
     EncryptedActions\EncryptedRevokeAuxData,
@@ -187,6 +188,7 @@ class ParserTest extends TestCase
         return [
             ['AddKey', EncryptedAddKey::class],
             ['AddAuxData', EncryptedAddAuxData::class],
+            ['BurnDown', EncryptedBurnDown::class],
             ['Fireproof', EncryptedFireproof::class],
             ['MoveIdentity', EncryptedMoveIdentity::class],
             ['RevokeAuxData', EncryptedRevokeAuxData::class],

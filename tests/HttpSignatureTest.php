@@ -1314,6 +1314,44 @@ class HttpSignatureTest extends TestCase
      * @throws NotImplementedException
      * @throws SodiumException
      */
+    public function testMethodContinueDoesNotSkipMissingHeader(): void
+    {
+        $keypair = sodium_crypto_sign_seed_keypair(
+            sodium_crypto_generichash('continue vs break test')
+        );
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+
+        $httpSignature = new HttpSignature();
+        // Craft request with @method before x-absent in covered components. x-absent is NOT present on the request.
+        $request = new Request(
+            'POST',
+            '/test',
+            [
+                'Host' => 'example.com',
+                'Signature-Input' =>
+                    'sig1=("@method" "x-absent");alg="ed25519";created='
+                    . time(),
+                'Signature' => 'sig1=:' . str_repeat('A', 86) . ':',
+            ],
+            'body'
+        );
+
+        // With correct `continue`, the loop reaches x-absent and returns false. A `break` mutant would exit after
+        // @method and skip the x-absent check, proceeding to signature verification (which would also fail, but for a
+        // different reason). verifyThrow lets us assert the exact failure.
+        $this->expectException(HttpSignatureException::class);
+        $this->expectExceptionMessage(
+            'Covered component header missing: x-absent'
+        );
+        $httpSignature->verifyThrow($pk, $request);
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
     public function testDefaultTimeoutExactBoundary(): void
     {
         $keypair = sodium_crypto_sign_seed_keypair(

@@ -1280,4 +1280,21 @@ class TreeTest extends TestCase
         $this->assertInstanceOf(ConsistencyProof::class, $proof);
         $this->assertEmpty($proof->proof, 'Consistency proof should be empty when old size > new size');
     }
+
+    /**
+     * @throws CryptoException
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testSingleLeafRejectsOutOfBoundsProof(string $hashAlg): void
+    {
+        $tree = new Tree(['only'], $hashAlg);
+        $root = $tree->getRoot();
+        $this->assertNotNull($root);
+        $badProof = new InclusionProof(1, []);
+        $this->assertFalse(
+            $tree->verifyInclusionProof($root, 'only', $badProof),
+            'index === size must be rejected for single-leaf tree'
+        );
+    }
 }

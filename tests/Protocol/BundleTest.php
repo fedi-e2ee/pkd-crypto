@@ -357,6 +357,68 @@ class BundleTest extends TestCase
     /**
      * @throws BundleException
      * @throws CryptoException
+     * @throws InputException
+     * @throws JsonException
+     * @throws RandomException
+     */
+    public function testBurnDownOtpRoundTrip(): void
+    {
+        $otp = Base64UrlSafe::encodeUnpadded(random_bytes(16));
+        $json = json_encode([
+            '!pkd-context' => 'https://github.com/fedi-e2ee/public-key-directory/v1',
+            'action' => 'BurnDown',
+            'message' => [
+                'actor' => 'test-actor',
+                'operator' => 'test-operator',
+                'time' => '2025-01-01T00:00:00+00:00',
+            ],
+            'otp' => $otp,
+            'recent-merkle-root' => 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(random_bytes(32)),
+            'signature' => Base64UrlSafe::encodeUnpadded(random_bytes(64)),
+            'symmetric-keys' => [],
+        ]);
+
+        $bundle = Bundle::fromJson($json);
+        $this->assertSame('BurnDown', $bundle->getAction());
+        $this->assertSame($otp, $bundle->getOtp());
+
+        // Round-trip: toJson must include 'otp' key
+        $output = json_decode($bundle->toJson(), true);
+        $this->assertArrayHasKey('otp', $output);
+        $this->assertSame($otp, $output['otp']);
+
+        // Keys must be sorted (otp before recent-merkle-root)
+        $keys = array_keys($output);
+        $sortedKeys = $keys;
+        sort($sortedKeys);
+        $this->assertSame($sortedKeys, $keys, 'JSON keys must be sorted');
+    }
+
+    /**
+     * @throws BundleException
+     * @throws CryptoException
+     * @throws InputException
+     * @throws RandomException
+     */
+    public function testNonBurnDownIgnoresOtp(): void
+    {
+        $json = json_encode([
+            'action' => 'AddKey',
+            'message' => ['actor' => 'test', 'public-key' => 'test', 'time' => '2025-01-01T00:00:00+00:00'],
+            'otp' => 'should-be-ignored',
+            'recent-merkle-root' => 'pkd-mr-v1:test',
+            'signature' => Base64UrlSafe::encodeUnpadded(random_bytes(64)),
+            'symmetric-keys' => [],
+        ]);
+
+        $bundle = Bundle::fromJson($json);
+        $this->assertSame('AddKey', $bundle->getAction());
+        $this->assertNull($bundle->getOtp());
+    }
+
+    /**
+     * @throws BundleException
+     * @throws CryptoException
      */
     public function testFromJsonWithKeyMapMissingAction(): void
     {
