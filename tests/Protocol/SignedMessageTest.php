@@ -10,12 +10,16 @@ use FediE2EE\PKD\Crypto\Exceptions\{
     NetworkException,
     NotImplementedException
 };
-use FediE2EE\PKD\Crypto\Protocol\Actions\AddKey;
-use FediE2EE\PKD\Crypto\Protocol\EncryptedProtocolMessageInterface;
-use FediE2EE\PKD\Crypto\Protocol\ProtocolMessageInterface;
-use FediE2EE\PKD\Crypto\Protocol\SignedMessage;
-use FediE2EE\PKD\Crypto\SecretKey;
-use FediE2EE\PKD\Crypto\SymmetricKey;
+use FediE2EE\PKD\Crypto\Protocol\{
+    Actions\AddKey,
+    EncryptedProtocolMessageInterface,
+    ProtocolMessageInterface,
+    SignedMessage
+};
+use FediE2EE\PKD\Crypto\{
+    SecretKey,
+    SymmetricKey
+};
 use GuzzleHttp\Exception\GuzzleException;
 use JsonSerializable;
 use ParagonIE\ConstantTime\Base64UrlSafe;
@@ -371,7 +375,7 @@ class SignedMessageTest extends TestCase
         $sk = SecretKey::generate();
         $pk = $sk->getPublicKey();
 
-        $dummy = new class() implements ProtocolMessageInterface, JsonSerializable {
+        $dummy = new class() implements ProtocolMessageInterface {
             public function getAction(): string
             {
                 return '';
@@ -421,6 +425,49 @@ class SignedMessageTest extends TestCase
         $this->assertNotEmpty($encodedRoot);
 
         $this->assertGreaterThan(70, strlen($encodedRoot));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws GuzzleException
+     * @throws NotImplementedException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    public function testVerifyStoresExplicitSignatureOnSuccess(): void
+    {
+        $recent = 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(random_bytes(32));
+        $sk = SecretKey::generate();
+        $pk = $sk->getPublicKey();
+
+        // Sign one message to obtain a valid signature
+        $sm1 = SignedMessage::init(
+            new AddKey('https://example.com/@alice', $pk),
+            $recent,
+            $sk
+        );
+        $sig = $sm1->getSignature();
+
+        // Create a second unsigned message with identical content
+        $sm2 = new SignedMessage(
+            new AddKey('https://example.com/@alice', $pk),
+            $recent
+        );
+
+        // Before verify, getSignature() throws
+        $threwBefore = false;
+        try {
+            $sm2->getSignature();
+        } catch (CryptoException) {
+            $threwBefore = true;
+        }
+        $this->assertTrue($threwBefore, 'getSignature should throw before verify');
+
+        // Verify with explicit signature — should succeed
+        $this->assertTrue($sm2->verify($pk, $sig));
+
+        // After successful verify, signature must be stored
+        $this->assertSame($sig, $sm2->getSignature());
     }
 
     /**

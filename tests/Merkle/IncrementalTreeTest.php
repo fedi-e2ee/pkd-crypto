@@ -816,4 +816,27 @@ class IncrementalTreeTest extends TestCase
         $this->expectExceptionMessage('Invalid node key format');
         IncrementalTree::fromJson($badJson);
     }
+
+    /**
+     * @throws CryptoException
+     * @throws InputException
+     * @throws JsonException
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testFromJsonRejectsTrailingCharsInNodeKey(string $hashAlg): void
+    {
+        $tree = new IncrementalTree(['a', 'b'], $hashAlg);
+        $json = $tree->toJson();
+        $data = json_decode($json, true);
+
+        // Replace "0-0" with "0-0abc" (valid without $, invalid with $)
+        $data['nodes']['0-0abc'] = $data['nodes']['0-0'];
+        unset($data['nodes']['0-0']);
+        $badJson = json_encode($data);
+
+        $this->expectException(InputException::class);
+        $this->expectExceptionMessage('Invalid node key format');
+        IncrementalTree::fromJson($badJson);
+    }
 }

@@ -19,6 +19,7 @@ use FediE2EE\PKD\Crypto\Protocol\Actions\{
 };
 use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\{
     EncryptedAddKey,
+    EncryptedBurnDown,
     EncryptedFireproof,
     EncryptedMoveIdentity,
     EncryptedRevokeKey,
@@ -382,5 +383,36 @@ class EncryptedActionsCoverageTest extends TestCase
             'https://example.com/users/alice',
             $arr['actor']
         );
+    }
+
+    public function testEncryptedAddKeyToArraySortsKeys(): void
+    {
+        // Keys deliberately in reverse alphabetical order
+        $encrypted = new EncryptedAddKey([
+            'time' => 'ct_time',
+            'public-key' => 'ct_pk',
+            'actor' => 'ct_actor',
+        ]);
+
+        $arr = $encrypted->toArray();
+        $keys = array_keys($arr);
+        $sorted = $keys;
+        sort($sorted);
+        $this->assertSame($sorted, $keys, 'EncryptedAddKey::toArray must sort keys');
+    }
+
+    public function testEncryptedBurnDownToArraySortsKeys(): void
+    {
+        $encrypted = new EncryptedBurnDown([
+            'time' => 'ct_time',
+            'operator' => 'ct_op',
+            'actor' => 'ct_actor',
+        ]);
+
+        $arr = $encrypted->toArray();
+        $keys = array_keys($arr);
+        $sorted = $keys;
+        sort($sorted);
+        $this->assertSame($sorted, $keys, 'EncryptedBurnDown::toArray must sort keys');
     }
 }

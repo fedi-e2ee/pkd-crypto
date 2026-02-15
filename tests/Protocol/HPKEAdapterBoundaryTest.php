@@ -214,4 +214,35 @@ class HPKEAdapterBoundaryTest extends TestCase
             "hpke:ABCDEF1234\n"
         );
     }
+
+    /**
+     * @throws HPKEException
+     */
+    #[DataProvider("ciphersuites")]
+    public function testOpenExactlyFiveBytesThrowsBase64Error(
+        HPKE $ciphersuite
+    ): void {
+        [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();
+        $adapter = new HPKEAdapter($ciphersuite);
+
+        $this->expectException(HPKEException::class);
+        $this->expectExceptionMessage(
+            'HPKE ciphertext must be base64url encoded'
+        );
+        $adapter->open($decapsKey, $encapsKey, 'hpke:');
+    }
+
+    #[DataProvider("ciphersuites")]
+    public function testKeyIdIsPublic(HPKE $ciphersuite): void
+    {
+        [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();
+        $adapter = new HPKEAdapter($ciphersuite);
+
+        $keyId = $adapter->keyId($encapsKey);
+        $this->assertIsString($keyId);
+        $this->assertNotEmpty($keyId);
+
+        // Deterministic: same key produces same ID
+        $this->assertSame($keyId, $adapter->keyId($encapsKey));
+    }
 }
