@@ -58,7 +58,7 @@ class WebFinger
                 'headers' => [
                     'Accept' => 'application/jrd+json'
                 ],
-                'verify' => $this->caCertFetcher->getLatestBundle()->getFilePath()
+                'verify' => $this->caCertFetcher->getLatestBundle()->getFilePath(),
                 'timeout' => 10.0,
                 'connect_timeout' => 5.0
             ]);
