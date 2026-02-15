@@ -49,9 +49,11 @@ class RevokeKeyThirdParty implements ProtocolMessageInterface, JsonSerializable
     #[Override]
     public function toArray(): array
     {
-        return [
+        $data = [
             'revocation-token' => $this->revocationToken
         ];
+        ksort($data);
+        return $data;
     }
 
     #[Override]

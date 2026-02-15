@@ -127,10 +127,12 @@ class Bundle
 
         // RevokeKeyThirdParty has a minimal structure.
         if ($this->action === 'RevokeKeyThirdParty') {
-            $encoded = json_encode([
+            $data = [
                 'action' => $this->action,
                 'revocation-token' => $this->revocationToken,
-            ], $flags);
+            ];
+            ksort($data);
+            $encoded = json_encode($data, $flags);
             if (!is_string($encoded)) {
                 throw new JsonException(
                     json_last_error_msg(),
@@ -163,6 +165,7 @@ class Bundle
             $data['otp'] = $this->otp;
         }
 
+        ksort($data);
         $encoded = json_encode($data, $flags);
         if (!is_string($encoded)) {
             throw new JsonException(

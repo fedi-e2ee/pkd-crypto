@@ -113,6 +113,7 @@ class RevokeAuxData implements ProtocolMessageInterface, JsonSerializable
         if ($this->auxId !== null) {
             $data['aux-id'] = $this->auxId;
         }
+        ksort($data);
         return $data;
     }
 

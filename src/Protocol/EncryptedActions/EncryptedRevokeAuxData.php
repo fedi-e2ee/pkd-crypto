@@ -41,7 +41,9 @@ class EncryptedRevokeAuxData implements EncryptedProtocolMessageInterface, JsonS
     #[Override]
     public function toArray(): array
     {
-        return $this->encrypted;
+        $data = $this->encrypted;
+        ksort($data);
+        return $data;
     }
 
     #[Override]

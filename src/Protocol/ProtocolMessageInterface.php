@@ -4,7 +4,7 @@ namespace FediE2EE\PKD\Crypto\Protocol;
 
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 
-interface ProtocolMessageInterface
+interface ProtocolMessageInterface extends \JsonSerializable
 {
     public function getAction(): string;
     public function toArray(): array;
