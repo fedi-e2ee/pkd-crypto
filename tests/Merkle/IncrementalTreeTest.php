@@ -48,7 +48,7 @@ class IncrementalTreeTest extends TestCase
         // Let's see if adding more leaves coaxes the two into a compatible state:
         $pieces = [$dummy];
         for ($i = 1; $i < 16; ++$i) {
-            $pieces []= random_bytes(32);
+            $pieces [] = random_bytes(32);
             $treeA = new IncrementalTree([], $hashAlg);
             foreach ($pieces as $p) {
                 $treeA->addLeaf($p);
@@ -336,7 +336,7 @@ class IncrementalTreeTest extends TestCase
         // Add leaves one by one to test odd/even sibling paths
         for ($i = 1; $i <= 10; ++$i) {
             $tree->addLeaf("leaf$i");
-            $baseTree = new Tree(array_map(fn($j) => "leaf$j", range(1, $i)), $hashAlg);
+            $baseTree = new Tree(array_map(fn ($j) => "leaf$j", range(1, $i)), $hashAlg);
             $this->assertEquals(
                 $baseTree->getRoot(),
                 $tree->getRoot(),
@@ -383,7 +383,7 @@ class IncrementalTreeTest extends TestCase
     #[DataProvider("hashAlgProvider")]
     public function testInclusionProofVariousPositions(string $hashAlg): void
     {
-        $leaves = array_map(fn($i) => "leaf$i", range(0, 15));
+        $leaves = array_map(fn ($i) => "leaf$i", range(0, 15));
         $tree = new IncrementalTree($leaves, $hashAlg);
         $root = $tree->getRoot();
         $this->assertNotNull($root);
@@ -405,7 +405,7 @@ class IncrementalTreeTest extends TestCase
     #[DataProvider("hashAlgProvider")]
     public function testConsistencyProofVerification(string $hashAlg): void
     {
-        $allLeaves = array_map(fn($i) => "leaf$i", range(0, 15));
+        $allLeaves = array_map(fn ($i) => "leaf$i", range(0, 15));
         $fullTree = new IncrementalTree($allLeaves, $hashAlg);
         $fullRoot = $fullTree->getRoot();
         $this->assertNotNull($fullRoot);
@@ -454,7 +454,7 @@ class IncrementalTreeTest extends TestCase
     {
         // Test with 3, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15 leaves
         foreach ([3, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15] as $count) {
-            $leaves = array_map(fn($i) => "leaf$i", range(0, $count - 1));
+            $leaves = array_map(fn ($i) => "leaf$i", range(0, $count - 1));
             $tree = new IncrementalTree($leaves, $hashAlg);
             $baseTree = new Tree($leaves, $hashAlg);
             $this->assertEquals(
@@ -495,7 +495,7 @@ class IncrementalTreeTest extends TestCase
             $this->assertNotNull($roots[$i]);
 
             // Verify against fresh tree
-            $freshTree = new Tree(array_map(fn($j) => "leaf$j", range(1, $i)), $hashAlg);
+            $freshTree = new Tree(array_map(fn ($j) => "leaf$j", range(1, $i)), $hashAlg);
             $this->assertEquals(
                 $freshTree->getRoot(),
                 $roots[$i],
@@ -543,7 +543,7 @@ class IncrementalTreeTest extends TestCase
     public function testInclusionProofMidCalculation(string $hashAlg): void
     {
         // Test with trees of sizes that exercise the mid = start + k calculation
-        $leaves = array_map(fn($i) => "leaf$i", range(0, 6));
+        $leaves = array_map(fn ($i) => "leaf$i", range(0, 6));
         $tree = new IncrementalTree($leaves, $hashAlg);
         $root = $tree->getRoot();
         $this->assertNotNull($root);
@@ -707,11 +707,11 @@ class IncrementalTreeTest extends TestCase
 
         $this->assertEquals($tree2->getRoot(), $tree1->getRoot());
 
-        $moreLeaves = array_map(fn($i) => "leaf$i", range(4, 15));
+        $moreLeaves = array_map(fn ($i) => "leaf$i", range(4, 15));
         foreach ($moreLeaves as $leaf) {
             $tree1->addLeaf($leaf);
         }
-        $fullLeaves = array_map(fn($i) => "leaf$i", range(0, 15));
+        $fullLeaves = array_map(fn ($i) => "leaf$i", range(0, 15));
         $fullTree = new Tree($fullLeaves, $hashAlg);
 
         $this->assertEquals($fullTree->getRoot(), $tree1->getRoot());
@@ -724,7 +724,7 @@ class IncrementalTreeTest extends TestCase
     #[DataProvider("hashAlgProvider")]
     public function testAlignmentCheck(string $hashAlg): void
     {
-        $leaves = array_map(fn($i) => "leaf$i", range(0, 7));
+        $leaves = array_map(fn ($i) => "leaf$i", range(0, 7));
         $tree = new IncrementalTree($leaves, $hashAlg);
         $baseTree = new Tree($leaves, $hashAlg);
 
@@ -732,7 +732,7 @@ class IncrementalTreeTest extends TestCase
         for ($i = 8; $i < 25; $i++) {
             $tree->addLeaf("leaf$i");
         }
-        $fullLeaves = array_map(fn($i) => "leaf$i", range(0, 24));
+        $fullLeaves = array_map(fn ($i) => "leaf$i", range(0, 24));
         $fullTree = new Tree($fullLeaves, $hashAlg);
         $this->assertEquals($fullTree->getRoot(), $tree->getRoot());
     }
@@ -748,7 +748,7 @@ class IncrementalTreeTest extends TestCase
         for ($i = 0; $i < 8; $i++) {
             $tree->addLeaf("leaf$i");
         }
-        $baseTree = new Tree(array_map(fn($i) => "leaf$i", range(0, 7)), $hashAlg);
+        $baseTree = new Tree(array_map(fn ($i) => "leaf$i", range(0, 7)), $hashAlg);
         $this->assertEquals($baseTree->getRoot(), $tree->getRoot());
     }
 
@@ -764,7 +764,7 @@ class IncrementalTreeTest extends TestCase
         // Add leaves and verify each step
         for ($i = 0; $i < 34; $i++) {
             $tree->addLeaf("leaf$i");
-            $baseTree = new Tree(array_map(fn($j) => "leaf$j", range(0, $i)), $hashAlg);
+            $baseTree = new Tree(array_map(fn ($j) => "leaf$j", range(0, $i)), $hashAlg);
             $this->assertEquals(
                 $baseTree->getRoot(),
                 $tree->getRoot(),

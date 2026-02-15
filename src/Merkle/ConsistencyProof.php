@@ -28,7 +28,7 @@ final readonly class ConsistencyProof implements JsonSerializable
         }
         $proof = [];
         foreach ($decoded as $p) {
-            $proof []= Base64UrlSafe::decodeNoPadding($p);
+            $proof [] = Base64UrlSafe::decodeNoPadding($p);
         }
 
         return new self($proof);
@@ -39,7 +39,7 @@ final readonly class ConsistencyProof implements JsonSerializable
     {
         $proof = [];
         foreach ($this->proof as $p) {
-            $proof []= Base64UrlSafe::encodeUnpadded($p);
+            $proof [] = Base64UrlSafe::encodeUnpadded($p);
         }
         return $proof;
     }

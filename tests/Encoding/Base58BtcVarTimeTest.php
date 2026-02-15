@@ -15,7 +15,6 @@ use Random\RandomException;
 #[CoversClass(Base58BtcVarTime::class)]
 class Base58BtcVarTimeTest extends TestCase
 {
-
     /**
      * Exhaustively test all inputs between 0 and 2^15 for division and modulo 58
      * @return void

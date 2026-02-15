@@ -47,7 +47,7 @@ class Parser
     use UtilTrait;
 
     /** Actions with no attribute encryption (truly plaintext fields). */
-    const PLAINTEXT_ACTIONS = ['Checkpoint', 'RevokeKeyThirdParty'];
+    public const PLAINTEXT_ACTIONS = ['Checkpoint', 'RevokeKeyThirdParty'];
 
     /**
      * Extract a message with encrypted attributes from a Bundle.
@@ -127,10 +127,10 @@ class Parser
             'Checkpoint' =>
                 new Checkpoint(
                     $components['from-directory'],
-                        $components['from-root'],
-                        PublicKey::fromString($components['from-public-key']),
-                        $components['to-directory'],
-                        $components['to-validated-root'],
+                    $components['from-root'],
+                    PublicKey::fromString($components['from-public-key']),
+                    $components['to-directory'],
+                    $components['to-validated-root'],
                     $time
                 ),
             default =>

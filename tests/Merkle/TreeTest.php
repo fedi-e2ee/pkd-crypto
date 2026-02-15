@@ -592,7 +592,7 @@ class TreeTest extends TestCase
     {
         // Test with various tree sizes to exercise different code paths
         foreach ([2, 3, 4, 5, 7, 8, 9, 15, 16, 17] as $size) {
-            $leaves = array_map(fn($i) => "leaf$i", range(0, $size - 1));
+            $leaves = array_map(fn ($i) => "leaf$i", range(0, $size - 1));
             $tree = new Tree($leaves, $hashAlg);
             $root = $tree->getRoot();
             $this->assertNotNull($root);
@@ -616,7 +616,7 @@ class TreeTest extends TestCase
     public function testConsistencyProofVariousSizes(string $hashAlg): void
     {
         // Create a large tree
-        $allLeaves = array_map(fn($i) => "leaf$i", range(0, 16));
+        $allLeaves = array_map(fn ($i) => "leaf$i", range(0, 16));
         $fullTree = new Tree($allLeaves, $hashAlg);
         $fullRoot = $fullTree->getRoot();
         $this->assertNotNull($fullRoot);
@@ -1143,7 +1143,7 @@ class TreeTest extends TestCase
     public function testInclusionProofVerificationLoops(string $hashAlg): void
     {
         foreach ([2, 3, 4, 5, 6, 7, 8, 9] as $size) {
-            $leaves = array_map(fn($i) => "leaf$i", range(0, $size - 1));
+            $leaves = array_map(fn ($i) => "leaf$i", range(0, $size - 1));
             $tree = new Tree($leaves, $hashAlg);
             $root = $tree->getRoot();
             $this->assertNotNull($root);
@@ -1168,7 +1168,7 @@ class TreeTest extends TestCase
     {
         // Powers of two have special handling
         foreach ([2, 4, 8, 16, 32] as $powerOfTwo) {
-            $leaves = array_map(fn($i) => "leaf$i", range(0, $powerOfTwo + 2));
+            $leaves = array_map(fn ($i) => "leaf$i", range(0, $powerOfTwo + 2));
             $fullTree = new Tree($leaves, $hashAlg);
             $fullRoot = $fullTree->getRoot();
 

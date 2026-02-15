@@ -45,7 +45,7 @@ class IncrementalTreeLargeTest extends TestCase
     ): void {
         foreach ([16, 17, 31, 32, 33, 48, 63, 64] as $size) {
             $leaves = array_map(
-                fn($i) => "leaf-$i-" . bin2hex(random_bytes(4)),
+                fn ($i) => "leaf-$i-" . bin2hex(random_bytes(4)),
                 range(0, $size - 1)
             );
 
@@ -80,7 +80,7 @@ class IncrementalTreeLargeTest extends TestCase
         string $hashAlg
     ): void {
         $leaves = array_map(
-            fn($i) => "cross-verify-$i",
+            fn ($i) => "cross-verify-$i",
             range(0, 31)
         );
 
@@ -118,7 +118,7 @@ class IncrementalTreeLargeTest extends TestCase
         string $hashAlg
     ): void {
         $allLeaves = array_map(
-            fn($i) => "consistency-$i",
+            fn ($i) => "consistency-$i",
             range(0, 31)
         );
 
@@ -164,7 +164,7 @@ class IncrementalTreeLargeTest extends TestCase
             $incTree->addLeaf("ordering-$i");
 
             $leaves = array_map(
-                fn($j) => "ordering-$j",
+                fn ($j) => "ordering-$j",
                 range(0, $i)
             );
             $baseTree = new Tree($leaves, $hashAlg);
@@ -206,7 +206,7 @@ class IncrementalTreeLargeTest extends TestCase
         // 12 leaves: getRootForSubtree will be called with
         // various subtree ranges including non-aligned ones
         $leaves = array_map(
-            fn($i) => "non-aligned-$i",
+            fn ($i) => "non-aligned-$i",
             range(0, 11)
         );
 
@@ -245,7 +245,7 @@ class IncrementalTreeLargeTest extends TestCase
         string $hashAlg
     ): void {
         $leaves = array_map(
-            fn($i) => "same-size-$i",
+            fn ($i) => "same-size-$i",
             range(0, 15)
         );
         $tree = new IncrementalTree($leaves, $hashAlg);

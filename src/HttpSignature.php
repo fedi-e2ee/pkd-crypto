@@ -12,17 +12,16 @@ use Psr\Http\Message\{
     RequestInterface
 };
 use SodiumException;
-use function
-    abs,
-    array_map,
-    implode,
-    is_null,
-    is_numeric,
-    preg_match,
-    preg_match_all,
-    preg_quote,
-    strtolower,
-    time;
+use function abs,
+array_map,
+implode,
+is_null,
+is_numeric,
+preg_match,
+preg_match_all,
+preg_quote,
+strtolower,
+time;
 
 /**
  * @api
@@ -257,7 +256,7 @@ final class HttpSignature
         string $keyId,
         int $created
     ): string {
-        $covered = implode(' ', array_map(fn($h) => '"' . strtolower($h) . '"', $headersToSign));
+        $covered = implode(' ', array_map(fn ($h) => '"' . strtolower($h) . '"', $headersToSign));
         $params = [
             'alg="ed25519"',
             'keyid="' . $keyId . '"',

@@ -86,7 +86,7 @@ class UtilTraitTest extends TestCase
 
     public function testPublicApiAccessibility(): void
     {
-        $helper = new class {
+        $helper = new class() {
             use UtilTrait;
         };
 

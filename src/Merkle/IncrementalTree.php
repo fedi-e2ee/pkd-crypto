@@ -10,21 +10,20 @@ use FediE2EE\PKD\Crypto\Exceptions\{
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use Override;
 use SodiumException;
-use function
-    array_key_exists,
-    array_map,
-    floor,
-    hash,
-    hash_equals,
-    is_array,
-    is_int,
-    is_string,
-    json_decode,
-    json_encode,
-    json_last_error_msg,
-    log,
-    preg_match,
-    sodium_crypto_generichash;
+use function array_key_exists,
+array_map,
+floor,
+hash,
+hash_equals,
+is_array,
+is_int,
+is_string,
+json_decode,
+json_encode,
+json_last_error_msg,
+log,
+preg_match,
+sodium_crypto_generichash;
 
 /**
  * @api

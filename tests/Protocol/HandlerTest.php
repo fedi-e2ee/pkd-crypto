@@ -262,10 +262,12 @@ class HandlerTest extends TestCase
         $this->assertArrayHasKey('time', $message);
         // actor and operator are attribute-encrypted
         $this->assertNotSame(
-            'https://example.com/users/foo', $message['actor']
+            'https://example.com/users/foo',
+            $message['actor']
         );
         $this->assertNotSame(
-            'https://pkd.example.org', $message['operator']
+            'https://pkd.example.org',
+            $message['operator']
         );
     }
 

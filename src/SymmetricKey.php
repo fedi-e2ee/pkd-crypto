@@ -7,12 +7,11 @@ use ParagonIE\ConstantTime\Binary;
 use Random\RandomException;
 use SensitiveParameter;
 use SodiumException;
-use function
-    is_string,
-    random_bytes,
-    sodium_crypto_aead_xchacha20poly1305_ietf_decrypt,
-    sodium_crypto_aead_xchacha20poly1305_ietf_encrypt,
-    strlen;
+use function is_string,
+random_bytes,
+sodium_crypto_aead_xchacha20poly1305_ietf_decrypt,
+sodium_crypto_aead_xchacha20poly1305_ietf_encrypt,
+strlen;
 
 class SymmetricKey
 {
@@ -24,7 +23,7 @@ class SymmetricKey
     public function __construct(
         #[SensitiveParameter]
         string $bytes
-    ){
+    ) {
         if (strlen($bytes) !== 32) {
             throw new CryptoException(
                 'Symmetric key must be 32 bytes'

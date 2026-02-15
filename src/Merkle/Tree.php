@@ -8,19 +8,18 @@ use FediE2EE\PKD\Crypto\{
     Exceptions\CryptoException
 };
 use SodiumException;
-use function
-    array_key_exists,
-    array_search,
-    array_unshift,
-    count,
-    hash,
-    hash_algos,
-    hash_equals,
-    in_array,
-    is_null,
-    sodium_crypto_generichash,
-    str_repeat,
-    strlen;
+use function array_key_exists,
+array_search,
+array_unshift,
+count,
+hash,
+hash_algos,
+hash_equals,
+in_array,
+is_null,
+sodium_crypto_generichash,
+str_repeat,
+strlen;
 
 //= https://www.rfc-editor.org/rfc/rfc9162.txt#section-2.1
 //# it is a binary tree where each non-leaf node is a hash of its children.

@@ -4,7 +4,4 @@ namespace FediE2EE\PKD\Crypto\Exceptions;
 
 use Exception;
 
-class CryptoException extends Exception
-{
-
-}
+class CryptoException extends Exception {}

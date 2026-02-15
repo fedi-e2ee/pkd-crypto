@@ -16,13 +16,13 @@ use FediE2EE\PKD\Crypto\{
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use SodiumException;
 use function array_key_exists,
-    hash_equals,
-    is_array,
-    is_string,
-    json_decode,
-    json_encode,
-    json_last_error_msg,
-    time;
+hash_equals,
+is_array,
+is_string,
+json_decode,
+json_encode,
+json_last_error_msg,
+time;
 
 class Cosignature
 {
@@ -30,8 +30,7 @@ class Cosignature
 
     public const CONTEXT = 'fedi-e2ee-v1:cosignature';
 
-    public function __construct(protected IncrementalTree $state)
-    {}
+    public function __construct(protected IncrementalTree $state) {}
 
     /**
      * Return a new instance of Cosignature with the new record appended.

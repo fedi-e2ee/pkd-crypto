@@ -15,16 +15,15 @@ use ParagonIE\ConstantTime\{
 };
 use SensitiveParameter;
 use SodiumException;
-use function
-    chunk_split,
-    explode,
-    hash_equals,
-    is_string,
-    sodium_crypto_sign_verify_detached,
-    str_contains,
-    str_replace,
-    strlen,
-    substr;
+use function chunk_split,
+explode,
+hash_equals,
+is_string,
+sodium_crypto_sign_verify_detached,
+str_contains,
+str_replace,
+strlen,
+substr;
 
 /**
  * @api

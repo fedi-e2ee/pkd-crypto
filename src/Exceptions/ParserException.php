@@ -2,7 +2,4 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Exceptions;
 
-class ParserException extends CryptoException
-{
-
-}
+class ParserException extends CryptoException {}

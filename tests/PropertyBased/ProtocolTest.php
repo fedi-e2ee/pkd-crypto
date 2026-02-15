@@ -118,7 +118,7 @@ class ProtocolTest extends TestCase
         $this->forAll(
             Generators::string()
         )
-        ->when(fn(string $s) => strlen($s) > 0 && json_decode($s) === null)
+        ->when(fn (string $s) => strlen($s) > 0 && json_decode($s) === null)
         ->then(function (string $invalidJson): void {
             try {
                 Parser::fromJson($invalidJson);

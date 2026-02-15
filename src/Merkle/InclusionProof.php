@@ -30,7 +30,7 @@ final readonly class InclusionProof implements JsonSerializable
         }
         $proof = [];
         foreach ($decoded->proof as $p) {
-            $proof []= Base64UrlSafe::decodeNoPadding($p);
+            $proof [] = Base64UrlSafe::decodeNoPadding($p);
         }
 
         return new self(
@@ -44,7 +44,7 @@ final readonly class InclusionProof implements JsonSerializable
     {
         $proof = [];
         foreach ($this->proof as $p) {
-            $proof []= Base64UrlSafe::encodeUnpadded($p);
+            $proof [] = Base64UrlSafe::encodeUnpadded($p);
         }
         return [
             'index' => $this->index,
