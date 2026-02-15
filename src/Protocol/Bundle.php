@@ -16,14 +16,7 @@ use FediE2EE\PKD\Crypto\{
 };
 use GuzzleHttp\Exception\GuzzleException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
-use function in_array,
-is_array,
-is_null,
-is_string,
-json_decode,
-json_encode,
-json_last_error,
-json_last_error_msg;
+use function in_array, is_array, is_null, is_string, json_decode, json_encode, json_last_error, json_last_error_msg;
 
 class Bundle
 {

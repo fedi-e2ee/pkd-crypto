@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+
 use Soatok\CodeStyle\SoatokRules;
 
 $finder = (new PhpCsFixer\Finder())
@@ -9,4 +10,4 @@ $finder = (new PhpCsFixer\Finder())
     ])
 ;
 
-return (new PhpCsFixer\Config())->setRules(SoatokRules::asArray())->setFinder($finder);
+return SoatokRules::config()->setFinder($finder);
