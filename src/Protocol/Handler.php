@@ -10,9 +10,9 @@ use FediE2EE\PKD\Crypto\Exceptions\{
 };
 use FediE2EE\PKD\Crypto\{
     ActivityPub\WebFinger,
+    Protocol\Actions\BurnDown,
     SecretKey,
-    UtilTrait
-};
+    UtilTrait};
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use ParagonIE\HPKE\{
     HPKE,
@@ -50,6 +50,10 @@ class Handler
         AttributeKeyMap $keyMap,
         string $recentMerkleRoot = ''
     ): Bundle {
+        $otp = null;
+        if ($message instanceof BurnDown) {
+            $otp = $message->getOTP();
+        }
         if (!($message instanceof EncryptedProtocolMessageInterface)) {
             if (!in_array($message->getAction(), Parser::PLAINTEXT_ACTIONS, true)) {
                 $message = $message->encrypt($keyMap);
@@ -63,7 +67,8 @@ class Handler
             $message->toArray(),
             $recentMerkleRoot,
             Base64UrlSafe::decodeNoPadding($signature),
-            $keyMap
+            $keyMap,
+            otp: $otp,
         );
     }
 
