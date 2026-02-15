@@ -74,6 +74,7 @@ class Bundle
                 'symmetric-keys',
                 'message',
                 'recent-merkle-root',
+                'signature'
             );
             if (!is_array($data['symmetric-keys'])) {
                 throw new BundleException('symmetric-keys must be an array');
@@ -95,6 +96,7 @@ class Bundle
                 $data,
                 'message',
                 'recent-merkle-root',
+                'signature'
             );
         }
 
