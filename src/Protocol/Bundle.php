@@ -67,7 +67,7 @@ class Bundle
                 'symmetric-keys',
                 'message',
                 'recent-merkle-root',
-                'signature'
+                // We do not always have a "signature" field, so it is omitted here.
             );
             if (!is_array($data['symmetric-keys'])) {
                 throw new BundleException('symmetric-keys must be an array');
@@ -89,7 +89,7 @@ class Bundle
                 $data,
                 'message',
                 'recent-merkle-root',
-                'signature'
+                // We do not always have a "signature" field. Omission is deliberate.
             );
         }
 
