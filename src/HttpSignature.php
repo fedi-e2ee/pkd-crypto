@@ -12,16 +12,7 @@ use Psr\Http\Message\{
     RequestInterface
 };
 use SodiumException;
-use function abs,
-array_map,
-implode,
-is_null,
-is_numeric,
-preg_match,
-preg_match_all,
-preg_quote,
-strtolower,
-time;
+use function abs, array_map, implode, is_null, is_numeric, preg_match, preg_match_all, preg_quote, strtolower, time;
 
 /**
  * @api
