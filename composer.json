@@ -31,11 +31,14 @@
     "paragonie/hpke": "^0|^1"
   },
   "require-dev": {
+    "friendsofphp/php-cs-fixer": "^3.5",
     "giorgiosironi/eris": "^1",
     "guzzlehttp/psr7": "^2",
     "phpunit/phpunit": "^8|^9|^10|^11|^12",
-    "vimeo/psalm": "^6",
-    "phpstan/phpstan": "^2.1"
+    "roave/security-advisories": "dev-latest",
+    "soatok/code-style": ">= 0",
+    "phpstan/phpstan": "^2.1",
+    "vimeo/psalm": "^6"
   },
   "config": {
     "allow-plugins": {
