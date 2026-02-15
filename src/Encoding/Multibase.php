@@ -27,7 +27,7 @@ class Multibase
     /**
      * Unlike what the blockchainiacs recommend, we default to Base64url, not Base58Btc.
      */
-    public static function encode(string $binary, bool $useBase58VarTIme = false): string
+    public static function encode(string $binary, bool $useBase58VarTime = false): string
     {
         if ($useBase58VarTIme) {
             return 'z' . Base58BtcVarTime::encode($binary);
