@@ -9,6 +9,7 @@
 [![Latest Stable Version](https://poser.pugx.org/fedi-e2ee/pkd-crypto/v/stable)](https://packagist.org/packages/fedi-e2ee/pkd-crypto)
 [![License](https://poser.pugx.org/fedi-e2ee/pkd-crypto/license)](https://packagist.org/packages/fedi-e2ee/pkd-crypto)
 [![Downloads](https://img.shields.io/packagist/dt/fedi-e2ee/pkd-crypto.svg)](https://packagist.org/packages/fedi-e2ee/pkd-crypto)
+[![Style](https://github.com/fedi-e2ee/pkd-crypto/actions/workflows/style.yml/badge.svg)](https://github.com/fedi-e2ee/pkd-crypto/actions/workflows/style.yml)
 
 This library implements the [cryptography protocols used by the Public Key Directory specification](https://github.com/fedi-e2ee/public-key-directory-specification/blob/main/Specification.md#cryptography-protocols).
 
