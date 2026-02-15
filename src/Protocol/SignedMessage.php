@@ -63,7 +63,7 @@ final class SignedMessage implements \JsonSerializable
         if ($this->message instanceof EncryptedProtocolMessageInterface) {
             $toArray = $this->decrypt($keyMap)->toArray();
         } else {
-            $toArray = $this->toArray();
+            $toArray = $this->message->toArray();
         }
         return [
             '!pkd-context' => self::PKD_CONTEXT,
