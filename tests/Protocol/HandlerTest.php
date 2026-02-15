@@ -244,10 +244,17 @@ class HandlerTest extends TestCase
             ->addKey('actor', SymmetricKey::generate())
             ->addKey('operator', SymmetricKey::generate());
 
+        $dummyOtp = str_pad(
+            (string) random_int(0, 99999999),
+            8,
+            '0',
+            STR_PAD_LEFT
+        );
         $merkleRoot = (new Tree([random_bytes(32)]))->getEncodedRoot();
         $burnDown = new BurnDown(
             actor: 'https://example.com/users/foo',
-            operator: 'https://pkd.example.org'
+            operator: 'https://pkd.example.org',
+            otp: $dummyOtp
         );
 
         $handler = new Handler();
@@ -269,6 +276,7 @@ class HandlerTest extends TestCase
             'https://pkd.example.org',
             $message['operator']
         );
+        $this->assertSame($dummyOtp, $bundle->getOtp());
     }
 
     /**
