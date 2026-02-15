@@ -371,7 +371,7 @@ class SignedMessageTest extends TestCase
         $sk = SecretKey::generate();
         $pk = $sk->getPublicKey();
 
-        $dummy = new class implements ProtocolMessageInterface, JsonSerializable {
+        $dummy = new class() implements ProtocolMessageInterface, JsonSerializable {
             public function getAction(): string
             {
                 return '';

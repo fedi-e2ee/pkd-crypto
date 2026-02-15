@@ -23,7 +23,6 @@ use SodiumException;
 
 class EncryptedMoveIdentity implements EncryptedProtocolMessageInterface, JsonSerializable
 {
-
     use ToStringTrait;
 
     private array $encrypted;

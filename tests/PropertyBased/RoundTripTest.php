@@ -157,7 +157,7 @@ class RoundTripTest extends TestCase
         $this->forAll(
             Generators::string()
         )
-        ->when(fn(string $s) => strlen($s) > 0)  // Skip empty strings
+        ->when(fn (string $s) => strlen($s) > 0)  // Skip empty strings
         ->then(function (string $plaintext): void {
             $v1 = new Version1();
             $key = SymmetricKey::generate();

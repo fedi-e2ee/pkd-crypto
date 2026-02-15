@@ -8,18 +8,17 @@ use ParagonIE\ConstantTime\Base64;
 use ParagonIE\ConstantTime\Hex;
 use SensitiveParameter;
 use SodiumException;
-use function
-    chunk_split,
-    hash_equals,
-    is_string,
-    sodium_crypto_sign_detached,
-    sodium_crypto_sign_keypair,
-    sodium_crypto_sign_publickey_from_secretkey,
-    sodium_crypto_sign_secretkey,
-    sodium_crypto_sign_seed_keypair,
-    str_replace,
-    strlen,
-    substr;
+use function chunk_split,
+hash_equals,
+is_string,
+sodium_crypto_sign_detached,
+sodium_crypto_sign_keypair,
+sodium_crypto_sign_publickey_from_secretkey,
+sodium_crypto_sign_secretkey,
+sodium_crypto_sign_seed_keypair,
+str_replace,
+strlen,
+substr;
 
 /**
  * @api

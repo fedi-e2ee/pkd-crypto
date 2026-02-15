@@ -187,7 +187,7 @@ class HPKETest extends TestCase
         [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();
         $this->expectException(HPKEException::class);
         $this->expectExceptionMessage('Invalid payload: too short');
-        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey,'abcd');
+        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey, 'abcd');
     }
 
     /**
@@ -200,7 +200,7 @@ class HPKETest extends TestCase
         $this->expectException(HPKEException::class);
         $this->expectExceptionMessage('Invalid payload header');
         // Still wrong but different size
-        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey,'abcde');
+        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey, 'abcde');
     }
 
     /**
@@ -212,7 +212,7 @@ class HPKETest extends TestCase
         [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();
         $this->expectException(HPKEException::class);
         $this->expectExceptionMessage('HPKE ciphertext must be base64url encoded without padding');
-        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey,'hpke:');
+        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey, 'hpke:');
     }
 
     /**
@@ -224,7 +224,7 @@ class HPKETest extends TestCase
         [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();
         $this->expectException(HPKEException::class);
         $this->expectExceptionMessage('HPKE ciphertext must be base64url encoded without padding');
-        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey,'hpke:abcd:efg');
+        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey, 'hpke:abcd:efg');
     }
 
     /**
@@ -236,7 +236,7 @@ class HPKETest extends TestCase
         [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();
         $this->expectException(HPKEException::class);
         $this->expectExceptionMessage('HPKE ciphertext must be base64url encoded without padding');
-        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey,'hpke::abcdefg');
+        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey, 'hpke::abcdefg');
     }
 
     /**
@@ -248,7 +248,7 @@ class HPKETest extends TestCase
         [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();
         $this->expectException(HPKEException::class);
         $this->expectExceptionMessage('HPKE ciphertext must be base64url encoded without padding');
-        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey,'hpke:$!@^');
+        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey, 'hpke:$!@^');
     }
 
     /**
@@ -260,7 +260,7 @@ class HPKETest extends TestCase
         [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();
         $this->expectException(HPKEException::class);
         $this->expectExceptionMessage('HPKE ciphertext must be base64url encoded without padding');
-        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey,'hpke:abcdefg:');
+        (new HPKEAdapter($ciphersuite))->open($decapsKey, $encapsKey, 'hpke:abcdefg:');
     }
 
     /**
