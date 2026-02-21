@@ -9,15 +9,15 @@ use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use SodiumException;
 use Override;
 use function hash,
-hash_equals,
-hash_hkdf,
-hash_hmac,
-openssl_encrypt,
-pack,
-random_bytes,
-sodium_crypto_pwhash,
-strlen,
-substr;
+    hash_equals,
+    hash_hkdf,
+    hash_hmac,
+    openssl_encrypt,
+    pack,
+    random_bytes,
+    sodium_crypto_pwhash,
+    strlen,
+    substr;
 
 //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-shreddability
 //# using a committing authenticated encryption mode.

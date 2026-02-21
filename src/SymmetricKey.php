@@ -8,10 +8,10 @@ use Random\RandomException;
 use SensitiveParameter;
 use SodiumException;
 use function is_string,
-random_bytes,
-sodium_crypto_aead_xchacha20poly1305_ietf_decrypt,
-sodium_crypto_aead_xchacha20poly1305_ietf_encrypt,
-strlen;
+    random_bytes,
+    sodium_crypto_aead_xchacha20poly1305_ietf_decrypt,
+    sodium_crypto_aead_xchacha20poly1305_ietf_encrypt,
+    strlen;
 
 class SymmetricKey
 {
