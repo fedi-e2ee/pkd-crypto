@@ -6,7 +6,8 @@ on:
       - main
   push:
 
-permissions: {}
+permissions:
+  contents: read
 
 jobs:
   unit-tests:

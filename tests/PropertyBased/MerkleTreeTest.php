@@ -4,15 +4,22 @@ namespace FediE2EE\PKD\Crypto\Tests\PropertyBased;
 
 use Eris\Generators;
 use Eris\TestTrait;
+use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
+use FediE2EE\PKD\Crypto\Merkle\ConsistencyProof;
+use FediE2EE\PKD\Crypto\Merkle\InclusionProof;
+use FediE2EE\PKD\Crypto\Merkle\IncrementalTree;
 use FediE2EE\PKD\Crypto\Merkle\Tree;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use SodiumException;
 
 /**
  * Property-based tests for Merkle tree operations.
  *
  * These tests verify RFC 9162 compliance and cryptographic properties.
  */
+#[CoversClass(IncrementalTree::class)]
 #[CoversClass(Tree::class)]
 class MerkleTreeTest extends TestCase
 {
@@ -25,6 +32,17 @@ class MerkleTreeTest extends TestCase
     {
         parent::setUp();
         $this->erisSetupCompat();
+    }
+
+    public static function hashAlgProvider(): array
+    {
+        return [
+            ['blake2b'],
+            ['sha256'],
+            ['sha3-256'],
+            ['sha384'],
+            ['sha512'],
+        ];
     }
 
     /**
@@ -335,7 +353,7 @@ class MerkleTreeTest extends TestCase
         $this->forAll(
             Generators::choose(1, 50)
         )->then(function (int $_counter): void {
-            $leaf = 'single-leaf-' . bin2hex(random_bytes(8));
+            $leaf = 'single-leaf-' . bin2hex(random_bytes($_counter));
             $tree = new Tree([$leaf]);
 
             $proof = $tree->getInclusionProof($leaf);
@@ -343,6 +361,64 @@ class MerkleTreeTest extends TestCase
 
             $this->assertTrue($isValid);
             $this->assertSame(0, $proof->index);
+        });
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testIncrementalTreeEquivalence(string $hashAlgo): void
+    {
+        $tree = new Tree([], $hashAlgo);
+        $incremental = new IncrementalTree([], $hashAlgo);
+        $this->limitTo(100)->forAll(
+            Generators::choose(1, 1000)
+        )->then(function (int $_counter) use ($tree, $incremental): void {
+            $leaf = 'leaf-' . $_counter . '-' . bin2hex(random_bytes($_counter));
+            $tree->addLeaf($leaf);
+            $incremental->addLeaf($leaf);
+            $this->assertSame(
+                $tree->getEncodedRoot(),
+                $incremental->getEncodedRoot(),
+                $leaf
+            );
+        });
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws SodiumException
+     */
+    #[DataProvider("hashAlgProvider")]
+    public function testIncrementalTreeEncodingEquivalence(string $hashAlgo): void
+    {
+        $incremental = new IncrementalTree([], $hashAlgo);
+        $size = 0;
+        $this->limitTo(200)->forAll(
+            Generators::choose(1, 1000)
+        )->then(function (int $_counter) use ($incremental, &$size): void {
+            $leaf = 'leaf-' . $_counter . '-' . bin2hex(random_bytes($_counter));
+            $incremental->addLeaf($leaf);
+            $json1 = IncrementalTree::fromJson($incremental->toJson());
+            $this->assertSame(
+                $json1->getEncodedRoot(),
+                $incremental->getEncodedRoot(),
+                'to/from json'
+            );
+
+            // Inclusion proof
+            $ip1 = $incremental->getInclusionProof($leaf);
+            $ip2 = InclusionProof::fromString(json_encode($ip1));
+            $this->assertSame($ip1->index, $ip2->index);
+            $this->assertSame(json_encode($ip1->proof), json_encode($ip2->proof));
+
+            // Consistency proof
+            $con1 = $incremental->getConsistencyProof($size);
+            $con2 = ConsistencyProof::fromString(json_encode($con1));
+            $this->assertSame(json_encode($con1), json_encode($con2));
+            ++$size;
         });
     }
 }

@@ -32,6 +32,7 @@ class TreeTest extends TestCase
             ['sha512'],
         ];
     }
+
     public static function insecureHashAlgProvider(): array
     {
         return [
