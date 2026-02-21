@@ -36,6 +36,32 @@ class Version1Test extends TestCase
      * @throws CryptoException
      * @throws SodiumException
      */
+    public function testDecryptKnownAnswer(): void
+    {
+        $v1 = new Version1();
+        $seed = hash('sha256', __METHOD__, true);
+        $attr = 'foo';
+        $merkle = 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(
+            hash_hmac('sha256', 'merkle', $seed, true)
+        );
+        $key = new SymmetricKey(
+            hash_hmac('sha256', 'symmetric key', $seed, true)
+        );
+
+        $kat = sodium_hex2bin(
+            '0134a92338404768eafff95b6fdefe575327eb06f5055ab0e2e2057eeef0e0a20673c576123dfd93548464713e8751546ebc7da5d29bd09a83787dbdd3ff8dd7e79f3ec4313028e8d4cac791e11535875b08cde6fb671669d3466c12764a232c1ec98033fd51dcf9ea81305c109cfac31e216bcf0cd85a31be1df828b336957d0a'
+        );
+
+        $this->assertSame(
+            hash_hmac('sha256', 'example-plaintext', $seed, true),
+            $v1->decryptAttribute($attr, $kat, $key, $merkle)
+        );
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws SodiumException
+     */
     public function testCryptoShred(): void
     {
         [$v1, $ikm, $merkle] = $this->getBasicData();

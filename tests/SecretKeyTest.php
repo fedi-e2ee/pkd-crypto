@@ -71,13 +71,13 @@ class SecretKeyTest extends TestCase
     /**
      * @throws SodiumException
      */
-    public function importPemBadOID(): void
+    public function testImportPemBadOID(): void
     {
         $this->expectException(CryptoException::class);
         SecretKey::importPem("-----BEGIN PRIVATE KEY-----\nMC4DAQAwBQYDK2VwBCIEIJCCGFPBH8jcE67DdjDPEzNaT3XMLih6iL88gDnSC3eF\n-----END PRIVATE KEY-----");
     }
 
-    public function importPublicKeyPemBadOID(): void
+    public function testImportPublicKeyPemBadOID(): void
     {
         $this->expectException(CryptoException::class);
         PublicKey::importPem("-----BEGIN PUBLIC KEY-----\nMCpwBQYDK2VwAyEA895bv6cvVy1h85m+bt0CG2sjvHpwHb9EyTWXmEZeAKg=\n-----END PUBLIC KEY-----");

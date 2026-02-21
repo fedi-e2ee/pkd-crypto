@@ -6,6 +6,7 @@ use FediE2EE\PKD\Crypto\Exceptions\{
     CryptoException,
     InvalidSignatureException,
     NotImplementedException};
+use ParagonIE\ConstantTime\Base64UrlSafe;
 use FediE2EE\PKD\Crypto\{
     Revocation,
     SecretKey
@@ -55,12 +56,15 @@ class RevocationTest extends TestCase
         $revocation = new Revocation();
         $token = $revocation->revokeThirdParty($sk);
         $this->assertTrue($revocation->verifyRevocationToken($token, $pk));
-        $token[203] = chr(ord($token[203]) ^ 1);
 
-        $this->assertFalse($revocation->verifyRevocationToken($token, $pk));
+        [, $signed, $signature] = $revocation->decode($token);
+        $signature[0] = chr(ord($signature[0]) ^ 1);
+        $badToken = Base64UrlSafe::encodeUnpadded($signed . $signature);
+
+        $this->assertFalse($revocation->verifyRevocationToken($badToken, $pk));
 
         // verifyThrow
         $this->expectException(InvalidSignatureException::class);
-        $revocation->verifyRevocationToken($token, $pk, true);
+        $revocation->verifyRevocationToken($badToken, $pk, true);
     }
 }
