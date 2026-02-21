@@ -189,15 +189,14 @@ final class SignedMessage implements \JsonSerializable
      */
     public function toArray(): array
     {
-        $data = [
+        // We used to have a ksort() here, but we already sorted the keys
+        return [
             '!pkd-context' => self::PKD_CONTEXT,
             'action' => $this->message->getAction(),
             'message' => $this->message->toArray(),
             'recent-merkle-root' => $this->getRecentMerkleRoot(),
             'signature' => $this->getSignature(),
         ];
-        ksort($data);
-        return $data;
     }
 
     /**

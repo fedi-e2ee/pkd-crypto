@@ -112,4 +112,20 @@ class SecretKeyTest extends TestCase
         $this->expectExceptionMessage('Unknown algorithm: ed448');
         new SecretKey('foo', 'ed448');
     }
+
+    /**
+     * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testInvalidAlgSign(): void
+    {
+        $sk = SecretKey::generate();
+
+        $rc = new \ReflectionClass(SecretKey::class);
+        $rc->getProperty('algo')->setValue($sk, 'rsa');
+
+        $this->expectException(NotImplementedException::class);
+        $sk->sign('');
+    }
 }

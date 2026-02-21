@@ -11,8 +11,9 @@ use FediE2EE\PKD\Crypto\SecretKey;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use ReflectionException;
 use SodiumException;
-use function Sodium\crypto_sign_publickey;
 
 #[CoversClass(PublicKey::class)]
 class PublicKeyTest extends TestCase
@@ -142,6 +143,26 @@ class PublicKeyTest extends TestCase
         $imported = PublicKey::importPem($pem);
         $this->assertSame($pk->getBytes(), $imported->getBytes());
         $this->assertSame($pk->toString(), $imported->toString());
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testInvalidAlgVerify(): void
+    {
+        $sk = SecretKey::generate();
+        $pk = $sk->getPublicKey();
+
+        $signature = $sk->sign('test');
+        $this->assertTrue($pk->verify($signature, 'test'));
+
+        // Let's pretend it's RSA
+        $rc = new ReflectionClass(PublicKey::class);
+        $rc->getProperty('algo')->setValue($pk, 'rsa');
+        $this->expectException(NotImplementedException::class);
+        $pk->verify($signature, 'test');
     }
 
     public static function signatureProvider(): array
