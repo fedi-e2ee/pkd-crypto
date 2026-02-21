@@ -16,23 +16,23 @@ use ParagonIE\Certainty\{
 };
 use SodiumException;
 use function array_key_exists,
-dirname,
-explode,
-extension_loaded,
-filter_var,
-http_build_query,
-in_array,
-is_array,
-is_null,
-is_object,
-json_decode,
-json_last_error_msg,
-ltrim,
-parse_url,
-preg_match,
-property_exists,
-str_contains,
-str_replace;
+    dirname,
+    explode,
+    extension_loaded,
+    filter_var,
+    http_build_query,
+    in_array,
+    is_array,
+    is_null,
+    is_object,
+    json_decode,
+    json_last_error_msg,
+    ltrim,
+    parse_url,
+    preg_match,
+    property_exists,
+    str_contains,
+    str_replace;
 
 class WebFinger
 {

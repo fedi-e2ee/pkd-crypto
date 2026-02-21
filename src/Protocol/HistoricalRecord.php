@@ -32,6 +32,9 @@ class HistoricalRecord
         if (!array_key_exists('publickeyhash', $data)) {
             throw new JsonException('Missing "publickeyhash" key');
         }
+        if (!array_key_exists('signature', $data)) {
+            throw new JsonException('Missing "signature" key');
+        }
 
         return new HistoricalRecord(
             $data['encrypted-message'],

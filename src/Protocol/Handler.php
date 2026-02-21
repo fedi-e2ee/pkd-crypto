@@ -25,13 +25,19 @@ use function in_array, is_null;
 class Handler
 {
     use UtilTrait;
-    public static ?WebFinger $wf = null;
+    private static ?WebFinger $wf = null;
 
     public static function getWebFinger(): WebFinger
     {
         if (is_null(self::$wf)) {
             self::$wf = new WebFinger();
         }
+        return self::$wf;
+    }
+
+    public static function setWebFinger(WebFinger $wf): WebFinger
+    {
+        self::$wf = $wf;
         return self::$wf;
     }
 

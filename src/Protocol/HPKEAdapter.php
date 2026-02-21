@@ -19,8 +19,8 @@ class HPKEAdapter
     public const KEY_ID_DOMAIN = 'fedi-e2ee/public-key-directory:v1:key-id';
 
     public function __construct(
-        private readonly HPKE $hpke,
-        public string         $info = self::DEFAULT_INFO,
+        private readonly HPKE  $hpke,
+        public readonly string $info = self::DEFAULT_INFO,
     ) {}
 
     /**

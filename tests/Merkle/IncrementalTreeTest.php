@@ -860,4 +860,53 @@ class IncrementalTreeTest extends TestCase
             (new IncrementalTree([], $hashAlg))->getEncodedRoot()
         );
     }
+
+    /**
+     * This is a convoluted test to ensure the inner loop for addLeaf() cannot be mutated.
+     *
+     * @throws CryptoException
+     * @throws InputException
+     * @throws JsonException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    public function testUpdateLeafIterations(): void
+    {
+        $it = new IncrementalTree([], 'sha256');
+        for ($i = 0; $i < 32; ++$i) {
+            $it->addLeaf("leaf:" . $i);
+        }
+        // First, a sanity check
+        $this->assertSame('pkd-mr-v1:AwUpXrZQzQ0xEmLAvsPy4I_MJaoU1sI9v0SQl1kRbGM', $it->getEncodedRoot());
+
+        // Let's ensure encoding/decoding works:
+        $stored = $it->toJson();
+        $loaded = IncrementalTree::fromJson($stored);
+        $it->addLeaf('extra leaf');
+        $loaded->addLeaf('extra leaf');
+        $this->assertSame($it->getEncodedRoot(), $loaded->getEncodedRoot());
+
+        // Try with a random leaf (same for both trees):
+        $stored = $it->toJson();
+        $loaded = IncrementalTree::fromJson($stored);
+        $random = random_bytes(32);
+        $it->addLeaf($random);
+        $loaded->addLeaf($random);
+        $this->assertSame($it->getEncodedRoot(), $loaded->getEncodedRoot());
+
+        // Let's do this again, but different leaves, and ensure non-equality:
+        $stored = $it->toJson();
+        $loaded = IncrementalTree::fromJson($stored);
+        $random1 = random_bytes(32);
+        $random2 = random_bytes(32);
+
+        $it->addLeaf($random1);
+        $loaded->addLeaf($random2);
+        if (hash_equals($random1, $random2)) {
+            // Unlikely path but still:
+            $this->assertSame($it->getEncodedRoot(), $loaded->getEncodedRoot());
+        } else {
+            $this->assertNotSame($it->getEncodedRoot(), $loaded->getEncodedRoot());
+        }
+    }
 }
