@@ -88,12 +88,12 @@ final class PublicKey
     /**
      * @link https://www.w3.org/TR/cid-1.0/#example-multikey-encoding-of-a-ed25519-public-key
      *
-     * @param bool $useUnsafe
+     * @param bool $useBase58BtcVarTime
      * @return string
      */
-    public function toMultibase(bool $useUnsafe = false): string
+    public function toMultibase(bool $useBase58BtcVarTime = false): string
     {
-        return Multibase::encode(self::MB_PREFIX_ED25519 . $this->bytes, $useUnsafe);
+        return Multibase::encode(self::MB_PREFIX_ED25519 . $this->bytes, $useBase58BtcVarTime);
     }
 
     /**
