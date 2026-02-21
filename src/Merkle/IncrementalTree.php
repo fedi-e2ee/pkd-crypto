@@ -251,6 +251,7 @@ class IncrementalTree extends Tree
     }
 
     /**
+     * @throws CryptoException
      * @throws SodiumException
      */
     private function generateInclusionSubProof(int $index, int $start, int $end): array
@@ -261,6 +262,9 @@ class IncrementalTree extends Tree
         }
         $k = self::getSplitPoint($leafCount);
         $mid = $start + $k;
+        if ($mid < $start) {
+            throw new CryptoException('Integer shenanigans leading to infinite recursion');
+        }
 
         if ($index < $mid) {
             $proof = $this->generateInclusionSubProof($index, $start, $mid);

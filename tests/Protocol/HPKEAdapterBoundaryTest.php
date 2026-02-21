@@ -245,4 +245,33 @@ class HPKEAdapterBoundaryTest extends TestCase
         // Deterministic: same key produces same ID
         $this->assertSame($keyId, $adapter->keyId($encapsKey));
     }
+
+    #[DataProvider("ciphersuites")]
+    public function testHpkeOpenTooShort(
+        HPKE $ciphersuite
+    ): void {
+        [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();
+        $adapter = new HPKEAdapter($ciphersuite);
+        $this->expectException(HPKEException::class);
+        $this->expectExceptionMessage('Invalid payload: too short');
+        $adapter->open(
+            $decapsKey,
+            $encapsKey,
+            "hpke"
+        );
+    }
+    #[DataProvider("ciphersuites")]
+    public function testHpkeOpenWrongHeader(
+        HPKE $ciphersuite
+    ): void {
+        [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();
+        $adapter = new HPKEAdapter($ciphersuite);
+        $this->expectException(HPKEException::class);
+        $this->expectExceptionMessage('Invalid payload header');
+        $adapter->open(
+            $decapsKey,
+            $encapsKey,
+            "furry"
+        );
+    }
 }

@@ -2,7 +2,8 @@ name: Style
 
 on: [push, pull_request]
 
-permissions: {}
+permissions:
+  contents: read
 
 jobs:
   php-cs-fixer:

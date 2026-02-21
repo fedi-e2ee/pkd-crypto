@@ -32,6 +32,7 @@ class TreeTest extends TestCase
             ['sha512'],
         ];
     }
+
     public static function insecureHashAlgProvider(): array
     {
         return [
@@ -1295,6 +1296,26 @@ class TreeTest extends TestCase
         $this->assertFalse(
             $tree->verifyInclusionProof($root, 'only', $badProof),
             'index === size must be rejected for single-leaf tree'
+        );
+    }
+
+    public static function hashAlgLengthProvider(): array
+    {
+        return [
+            ['blake2b', 32],
+            ['sha256', 32],
+            ['sha3-256', 32],
+            ['sha384', 48],
+            ['sha512', 64],
+        ];
+    }
+
+    #[DataProvider("hashAlgLengthProvider")]
+    public function testEncodedEmpty(string $hashAlg, int $length): void
+    {
+        $this->assertSame(
+            'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(str_repeat("\0", $length)),
+            (new Tree([], $hashAlg))->getEncodedRoot()
         );
     }
 }

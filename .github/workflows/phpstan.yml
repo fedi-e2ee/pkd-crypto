@@ -2,7 +2,8 @@ name: PHPStan
 
 on: [push, pull_request]
 
-permissions: {}
+permissions:
+  contents: read
 
 jobs:
   phpstan:

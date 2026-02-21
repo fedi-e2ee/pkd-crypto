@@ -85,6 +85,11 @@
             	".*chunk_split.*"
             ]
         },
+        "FunctionCallRemoval": {
+            "ignoreSourceCodeByRegex": [
+                ".*ksort.*"
+            ]
+        },
         "IncrementInteger": {
             "ignore": [
                 "FediE2EE\\PKD\\Crypto\\Merkle\\Tree",

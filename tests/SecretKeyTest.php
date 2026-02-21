@@ -3,14 +3,22 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests;
 
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
+use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use FediE2EE\PKD\Crypto\PublicKey;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use FediE2EE\PKD\Crypto\SecretKey;
+use Random\RandomException;
+use SodiumException;
 
 #[CoversClass(SecretKey::class)]
 class SecretKeyTest extends TestCase
 {
+    /**
+     * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
     public function testGetPublicKey(): void
     {
         $keypair = sodium_crypto_sign_seed_keypair(
@@ -26,6 +34,11 @@ class SecretKeyTest extends TestCase
         $this->assertSame($public, $pk->getBytes());
     }
 
+    /**
+     * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
     public function testPEM(): void
     {
         $keypair = sodium_crypto_sign_seed_keypair(
@@ -55,18 +68,24 @@ class SecretKeyTest extends TestCase
         $this->assertSame($decoded->getPublicKey()->encodePem(), $random->getPublicKey()->encodePem());
     }
 
-    public function importPemBadOID(): void
+    /**
+     * @throws SodiumException
+     */
+    public function testImportPemBadOID(): void
     {
         $this->expectException(CryptoException::class);
         SecretKey::importPem("-----BEGIN PRIVATE KEY-----\nMC4DAQAwBQYDK2VwBCIEIJCCGFPBH8jcE67DdjDPEzNaT3XMLih6iL88gDnSC3eF\n-----END PRIVATE KEY-----");
     }
 
-    public function importPublicKeyPemBadOID(): void
+    public function testImportPublicKeyPemBadOID(): void
     {
         $this->expectException(CryptoException::class);
         PublicKey::importPem("-----BEGIN PUBLIC KEY-----\nMCpwBQYDK2VwAyEA895bv6cvVy1h85m+bt0CG2sjvHpwHb9EyTWXmEZeAKg=\n-----END PUBLIC KEY-----");
     }
 
+    /**
+     * @throws RandomException
+     */
     public function testTooShort(): void
     {
         $this->expectException(CryptoException::class);
@@ -74,6 +93,9 @@ class SecretKeyTest extends TestCase
         new SecretKey(random_bytes(32));
     }
 
+    /**
+     * @throws RandomException
+     */
     public function testTooLong(): void
     {
         $this->expectException(CryptoException::class);
@@ -81,10 +103,29 @@ class SecretKeyTest extends TestCase
         new SecretKey(random_bytes(65));
     }
 
+    /**
+     * @throws RandomException
+     */
     public function testWrongAlgorithm(): void
     {
         $this->expectException(CryptoException::class);
         $this->expectExceptionMessage('Unknown algorithm: ed448');
         new SecretKey('foo', 'ed448');
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testInvalidAlgSign(): void
+    {
+        $sk = SecretKey::generate();
+
+        $rc = new \ReflectionClass(SecretKey::class);
+        $rc->getProperty('algo')->setValue($sk, 'rsa');
+
+        $this->expectException(NotImplementedException::class);
+        $sk->sign('');
     }
 }
