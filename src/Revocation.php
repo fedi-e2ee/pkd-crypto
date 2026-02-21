@@ -82,14 +82,21 @@ class Revocation
      */
     //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revokekeythirdparty-validation-steps
     //# Validate signature for  `version || REVOCATION_CONSTANT || public_key`, using `public_key`.
-    public function verifyRevocationToken(string $token, ?PublicKey $pk = null): bool
-    {
+    public function verifyRevocationToken(
+        string $token,
+        ?PublicKey $pk = null,
+        bool $throwIfInvalid = false
+    ): bool {
         /** @var PublicKey $pkPrime */
         [$pkPrime, $tmp, $signature] = $this->decode($token);
         if (!is_null($pk)) {
             if (!hash_equals($pkPrime->toString(), $pk->toString())) {
                 throw new CryptoException('mismatched public key');
             }
+        }
+        if ($throwIfInvalid) {
+            $pkPrime->verifyThrow($signature, $tmp);
+            return true;
         }
         return $pkPrime->verify($signature, $tmp);
     }

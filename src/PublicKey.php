@@ -6,8 +6,8 @@ use FediE2EE\PKD\Crypto\Encoding\Multibase;
 use FediE2EE\PKD\Crypto\Exceptions\{
     CryptoException,
     EncodingException,
-    NotImplementedException
-};
+    InvalidSignatureException,
+    NotImplementedException};
 use ParagonIE\ConstantTime\{
     Base64,
     Base64UrlSafe,
@@ -184,6 +184,22 @@ final class PublicKey
     }
 
     /**
+     * @throws InvalidSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function verifyThrow(string $signature, string $message): void
+    {
+        if (!$this->verify($signature, $message)) {
+            throw new InvalidSignatureException($message);
+        }
+    }
+
+    /**
+     * Verifies a signature.
+     * Returns TRUE if the signature is valid.
+     * Returns FALSE if the signature is invalid.
+     *
      * @param string $signature
      * @param string $message
      * @return bool
@@ -192,11 +208,11 @@ final class PublicKey
      */
     public function verify(string $signature, string $message): bool
     {
-        switch ($this->algo) {
-            case 'ed25519':
-                return sodium_crypto_sign_verify_detached($signature, $message, $this->bytes);
-            default:
-                throw new NotImplementedException('');
-        }
+        return match ($this->algo) {
+            'ed25519' =>
+                sodium_crypto_sign_verify_detached($signature, $message, $this->bytes),
+            default =>
+                throw new NotImplementedException(''),
+        };
     }
 }

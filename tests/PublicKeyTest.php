@@ -3,7 +3,11 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests;
 
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
+use FediE2EE\PKD\Crypto\Exceptions\EncodingException;
+use FediE2EE\PKD\Crypto\Exceptions\InvalidSignatureException;
+use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use FediE2EE\PKD\Crypto\PublicKey;
+use FediE2EE\PKD\Crypto\SecretKey;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -21,6 +25,10 @@ class PublicKeyTest extends TestCase
         ];
     }
 
+    /**
+     * @throws CryptoException
+     * @throws EncodingException
+     */
     #[DataProvider("knownAnswersMultibase")]
     public function testMultibase(string $input, string $expected): void
     {
@@ -134,5 +142,42 @@ class PublicKeyTest extends TestCase
         $imported = PublicKey::importPem($pem);
         $this->assertSame($pk->getBytes(), $imported->getBytes());
         $this->assertSame($pk->toString(), $imported->toString());
+    }
+
+    public static function signatureProvider(): array
+    {
+        $sk = SecretKey::generate();
+        $testCases = [
+            [
+                $sk,
+                'message',
+                $sk->sign('message'),
+                true,
+            ],
+        ];
+
+        return $testCases;
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    #[DataProvider("signatureProvider")]
+    public function testVerify(
+        SecretKey $secretKey,
+        string $message,
+        string $signature,
+        bool $shouldBeValid,
+    ): void {
+        if (!$shouldBeValid) {
+            $this->expectException(InvalidSignatureException::class);
+            $secretKey->getPublicKey()->verifyThrow($signature, $message);
+        }
+        $this->assertSame(
+            $shouldBeValid,
+            $secretKey->getPublicKey()->verify($signature, $message)
+        );
     }
 }
