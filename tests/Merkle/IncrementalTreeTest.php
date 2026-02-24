@@ -897,6 +897,7 @@ class IncrementalTreeTest extends TestCase
         // Let's do this again, but different leaves, and ensure non-equality:
         $stored = $it->toJson();
         $loaded = IncrementalTree::fromJson($stored);
+        $loaded->updateRoot();
         $random1 = random_bytes(32);
         $random2 = random_bytes(32);
 

@@ -218,7 +218,7 @@ class IncrementalTree extends Tree
         foreach ($state['nodes'] as $key => $hash) {
             if (!is_string($key) || !preg_match('/^\d+-\d+$/', $key)) {
                 throw new InputException(
-                    'Invalid node key format: ' . (string) $key
+                    'Invalid node key format: ' . $key
                 );
             }
             $decoded = Base64UrlSafe::decode($hash);
