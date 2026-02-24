@@ -1286,6 +1286,19 @@ class TreeTest extends TestCase
      * @throws CryptoException
      * @throws SodiumException
      */
+    public function testConsistencyProofSameSize(): void
+    {
+        $leaves = ['a', 'b'];
+        $tree = new Tree($leaves);
+        $proof = $tree->getConsistencyProof(2);
+        $this->assertInstanceOf(ConsistencyProof::class, $proof);
+        $this->assertEmpty($proof->proof, 'Consistency proof should be empty when old size == new size');
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws SodiumException
+     */
     #[DataProvider("hashAlgProvider")]
     public function testSingleLeafRejectsOutOfBoundsProof(string $hashAlg): void
     {

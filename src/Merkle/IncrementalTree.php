@@ -14,7 +14,6 @@ use function array_key_exists,
     array_map,
     floor,
     hash,
-    hash_equals,
     is_array,
     is_int,
     is_string,
@@ -23,7 +22,9 @@ use function array_key_exists,
     json_last_error_msg,
     log,
     preg_match,
-    sodium_crypto_generichash;
+    sodium_crypto_generichash,
+    str_starts_with,
+    substr;
 
 /**
  * @api
@@ -34,6 +35,7 @@ class IncrementalTree extends Tree
      * @var array<string, string>
      */
     private array $nodes = [];
+    private array $leafIndex = [];
     private int $size = 0;
     private string $hashAlgo;
 
@@ -66,6 +68,7 @@ class IncrementalTree extends Tree
         $leafHash = $this->hashLeaf($leaf);
         $index = $this->size;
         $this->nodes["0-{$index}"] = $leafHash;
+        $this->leafIndex[$leafHash] = $index;
         $this->size++;
 
         $level = 0;
@@ -215,10 +218,14 @@ class IncrementalTree extends Tree
         foreach ($state['nodes'] as $key => $hash) {
             if (!is_string($key) || !preg_match('/^\d+-\d+$/', $key)) {
                 throw new InputException(
-                    'Invalid node key format: ' . (string) $key
+                    'Invalid node key format: ' . $key
                 );
             }
-            $tree->nodes[$key] = Base64UrlSafe::decode($hash);
+            $decoded = Base64UrlSafe::decode($hash);
+            $tree->nodes[$key] = $decoded;
+            if (str_starts_with($key, '0-')) {
+                $tree->leafIndex[$decoded] = (int) substr($key, 2);
+            }
         }
         $tree->updateRoot();
         return $tree;
@@ -232,14 +239,7 @@ class IncrementalTree extends Tree
     public function getInclusionProof(string $leaf): InclusionProof
     {
         $leafHash = $this->hashLeaf($leaf);
-        $index = -1;
-        // TODO: Consider more efficient techniques
-        for ($i = 0; $i < $this->size; $i++) {
-            if (hash_equals($this->nodes["0-{$i}"], $leafHash)) {
-                $index = $i;
-                break;
-            }
-        }
+        $index = $this->leafIndex[$leafHash] ?? -1;
         if ($index === -1) {
             throw new CryptoException('Could not find index in leaves');
         }

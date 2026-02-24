@@ -121,6 +121,12 @@
                 "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
             ]
         },
+        "MatchArmRemoval": {
+            "ignore": [
+                "FediE2EE\\PKD\\Crypto\\Merkle\\IncrementalTree",
+                "FediE2EE\\PKD\\Crypto\\Merkle\\Tree",
+            ]
+        },
         "Minus": {
             "ignore": [
                 "FediE2EE\\PKD\\Crypto\\Encoding\\Base58BtcVarTime"
