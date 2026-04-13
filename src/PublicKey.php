@@ -38,7 +38,7 @@ final class PublicKey
     private const PEM_PREFIX_ED25519 = '302a300506032b6570032100';
     private const PEM_PREFIX_ML_DSA_44 = '30820534300b06096086480165030403110382052100';
     private const MB_PREFIX_ED25519 = "\xed\x01";
-    private const MB_PREFIX_MLDSA44= "\x12\x10";
+    private const MB_PREFIX_MLDSA44 = "\x12\x10";
     private string $bytes;
     private string $algo;
     private array $metadata = [];
@@ -93,8 +93,8 @@ final class PublicKey
         $decoded = Multibase::decode($encoded);
         $length = strlen($encoded);
         switch ($length) {
-            case 1753;
-            case 1795;
+            case 1753:
+            case 1795:
                 $alg = 'mldsa44';
                 $actualPrefix = substr($decoded, 0, 2);
                 if (!hash_equals(self::MB_PREFIX_MLDSA44, $actualPrefix)) {
