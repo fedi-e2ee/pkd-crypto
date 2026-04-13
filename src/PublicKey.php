@@ -13,6 +13,10 @@ use ParagonIE\ConstantTime\{
     Base64UrlSafe,
     Hex
 };
+use ParagonIE\PQCrypto\{
+    Compat,
+    Exception\MLDSAInternalException
+};
 use SensitiveParameter;
 use SodiumException;
 use function chunk_split,
@@ -32,7 +36,9 @@ final class PublicKey
 {
     use UtilTrait;
     private const PEM_PREFIX_ED25519 = '302a300506032b6570032100';
+    private const PEM_PREFIX_ML_DSA_44 = '30820534300b06096086480165030403110382052100';
     private const MB_PREFIX_ED25519 = "\xed\x01";
+    private const MB_PREFIX_MLDSA44= "\x12\x10";
     private string $bytes;
     private string $algo;
     private array $metadata = [];
@@ -47,6 +53,7 @@ final class PublicKey
     ) {
         $expectedLength = match($algo) {
             'ed25519' => 32,
+            'mldsa44' => 1312,
             default => throw new CryptoException('Unknown algorithm: ' . $algo)
         };
         if (strlen($bytes) !== $expectedLength) {
@@ -58,9 +65,18 @@ final class PublicKey
 
     public function encodePem(): string
     {
-        $encoded = Base64::encode(
-            Hex::decode(self::PEM_PREFIX_ED25519) . $this->bytes
-        );
+        $encoded = match ($this->algo) {
+            'ed25519' =>
+                Base64::encode(
+                    Hex::decode(self::PEM_PREFIX_ED25519) . $this->bytes
+                ),
+            'mldsa44' =>
+                Base64::encode(
+                    Hex::decode(self::PEM_PREFIX_ML_DSA_44) . $this->bytes
+                ),
+            default =>
+                throw new CryptoException('Unknown algorithm: ' . $this->algo),
+        };
         return "-----BEGIN PUBLIC KEY-----\n" .
             self::dos2unix(chunk_split($encoded, 64)).
             "-----END PUBLIC KEY-----";
@@ -75,14 +91,28 @@ final class PublicKey
     public static function fromMultibase(string $encoded): PublicKey
     {
         $decoded = Multibase::decode($encoded);
-        if (strlen($decoded) !== 34) {
-            throw new CryptoException('Invalid public key');
+        $length = strlen($encoded);
+        switch ($length) {
+            case 1753;
+            case 1795;
+                $alg = 'mldsa44';
+                $actualPrefix = substr($decoded, 0, 2);
+                if (!hash_equals(self::MB_PREFIX_MLDSA44, $actualPrefix)) {
+                    throw new CryptoException('Incorrect public key type');
+                }
+                break;
+            case 47:
+            case 48:
+                $alg = 'ed25519';
+                $actualPrefix = substr($decoded, 0, 2);
+                if (!hash_equals(self::MB_PREFIX_ED25519, $actualPrefix)) {
+                    throw new CryptoException('Incorrect public key type');
+                }
+                break;
+            default:
+                throw new CryptoException('Invalid public key: incorrect length = ' . $length);
         }
-        $actualPrefix = substr($decoded, 0, 2);
-        if (!hash_equals(self::MB_PREFIX_ED25519, $actualPrefix)) {
-            throw new CryptoException('Incorrect public key type');
-        }
-        return new PublicKey(substr($decoded, 2));
+        return new PublicKey(substr($decoded, 2), $alg);
     }
 
     /**
@@ -93,7 +123,13 @@ final class PublicKey
      */
     public function toMultibase(bool $useBase58BtcVarTime = false): string
     {
-        return Multibase::encode(self::MB_PREFIX_ED25519 . $this->bytes, $useBase58BtcVarTime);
+        return match ($this->algo) {
+            'ed25519' =>
+                Multibase::encode(self::MB_PREFIX_ED25519 . $this->bytes, $useBase58BtcVarTime),
+            'mldsa44' =>
+                Multibase::encode(self::MB_PREFIX_MLDSA44 . $this->bytes, $useBase58BtcVarTime),
+            default => '',
+        };
     }
 
     /**
@@ -105,9 +141,11 @@ final class PublicKey
      */
     public static function importPem(string $pem, string $algo = 'ed25519'): PublicKey
     {
-        if (!hash_equals('ed25519', $algo)) {
-            throw new CryptoException('Only ed25519 keys are supported');
-        }
+        $prefix = match($algo) {
+            'ed25519' => Hex::decode(self::PEM_PREFIX_ED25519),
+            'mldsa44' => Hex::decode(self::PEM_PREFIX_ML_DSA_44),
+            default => throw new CryptoException('Only ed25519 and mldsa44 keys are supported')
+        };
         $formattedKey = str_replace('-----BEGIN PUBLIC KEY-----', '', $pem);
         $formattedKey = str_replace('-----END PUBLIC KEY-----', '', $formattedKey);
         /**
@@ -119,7 +157,6 @@ final class PublicKey
         }
         $formattedKey = self::stripNewlines($formattedKey);
         $key = Base64::decode($formattedKey);
-        $prefix = Hex::decode(self::PEM_PREFIX_ED25519);
         if (!hash_equals(substr($key, 0, strlen($prefix)), $prefix)) {
             throw new CryptoException('Invalid PEM prefix');
         }
@@ -144,8 +181,7 @@ final class PublicKey
 
     public function toString(): string
     {
-        // "ed25519:" || base64url_encode(pk)
-        return 'ed25519:' .  Base64UrlSafe::encodeUnpadded($this->bytes);
+        return $this->algo . ':' . Base64UrlSafe::encodeUnpadded($this->bytes);
     }
 
     /**
@@ -203,14 +239,18 @@ final class PublicKey
      * @param string $signature
      * @param string $message
      * @return bool
+     *
      * @throws NotImplementedException
      * @throws SodiumException
+     * @throws MLDSAInternalException
      */
     public function verify(string $signature, string $message): bool
     {
         return match ($this->algo) {
             'ed25519' =>
                 sodium_crypto_sign_verify_detached($signature, $message, $this->bytes),
+            'mldsa44' =>
+                Compat::mldsa44_verify($this->bytes, $signature, $message),
             default =>
                 throw new NotImplementedException(''),
         };

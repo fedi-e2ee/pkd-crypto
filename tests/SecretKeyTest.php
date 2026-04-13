@@ -128,4 +128,36 @@ class SecretKeyTest extends TestCase
         $this->expectException(NotImplementedException::class);
         $sk->sign('');
     }
+
+    public function testMldsa44(): void
+    {
+        $sk = SecretKey::generate('mldsa44');
+        $this->assertSame('mldsa44', $sk->getAlgo());
+        $this->assertSame(32, strlen($sk->getBytes()));
+
+        // Test with deterministic inputs
+        $sk2 = new SecretKey(hash('sha256', 'unit testing', true), 'mldsa44');
+        $expected = '-----BEGIN PRIVATE KEY-----' . "\n" .
+            'MDQCAQAwCwYJYIZIAWUDBAMRBCKAIMmVWL/mRG+3IQddHi3yL1dfyQVXr3h07ZdW' . "\n" .
+            '0FphW5SC' . "\n" .
+            '-----END PRIVATE KEY-----';
+        $this->assertSame($expected, $sk2->encodePem());
+        $sk2p = SecretKey::importPem($expected, 'mldsa44');
+        $this->assertSame($sk2->getBytes(), $sk2p->getBytes());
+        $this->assertSame($sk2->getAlgo(), $sk2p->getAlgo());
+        $pk2 = $sk2->getPublicKey();
+        $this->assertSame($sk2->getAlgo(), $pk2->getAlgo());
+        $this->assertSame(
+            '32ec4cb94fd7dfade21c14420d0009d6974f6a488a4449322b3a2019f78b674c',
+            hash('sha256', $pk2->getBytes())
+        );
+        $this->assertSame(
+            '28e4b0f9dc0d5ed51167e8e6edb5c83d96afcd6c585e936e214c1650c547b0f2',
+            hash('sha256', $pk2->toString())
+        );
+        $this->assertSame(
+            '5c6767bcff03fb9409e11137f91aab84c41a07b31dd3164555e96f5bde56e9df',
+            hash('sha256', $pk2->toMultibase())
+        );
+    }
 }
