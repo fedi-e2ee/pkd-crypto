@@ -10,10 +10,5 @@
         <testsuite name="default">
             <directory>tests</directory>
         </testsuite>
-        <!-- for fast testing without property-based tests -->
-        <testsuite name="noprop">
-            <directory>tests</directory>
-            <exclude>tests/PropertyBased</exclude>
-        </testsuite>
     </testsuites>
 </phpunit>

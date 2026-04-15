@@ -52,7 +52,7 @@ class SignedMessageTest extends TestCase
         $signature = $sm->sign($sk);
         $this->assertMatchesRegularExpression('/^[A-Za-z0-9-_]{3226,3228}$/', $signature);
         $decoded = Base64UrlSafe::decodeNoPadding($signature);
-        $this->assertSame(Compat::MLDSA44_SIGNATURE_BYTES , mb_strlen($decoded, '8bit'));
+        $this->assertSame(Compat::MLDSA44_SIGNATURE_BYTES, mb_strlen($decoded, '8bit'));
         $this->assertTrue($sm->verify($pk));
     }
 

@@ -1,10 +1,11 @@
 <?php
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Enums;
+
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use ValueError;
 
-enum SigningAlgorithm : string
+enum SigningAlgorithm: string
 {
     case ED25519 = 'ed25519';
     case MLDSA44 = 'mldsa44';

@@ -1,6 +1,5 @@
 <?php
 declare(strict_types=1);
-
 namespace FediE2EE\PKD\Crypto\Tests;
 
 use FediE2EE\PKD\Crypto\Enums\ProtocolVersion;
