@@ -441,9 +441,10 @@ class SignedMessageTest extends TestCase
         $sk = SecretKey::generate();
         $pk = $sk->getPublicKey();
 
+        $addKey = new AddKey('https://example.com/@alice', $pk);
         // Sign one message to obtain a valid signature
         $sm1 = SignedMessage::init(
-            new AddKey('https://example.com/@alice', $pk),
+            $addKey,
             $recent,
             $sk
         );
@@ -451,7 +452,7 @@ class SignedMessageTest extends TestCase
 
         // Create a second unsigned message with identical content
         $sm2 = new SignedMessage(
-            new AddKey('https://example.com/@alice', $pk),
+            $addKey,
             $recent
         );
 
