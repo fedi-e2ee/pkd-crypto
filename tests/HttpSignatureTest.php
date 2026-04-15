@@ -110,7 +110,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('test key')
         );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature();
         $request = new Request('POST', '/foo', ['Host' => 'example.com'], 'body');
@@ -130,7 +130,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('test key')
         );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature();
         $request = new Request(
@@ -158,7 +158,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('test key')
         );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature();
         $request = new Request('POST', '/foo', ['Host' => 'example.com'], 'body');
@@ -215,7 +215,7 @@ class HttpSignatureTest extends TestCase
         $keypair2 = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('key 2')
         );
-        $pk2 = new PublicKey(sodium_crypto_sign_publickey($keypair2));
+        $pk2 = new PublicKey(sodium_crypto_sign_publickey($keypair2), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature();
         $request = new Request('POST', '/foo', ['Host' => 'example.com'], 'body');
@@ -262,7 +262,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('non-numeric created test')
         );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature();
         $request = new Request(
@@ -336,7 +336,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('invalid format test')
         );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature();
         $request = new Request(
@@ -407,7 +407,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('label not found test')
         );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair), SigningAlgorithm::ED25519);
 
         // Create a signature using label "sig1" but verify with "sig2"
         $httpSignature = new HttpSignature('sig2');
@@ -436,7 +436,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('throw label test')
         );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature('mysig');
         $request = new Request(
@@ -466,7 +466,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('unsupported algo test')
         );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature();
         $request = new Request(
@@ -494,7 +494,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('unsupported algo throw')
         );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature();
         $request = new Request(
@@ -524,7 +524,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('missing algo throw')
         );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature();
         $request = new Request(
@@ -554,7 +554,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('missing created throw')
         );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature();
         $request = new Request(
@@ -610,7 +610,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('missing sig header')
         );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature();
         $request = new Request(
@@ -762,7 +762,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('exact label test')
         );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature('sig1');
         $request = new Request(
@@ -870,7 +870,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('missing sig input test')
         );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature();
         $request = new Request(
@@ -1003,7 +1003,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('missing header test')
         );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature();
         $request = new Request(
@@ -1289,7 +1289,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('throw when missing test')
         );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature();
         // Request has Signature-Input but NO Signature
@@ -1320,7 +1320,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('continue vs break test')
         );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature();
         // Craft request with @method before x-absent in covered components. x-absent is NOT present on the request.
