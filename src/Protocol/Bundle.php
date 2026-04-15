@@ -235,7 +235,8 @@ class Bundle
         return new SignedMessage(
             $message,
             $this->getRecentMerkleRoot(),
-            $this->signature
+            $this->signature,
+            $this->version
         );
     }
 

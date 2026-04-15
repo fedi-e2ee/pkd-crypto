@@ -8,9 +8,9 @@ use FediE2EE\PKD\Crypto\Exceptions\{
     NotImplementedException
 };
 use FediE2EE\PKD\Crypto\{
+    Enums\SigningAlgorithm,
     PublicKey,
-    SecretKey
-};
+    SecretKey};
 use PhpFuzzer\Config;
 use RuntimeException;
 use SodiumException;
@@ -21,6 +21,7 @@ use TypeError;
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 $config->setTarget(function (string $input): void {
+    $alg = SigningAlgorithm::ED25519;
     try {
         $pk = new PublicKey($input);
         assert($pk->getAlgo() === 'ed25519');
@@ -193,7 +194,7 @@ $config->setTarget(function (string $input): void {
     }
 
     try {
-        SecretKey::importPem($input);
+        SecretKey::importPem($input, $alg);
     } catch (CryptoException|TypeError) {
         // Expected for most inputs
     }

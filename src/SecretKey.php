@@ -111,7 +111,7 @@ final class SecretKey
      * Load a secret key from a PEM-encoded string.
      *
      * @param string $pem
-     * @param string $algo
+     * @param SigningAlgorithm|string $algo
      * @return self
      *
      * @throws CryptoException

@@ -134,7 +134,7 @@ final class PublicKey
 
     /**
      * @param string $pem
-     * @param string $algo
+     * @param SigningAlgorithm|string $algo
      * @return self
      *
      * @throws CryptoException

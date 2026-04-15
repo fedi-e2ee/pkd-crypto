@@ -48,18 +48,6 @@ class Parser
 
     /** Actions with no attribute encryption (truly plaintext fields). */
     public const PLAINTEXT_ACTIONS = ['BurnDown', 'Checkpoint', 'RevokeKeyThirdParty'];
-    private ProtocolVersion $version;
-
-    /**
-     * @param ?ProtocolVersion $version
-     */
-    public function __construct(?ProtocolVersion $version = null)
-    {
-        if (is_null($version)) {
-            $version = ProtocolVersion::default();
-        }
-        $this->version = $version;
-    }
 
     /**
      * Extract a message with encrypted attributes from a Bundle.

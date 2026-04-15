@@ -24,16 +24,6 @@ class Revocation
         "\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE" .
         'revoke-public-key';
 
-    public readonly ProtocolVersion $version;
-
-    public function __construct(?ProtocolVersion $version = null)
-    {
-        if (is_null($version)) {
-            $version = ProtocolVersion::default();
-        }
-        $this->version = $version;
-    }
-
     /**
      * Calculate a Third-Party revocation token for the given Secret Key.
      *
