@@ -23,7 +23,7 @@ require_once dirname(__DIR__) . '/vendor/autoload.php';
 $config->setTarget(function (string $input): void {
     $alg = SigningAlgorithm::ED25519;
     try {
-        $pk = new PublicKey($input);
+        $pk = new PublicKey($input, $alg);
         assert($pk->getAlgo() === 'ed25519');
         assert(strlen($pk->getBytes()) === 32);
     } catch (CryptoException|TypeError) {
@@ -38,7 +38,7 @@ $config->setTarget(function (string $input): void {
     }
 
     try {
-        $sk = new SecretKey($input);
+        $sk = new SecretKey($input, $alg);
         assert($sk->getAlgo() === 'ed25519');
     } catch (CryptoException|TypeError) {
         // Expected for inputs that are not exactly 64 bytes
@@ -57,7 +57,7 @@ $config->setTarget(function (string $input): void {
 
     try {
         $pkBytes = substr($input, 0, 32);
-        $pk = new PublicKey($pkBytes);
+        $pk = new PublicKey($pkBytes, $alg);
 
         // Test toString/fromString round-trip
         $str = $pk->toString();
@@ -107,7 +107,7 @@ $config->setTarget(function (string $input): void {
 
         foreach ($malformedFormats as $malformed) {
             try {
-                PublicKey::fromString($malformed);
+                PublicKey::fromString($malformed, $alg);
             } catch (CryptoException|TypeError) {
                 // Expected
             }
@@ -117,7 +117,7 @@ $config->setTarget(function (string $input): void {
     }
 
     try {
-        PublicKey::importPem($input);
+        PublicKey::importPem($input, $alg);
     } catch (CryptoException|TypeError) {
         // Expected for most inputs
     }
@@ -132,7 +132,7 @@ $config->setTarget(function (string $input): void {
 
         foreach ($malformedPems as $malformedPem) {
             try {
-                PublicKey::importPem($malformedPem);
+                PublicKey::importPem($malformedPem, $alg);
             } catch (CryptoException|TypeError) {
                 // Expected
             }
@@ -142,13 +142,13 @@ $config->setTarget(function (string $input): void {
     }
 
     try {
-        PublicKey::fromMultibase($input);
+        PublicKey::fromMultibase($input, $alg);
     } catch (CryptoException|EncodingException|TypeError) {
         // Expected for most inputs
     }
 
     try {
-        $pk = new PublicKey(substr($input, 0, 32));
+        $pk = new PublicKey(substr($input, 0, 32), $alg);
         $metadata = ['key' => 'value', 'number' => 42];
         $pk->setMetadata($metadata);
         $retrieved = $pk->getMetadata();
@@ -160,7 +160,7 @@ $config->setTarget(function (string $input): void {
     }
 
     try {
-        $pk = new PublicKey(substr($input, 0, 32));
+        $pk = new PublicKey(substr($input, 0, 32), $alg);
         $str1 = $pk->toString();
         $str2 = (string) $pk;
         if ($str1 !== $str2) {
@@ -177,7 +177,7 @@ $config->setTarget(function (string $input): void {
 
     try {
         $skBytes = substr($input, 0, 64);
-        $sk = new SecretKey($skBytes);
+        $sk = new SecretKey($skBytes, $alg);
 
         // Test PEM encoding round-trip
         $pem = $sk->encodePem();
@@ -209,7 +209,7 @@ $config->setTarget(function (string $input): void {
 
         foreach ($malformedPems as $malformedPem) {
             try {
-                SecretKey::importPem($malformedPem);
+                SecretKey::importPem($malformedPem, $alg);
             } catch (CryptoException|TypeError) {
                 // Expected
             }
@@ -219,7 +219,7 @@ $config->setTarget(function (string $input): void {
     }
 
     try {
-        $sk = new SecretKey(substr($input, 0, 64));
+        $sk = new SecretKey(substr($input, 0, 64), $alg);
         $pk = $sk->getPublicKey();
         assert($pk instanceof PublicKey);
         assert(strlen($pk->getBytes()) === 32);
@@ -228,7 +228,7 @@ $config->setTarget(function (string $input): void {
     }
 
     try {
-        $sk = new SecretKey(substr($input, 0, 64));
+        $sk = new SecretKey(substr($input, 0, 64), $alg);
         $pk = $sk->getPublicKey();
         $message = substr($input, 64) ?: 'test message';
 
@@ -258,7 +258,7 @@ $config->setTarget(function (string $input): void {
     }
 
     try {
-        $pk = new PublicKey(substr($input, 0, 32));
+        $pk = new PublicKey(substr($input, 0, 32), $alg);
         $message = 'test message';
         $signature = substr($input, 32, min(64, strlen($input) - 32));
         $pk->verify($signature, $message);
