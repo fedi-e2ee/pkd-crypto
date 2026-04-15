@@ -743,11 +743,14 @@ class HttpSignatureTest extends TestCase
         $signed2 = $httpSignature2->sign($sk2, $request2, ['@method'], 'key', $created);
         $signed3 = $httpSignature2->sign($sk2, $request3, ['@method'], 'key', $created);
 
-        $this->assertSame(
-            $signed2->getHeaderLine('Signature'),
-            $signed3->getHeaderLine('Signature'),
-            'Method case should be normalized'
-        );
+        if ($alg === SigningAlgorithm::ED25519) {
+            // ML-DSA-44 signatures are not deterministic
+            $this->assertSame(
+                $signed2->getHeaderLine('Signature'),
+                $signed3->getHeaderLine('Signature'),
+                'Method case should be normalized'
+            );
+        }
     }
 
     /**
