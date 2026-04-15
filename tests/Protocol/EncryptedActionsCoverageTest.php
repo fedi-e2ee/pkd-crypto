@@ -30,9 +30,9 @@ use FediE2EE\PKD\Crypto\Protocol\{
     SignedMessage
 };
 use FediE2EE\PKD\Crypto\{
+    Merkle\Tree,
     SecretKey,
-    SymmetricKey
-};
+    SymmetricKey};
 use GuzzleHttp\Exception\GuzzleException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -76,8 +76,9 @@ class EncryptedActionsCoverageTest extends TestCase
         $msg1 = new AddKey($actor1, $pk);
         $msg2 = new AddKey($actor2, $pk);
 
-        $enc1 = $msg1->encrypt($keyMap);
-        $enc2 = $msg2->encrypt($keyMap);
+        $recentMerkleRoot = (new Tree())->getEncodedRoot();
+        $enc1 = $msg1->encrypt($keyMap, $recentMerkleRoot);
+        $enc2 = $msg2->encrypt($keyMap, $recentMerkleRoot);
 
         $arr1 = $enc1->toArray();
         $arr2 = $enc2->toArray();
@@ -117,13 +118,14 @@ class EncryptedActionsCoverageTest extends TestCase
             ->addRandomKey('actor')
             ->addRandomKey('public-key');
 
+        $recentMerkleRoot = (new Tree())->getEncodedRoot();
         $msg = new AddKey(
             'https://example.com/users/alice',
             $pk
         );
 
-        $enc1 = $msg->encrypt($keyMap);
-        $enc2 = $msg->encrypt($keyMap);
+        $enc1 = $msg->encrypt($keyMap, $recentMerkleRoot);
+        $enc2 = $msg->encrypt($keyMap, $recentMerkleRoot);
 
         $arr1 = $enc1->toArray();
         $arr2 = $enc2->toArray();
@@ -161,19 +163,21 @@ class EncryptedActionsCoverageTest extends TestCase
             ->addRandomKey('actor')
             ->addRandomKey('public-key');
 
+        $recentMerkleRoot = (new Tree())->getEncodedRoot();
+
         $original = new AddKey(
             'https://example.com/users/alice',
             $pk
         );
 
-        $encrypted = $original->encrypt($keyMap);
+        $encrypted = $original->encrypt($keyMap, $recentMerkleRoot);
         $this->assertInstanceOf(
             EncryptedProtocolMessageInterface::class,
             $encrypted
         );
         $this->assertSame('AddKey', $encrypted->getAction());
 
-        $decrypted = $encrypted->decrypt($keyMap);
+        $decrypted = $encrypted->decrypt($keyMap, $recentMerkleRoot);
         $this->assertInstanceOf(AddKey::class, $decrypted);
         $this->assertSame(
             $original->getActor(),
@@ -208,15 +212,18 @@ class EncryptedActionsCoverageTest extends TestCase
             'https://example.com/users/bob',
             $pk
         );
+        $recent = 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(
+            random_bytes(32)
+        );
 
-        $encrypted = $original->encrypt($keyMap);
+        $encrypted = $original->encrypt($keyMap, $recent);
         $this->assertInstanceOf(
             EncryptedProtocolMessageInterface::class,
             $encrypted
         );
         $this->assertSame('RevokeKey', $encrypted->getAction());
 
-        $decrypted = $encrypted->decrypt($keyMap);
+        $decrypted = $encrypted->decrypt($keyMap, $recent);
         $this->assertInstanceOf(RevokeKey::class, $decrypted);
         $this->assertSame(
             $original->getActor(),
@@ -242,11 +249,14 @@ class EncryptedActionsCoverageTest extends TestCase
         $original = new Fireproof(
             'https://example.com/users/carol'
         );
+        $recent = 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(
+            random_bytes(32)
+        );
 
-        $encrypted = $original->encrypt($keyMap);
+        $encrypted = $original->encrypt($keyMap, $recent);
         $this->assertSame('Fireproof', $encrypted->getAction());
 
-        $decrypted = $encrypted->decrypt($keyMap);
+        $decrypted = $encrypted->decrypt($keyMap, $recent);
         $this->assertInstanceOf(Fireproof::class, $decrypted);
         $this->assertSame(
             $original->getActor(),
@@ -268,11 +278,14 @@ class EncryptedActionsCoverageTest extends TestCase
         $original = new UndoFireproof(
             'https://example.com/users/dave'
         );
+        $recent = 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(
+            random_bytes(32)
+        );
 
-        $encrypted = $original->encrypt($keyMap);
+        $encrypted = $original->encrypt($keyMap, $recent);
         $this->assertSame('UndoFireproof', $encrypted->getAction());
 
-        $decrypted = $encrypted->decrypt($keyMap);
+        $decrypted = $encrypted->decrypt($keyMap, $recent);
         $this->assertInstanceOf(UndoFireproof::class, $decrypted);
         $this->assertSame(
             $original->getActor(),
@@ -296,11 +309,14 @@ class EncryptedActionsCoverageTest extends TestCase
             'https://old.example.com/users/eve',
             'https://new.example.com/users/eve'
         );
+        $recent = 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(
+            random_bytes(32)
+        );
 
-        $encrypted = $original->encrypt($keyMap);
+        $encrypted = $original->encrypt($keyMap, $recent);
         $this->assertSame('MoveIdentity', $encrypted->getAction());
 
-        $decrypted = $encrypted->decrypt($keyMap);
+        $decrypted = $encrypted->decrypt($keyMap, $recent);
         $this->assertInstanceOf(MoveIdentity::class, $decrypted);
     }
 
@@ -328,11 +344,11 @@ class EncryptedActionsCoverageTest extends TestCase
             'https://example.com/users/alice',
             $pk
         );
-        $encrypted = $addKey->encrypt($keyMap);
-
         $recent = 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(
             random_bytes(32)
         );
+        $encrypted = $addKey->encrypt($keyMap, $recent);
+
         $sm = new SignedMessage($encrypted, $recent);
         $sm->sign($sk);
 
@@ -369,7 +385,8 @@ class EncryptedActionsCoverageTest extends TestCase
             'https://example.com/users/alice',
             $pk
         );
-        $encrypted = $addKey->encrypt($keyMap);
+        $recentMerkleRoot = (new Tree())->getEncodedRoot();
+        $encrypted = $addKey->encrypt($keyMap, $recentMerkleRoot);
         $arr = $encrypted->toArray();
 
         // 'public-key' should be the same as original plaintext

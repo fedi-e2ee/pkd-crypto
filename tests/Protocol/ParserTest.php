@@ -76,7 +76,7 @@ class ParserTest extends TestCase
             'fedie2ee@mastodon.social',
             $publicKey
         );
-        $encryptedAddKey = $addKey->encrypt($keyMap);
+        $encryptedAddKey = $addKey->encrypt($keyMap, $recent);
 
         $handler = new Handler();
         $message = $handler->handle($encryptedAddKey, $secretKey, $keyMap, $recent);
@@ -90,7 +90,12 @@ class ParserTest extends TestCase
         $this->assertInstanceOf(EncryptedAddKey::class, $decryptedMessage->getMessage());
         $this->assertInstanceOf(AttributeKeyMap::class, $decryptedMessage->getKeyMap());
 
-        $decrypted = $decryptedMessage->getMessage()->decrypt($decryptedMessage->getKeyMap());
+        $decrypted = $decryptedMessage
+            ->getMessage()
+            ->decrypt(
+                $decryptedMessage->getKeyMap(),
+                $recent
+            );
         $this->assertInstanceOf(AddKey::class, $decrypted);
     }
 

@@ -7,6 +7,7 @@ use FediE2EE\PKD\Crypto\Exceptions\{
     InputException,
     JsonException
 };
+use FediE2EE\PKD\Crypto\Enums\ProtocolVersion;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use Override;
 use SodiumException;
@@ -41,17 +42,25 @@ class IncrementalTree extends Tree
 
     /**
      * @param string[] $leaves Leaves to insert
-     * @param string $hashAlgo Hash function algorithm
+     * @param ?string $hashAlgo Hash function algorithm
      *
      * @throws CryptoException
      * @throws SodiumException
      */
     public function __construct(
         array  $leaves = [],
-        string $hashAlgo = 'sha256'
+        ?string $hashAlgo = null,
+        ProtocolVersion $version = null
     ) {
-        parent::__construct([], $hashAlgo);
+        parent::__construct([], $hashAlgo, $version);
+        if (is_null($version)) {
+            $version = ProtocolVersion::default();
+        }
+        if (is_null($hashAlgo)) {
+            $hashAlgo = $version->getDefaultMerkleTreeHash();
+        }
         $this->hashAlgo = $hashAlgo;
+        $this->version = $version;
         if (!empty($leaves)) {
             foreach ($leaves as $leaf) {
                 $this->addLeaf($leaf);

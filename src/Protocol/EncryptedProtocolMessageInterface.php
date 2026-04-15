@@ -6,5 +6,5 @@ use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 
 interface EncryptedProtocolMessageInterface extends ProtocolMessageInterface
 {
-    public function decrypt(AttributeKeyMap $keyMap): ProtocolMessageInterface;
+    public function decrypt(AttributeKeyMap $keyMap, string $recentMerkleRoot): ProtocolMessageInterface;
 }

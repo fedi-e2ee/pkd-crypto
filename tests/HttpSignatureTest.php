@@ -8,6 +8,7 @@ use FediE2EE\PKD\Crypto\Exceptions\{
     NotImplementedException
 };
 use FediE2EE\PKD\Crypto\{
+    Enums\SigningAlgorithm,
     HttpSignature,
     PublicKey,
     SecretKey
@@ -36,7 +37,7 @@ class HttpSignatureTest extends TestCase
             sodium_crypto_generichash('phpunit test case for fedi-e2ee/pkd-client')
         );
         $secret = sodium_crypto_sign_secretkey($keypair);
-        $sk = new SecretKey($secret);
+        $sk = new SecretKey($secret, SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -180,7 +181,7 @@ class HttpSignatureTest extends TestCase
             sodium_crypto_generichash('custom label test')
         );
         $secret = sodium_crypto_sign_secretkey($keypair);
-        $sk = new SecretKey($secret);
+        $sk = new SecretKey($secret, SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature('custom-sig');
@@ -209,7 +210,7 @@ class HttpSignatureTest extends TestCase
         $keypair1 = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('key 1')
         );
-        $sk1 = new SecretKey(sodium_crypto_sign_secretkey($keypair1));
+        $sk1 = new SecretKey(sodium_crypto_sign_secretkey($keypair1), SigningAlgorithm::ED25519);
 
         $keypair2 = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('key 2')
@@ -237,7 +238,7 @@ class HttpSignatureTest extends TestCase
             sodium_crypto_generichash('expired test')
         );
         $secret = sodium_crypto_sign_secretkey($keypair);
-        $sk = new SecretKey($secret);
+        $sk = new SecretKey($secret, SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         // Use a small timeout window
@@ -288,7 +289,7 @@ class HttpSignatureTest extends TestCase
             sodium_crypto_generichash('boundary test')
         );
         $secret = sodium_crypto_sign_secretkey($keypair);
-        $sk = new SecretKey($secret);
+        $sk = new SecretKey($secret, SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $timeout = 10;
@@ -316,7 +317,7 @@ class HttpSignatureTest extends TestCase
             sodium_crypto_generichash('regex label test')
         );
         $secret = sodium_crypto_sign_secretkey($keypair);
-        $sk = new SecretKey($secret);
+        $sk = new SecretKey($secret, SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         // Label with characters that need escaping in regex
@@ -365,7 +366,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('case normalization test')
         );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -583,7 +584,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('expired throw test')
         );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature('sig1', 10);
@@ -638,7 +639,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('mixed case headers')
         );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -674,8 +675,8 @@ class HttpSignatureTest extends TestCase
         $keypair2 = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('method case test 2')
         );
-        $sk1 = new SecretKey(sodium_crypto_sign_secretkey($keypair1));
-        $sk2 = new SecretKey(sodium_crypto_sign_secretkey($keypair2));
+        $sk1 = new SecretKey(sodium_crypto_sign_secretkey($keypair1), SigningAlgorithm::ED25519);
+        $sk2 = new SecretKey(sodium_crypto_sign_secretkey($keypair2), SigningAlgorithm::ED25519);
         $pk1 = $sk1->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -710,7 +711,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('single header test')
         );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -735,7 +736,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('path only test')
         );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -788,7 +789,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('method lowercase test')
         );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -816,7 +817,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('default timeout test')
         );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -841,7 +842,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('params extraction test')
         );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -895,7 +896,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('unknown headers test')
         );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -923,7 +924,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('method lowercase consistency')
         );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature();
         $created = time();
@@ -951,7 +952,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('path signature test')
         );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -980,7 +981,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('custom timeout window')
         );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
         $httpSignature = new HttpSignature('sig1', 60);
         $request = new Request('POST', '/foo', ['Host' => 'example.com'], 'body');
@@ -1029,7 +1030,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('foreach all headers')
         );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -1073,7 +1074,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('method does not break loop')
         );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -1118,7 +1119,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('path does not break loop')
         );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -1166,7 +1167,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('missing header skipped')
         );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -1203,7 +1204,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('missing header throw')
         );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -1240,7 +1241,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('tampered header test')
         );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -1357,7 +1358,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('default timeout exact')
         );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -1391,7 +1392,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('params extraction correctness')
         );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -1438,7 +1439,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('capture group test')
         );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -1465,7 +1466,7 @@ class HttpSignatureTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('matches group 1')
         );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -1490,7 +1491,7 @@ class HttpSignatureTest extends TestCase
         // Deterministic key from fixed seed (32 bytes of 0x42)
         $seed = str_repeat("\x42", 32);
         $keypair = sodium_crypto_sign_seed_keypair($seed);
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature();
         $request = new Request('POST', '/inbox', ['Host' => 'example.com']);
@@ -1535,7 +1536,7 @@ class HttpSignatureTest extends TestCase
     {
         $seed = str_repeat("\x43", 32);
         $keypair = sodium_crypto_sign_seed_keypair($seed);
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature();
         $request = new Request('GET', '/api/v1/resource', ['Host' => 'api.test']);
@@ -1571,7 +1572,7 @@ class HttpSignatureTest extends TestCase
     {
         $seed = str_repeat("\x44", 32);
         $keypair = sodium_crypto_sign_seed_keypair($seed);
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature();
         $request = new Request('DELETE', '/users/123', ['Host' => 'admin.example.org']);

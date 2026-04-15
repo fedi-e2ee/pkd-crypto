@@ -17,6 +17,7 @@ use ParagonIE\PQCrypto\{
     Compat,
     Exception\MLDSAInternalException
 };
+use FediE2EE\PKD\Crypto\Enums\SigningAlgorithm;
 use SensitiveParameter;
 use SodiumException;
 use function chunk_split,
@@ -40,7 +41,7 @@ final class PublicKey
     private const MB_PREFIX_ED25519 = "\xed\x01";
     private const MB_PREFIX_MLDSA44 = "\x12\x10";
     private string $bytes;
-    private string $algo;
+    private SigningAlgorithm $algo;
     private array $metadata = [];
 
     /**
@@ -49,13 +50,12 @@ final class PublicKey
     public function __construct(
         #[SensitiveParameter]
         string $bytes,
-        string $algo = 'ed25519'
+        SigningAlgorithm|string $algo = 'ed25519'
     ) {
-        $expectedLength = match($algo) {
-            'ed25519' => 32,
-            'mldsa44' => 1312,
-            default => throw new CryptoException('Unknown algorithm: ' . $algo)
-        };
+        if (is_string($algo)) {
+            $algo = SigningAlgorithm::from($algo);
+        }
+        $expectedLength = $algo->publicKeyLength();
         if (strlen($bytes) !== $expectedLength) {
             throw new CryptoException('Public key must be ' . $expectedLength . ' bytes');
         }
@@ -66,11 +66,11 @@ final class PublicKey
     public function encodePem(): string
     {
         $encoded = match ($this->algo) {
-            'ed25519' =>
+            SigningAlgorithm::ED25519 =>
                 Base64::encode(
                     Hex::decode(self::PEM_PREFIX_ED25519) . $this->bytes
                 ),
-            'mldsa44' =>
+            SigningAlgorithm::MLDSA44 =>
                 Base64::encode(
                     Hex::decode(self::PEM_PREFIX_ML_DSA_44) . $this->bytes
                 ),
@@ -95,7 +95,7 @@ final class PublicKey
         switch ($length) {
             case 1753:
             case 1795:
-                $alg = 'mldsa44';
+                $alg = SigningAlgorithm::MLDSA44;
                 $actualPrefix = substr($decoded, 0, 2);
                 if (!hash_equals(self::MB_PREFIX_MLDSA44, $actualPrefix)) {
                     throw new CryptoException('Incorrect public key type');
@@ -103,7 +103,7 @@ final class PublicKey
                 break;
             case 47:
             case 48:
-                $alg = 'ed25519';
+                $alg = SigningAlgorithm::ED25519;
                 $actualPrefix = substr($decoded, 0, 2);
                 if (!hash_equals(self::MB_PREFIX_ED25519, $actualPrefix)) {
                     throw new CryptoException('Incorrect public key type');
@@ -124,9 +124,9 @@ final class PublicKey
     public function toMultibase(bool $useBase58BtcVarTime = false): string
     {
         return match ($this->algo) {
-            'ed25519' =>
+            SigningAlgorithm::ED25519 =>
                 Multibase::encode(self::MB_PREFIX_ED25519 . $this->bytes, $useBase58BtcVarTime),
-            'mldsa44' =>
+            SigningAlgorithm::MLDSA44 =>
                 Multibase::encode(self::MB_PREFIX_MLDSA44 . $this->bytes, $useBase58BtcVarTime),
             default => '',
         };
@@ -139,11 +139,14 @@ final class PublicKey
      *
      * @throws CryptoException
      */
-    public static function importPem(string $pem, string $algo = 'ed25519'): PublicKey
+    public static function importPem(string $pem, SigningAlgorithm|string $algo = 'ed25519'): PublicKey
     {
+        if (is_string($algo)) {
+            $algo = SigningAlgorithm::from($algo);
+        }
         $prefix = match($algo) {
-            'ed25519' => Hex::decode(self::PEM_PREFIX_ED25519),
-            'mldsa44' => Hex::decode(self::PEM_PREFIX_ML_DSA_44),
+            SigningAlgorithm::ED25519 => Hex::decode(self::PEM_PREFIX_ED25519),
+            SigningAlgorithm::MLDSA44 => Hex::decode(self::PEM_PREFIX_ML_DSA_44),
             default => throw new CryptoException('Only ed25519 and mldsa44 keys are supported')
         };
         $formattedKey = str_replace('-----BEGIN PUBLIC KEY-----', '', $pem);
@@ -174,14 +177,14 @@ final class PublicKey
     /**
      * @api
      */
-    public function getAlgo(): string
+    public function getAlgo(): SigningAlgorithm
     {
         return $this->algo;
     }
 
     public function toString(): string
     {
-        return $this->algo . ':' . Base64UrlSafe::encodeUnpadded($this->bytes);
+        return $this->algo->value . ':' . Base64UrlSafe::encodeUnpadded($this->bytes);
     }
 
     /**
@@ -194,7 +197,10 @@ final class PublicKey
             throw new CryptoException('Invalid public key: algorithm prefix required');
         }
         [$algo, $bytes] = explode(':', $pk);
-        return new self(Base64UrlSafe::decodeNoPadding($bytes), $algo);
+        return new self(
+            Base64UrlSafe::decodeNoPadding($bytes),
+            SigningAlgorithm::fromString($algo)
+        );
     }
 
     public function __toString(): string
@@ -221,6 +227,7 @@ final class PublicKey
 
     /**
      * @throws InvalidSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
      * @throws SodiumException
      */
@@ -247,9 +254,9 @@ final class PublicKey
     public function verify(string $signature, string $message): bool
     {
         return match ($this->algo) {
-            'ed25519' =>
+            SigningAlgorithm::ED25519 =>
                 sodium_crypto_sign_verify_detached($signature, $message, $this->bytes),
-            'mldsa44' =>
+            SigningAlgorithm::MLDSA44 =>
                 Compat::mldsa44_verify($this->bytes, $signature, $message),
             default =>
                 throw new NotImplementedException(''),

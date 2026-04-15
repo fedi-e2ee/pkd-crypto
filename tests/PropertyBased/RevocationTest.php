@@ -4,10 +4,13 @@ namespace FediE2EE\PKD\Crypto\Tests\PropertyBased;
 
 use Eris\Generators;
 use Eris\TestTrait;
+use FediE2EE\PKD\Crypto\Enums\SigningAlgorithm;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\Revocation;
 use FediE2EE\PKD\Crypto\SecretKey;
+use FediE2EE\PKD\Crypto\Tests\ExtraneousDataProviderTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -16,6 +19,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Revocation::class)]
 class RevocationTest extends TestCase
 {
+    use ExtraneousDataProviderTrait;
     use TestTrait;
     use ErisPhpUnit12Trait {
         ErisPhpUnit12Trait::getTestCaseAnnotations insteadof TestTrait;
@@ -32,12 +36,13 @@ class RevocationTest extends TestCase
      *
      * verify(revokeThirdParty(sk), pk) == true
      */
-    public function testRevocationTokenVerifies(): void
+    #[DataProvider('signingAlgorithmProvider')]
+    public function testRevocationTokenVerifies(SigningAlgorithm $alg): void
     {
         $this->forAll(
             Generators::choose(1, 100)
-        )->then(function (int $_counter): void {
-            $secretKey = SecretKey::generate();
+        )->then(function (int $_counter) use ($alg): void {
+            $secretKey = SecretKey::generate($alg);
             $publicKey = $secretKey->getPublicKey();
 
             $revocation = new Revocation();
@@ -53,12 +58,13 @@ class RevocationTest extends TestCase
      *
      * The token contains the public key, so verification should work.
      */
-    public function testRevocationTokenVerifiesWithoutExplicitKey(): void
+    #[DataProvider('signingAlgorithmProvider')]
+    public function testRevocationTokenVerifiesWithoutExplicitKey(SigningAlgorithm $alg): void
     {
         $this->forAll(
             Generators::choose(1, 100)
-        )->then(function (int $_counter): void {
-            $secretKey = SecretKey::generate();
+        )->then(function (int $_counter) use ($alg): void {
+            $secretKey = SecretKey::generate($alg);
 
             $revocation = new Revocation();
             $token = $revocation->revokeThirdParty($secretKey);
@@ -74,13 +80,14 @@ class RevocationTest extends TestCase
      *
      * verify(revokeThirdParty(sk1), pk2) throws exception
      */
-    public function testRevocationTokenFailsWithWrongKey(): void
+    #[DataProvider('signingAlgorithmProvider')]
+    public function testRevocationTokenFailsWithWrongKey(SigningAlgorithm $alg): void
     {
         $this->forAll(
             Generators::choose(1, 50)
-        )->then(function (int $_counter): void {
-            $secretKey1 = SecretKey::generate();
-            $secretKey2 = SecretKey::generate();
+        )->then(function (int $_counter) use ($alg): void {
+            $secretKey1 = SecretKey::generate($alg);
+            $secretKey2 = SecretKey::generate($alg);
 
             $revocation = new Revocation();
             $token = $revocation->revokeThirdParty($secretKey1);
@@ -94,12 +101,13 @@ class RevocationTest extends TestCase
     /**
      * Property: Token decode extracts correct public key.
      */
-    public function testTokenDecodeExtractsPublicKey(): void
+    #[DataProvider('signingAlgorithmProvider')]
+    public function testTokenDecodeExtractsPublicKey(SigningAlgorithm $alg): void
     {
         $this->forAll(
             Generators::choose(1, 100)
-        )->then(function (int $_counter): void {
-            $secretKey = SecretKey::generate();
+        )->then(function (int $_counter) use ($alg): void {
+            $secretKey = SecretKey::generate($alg);
             $expectedPublicKey = $secretKey->getPublicKey();
 
             $revocation = new Revocation();
@@ -120,12 +128,13 @@ class RevocationTest extends TestCase
      *
      * revokeThirdParty(sk) == revokeThirdParty(sk)
      */
-    public function testTokenDeterministic(): void
+    #[DataProvider('signingAlgorithmProvider')]
+    public function testTokenDeterministic(SigningAlgorithm $alg): void
     {
         $this->forAll(
             Generators::choose(1, 50)
-        )->then(function (int $_counter): void {
-            $secretKey = SecretKey::generate();
+        )->then(function (int $_counter) use ($alg): void {
+            $secretKey = SecretKey::generate($alg);
 
             $revocation = new Revocation();
             $token1 = $revocation->revokeThirdParty($secretKey);
@@ -138,13 +147,14 @@ class RevocationTest extends TestCase
     /**
      * Property: Different keys produce different tokens.
      */
-    public function testDifferentKeysDifferentTokens(): void
+    #[DataProvider('signingAlgorithmProvider')]
+    public function testDifferentKeysDifferentTokens(SigningAlgorithm $alg): void
     {
         $this->forAll(
             Generators::choose(1, 50)
-        )->then(function (int $_counter): void {
-            $secretKey1 = SecretKey::generate();
-            $secretKey2 = SecretKey::generate();
+        )->then(function (int $_counter) use ($alg): void {
+            $secretKey1 = SecretKey::generate($alg);
+            $secretKey2 = SecretKey::generate($alg);
 
             $revocation = new Revocation();
             $token1 = $revocation->revokeThirdParty($secretKey1);
@@ -157,12 +167,13 @@ class RevocationTest extends TestCase
     /**
      * Property: Decode rejects truncated tokens.
      */
-    public function testDecodeRejectsTruncatedTokens(): void
+    #[DataProvider('signingAlgorithmProvider')]
+    public function testDecodeRejectsTruncatedTokens(SigningAlgorithm $alg): void
     {
         $this->forAll(
             Generators::choose(1, 50)
-        )->then(function (int $_counter): void {
-            $secretKey = SecretKey::generate();
+        )->then(function (int $_counter) use ($alg): void {
+            $secretKey = SecretKey::generate($alg);
 
             $revocation = new Revocation();
             $token = $revocation->revokeThirdParty($secretKey);
@@ -185,12 +196,13 @@ class RevocationTest extends TestCase
     /**
      * Property: Decode rejects tokens with invalid header.
      */
-    public function testDecodeRejectsInvalidHeader(): void
+    #[DataProvider('signingAlgorithmProvider')]
+    public function testDecodeRejectsInvalidHeader(SigningAlgorithm $alg): void
     {
         $this->forAll(
             Generators::choose(1, 20)
-        )->then(function (int $_counter): void {
-            $secretKey = SecretKey::generate();
+        )->then(function (int $_counter) use ($alg): void {
+            $secretKey = SecretKey::generate($alg);
 
             $revocation = new Revocation();
             $token = $revocation->revokeThirdParty($secretKey);
@@ -210,14 +222,15 @@ class RevocationTest extends TestCase
      *
      * All tokens should have the same length (deterministic structure).
      */
-    public function testTokenLengthConsistent(): void
+    #[DataProvider('signingAlgorithmProvider')]
+    public function testTokenLengthConsistent(SigningAlgorithm $alg): void
     {
         $lengths = [];
 
         $this->forAll(
             Generators::choose(1, 50)
-        )->then(function (int $_counter) use (&$lengths): void {
-            $secretKey = SecretKey::generate();
+        )->then(function (int $_counter) use (&$lengths, $alg): void {
+            $secretKey = SecretKey::generate($alg);
 
             $revocation = new Revocation();
             $token = $revocation->revokeThirdParty($secretKey);
@@ -233,12 +246,13 @@ class RevocationTest extends TestCase
     /**
      * Property: Signature in token is valid Ed25519 signature.
      */
-    public function testTokenContainsValidSignature(): void
+    #[DataProvider('signingAlgorithmProvider')]
+    public function testTokenContainsValidSignature(SigningAlgorithm $alg): void
     {
         $this->forAll(
             Generators::choose(1, 50)
-        )->then(function (int $_counter): void {
-            $secretKey = SecretKey::generate();
+        )->then(function (int $_counter) use ($alg): void {
+            $secretKey = SecretKey::generate($alg);
 
             $revocation = new Revocation();
             $token = $revocation->revokeThirdParty($secretKey);

@@ -23,7 +23,7 @@ use JsonSerializable;
 use Override;
 use SodiumException;
 
-class EncryptedAddKey implements EncryptedProtocolMessageInterface, JsonSerializable
+class EncryptedAddKey implements EncryptedProtocolMessageInterface
 {
     use ToStringTrait;
 
@@ -55,7 +55,7 @@ class EncryptedAddKey implements EncryptedProtocolMessageInterface, JsonSerializ
     }
 
     #[Override]
-    public function encrypt(AttributeKeyMap $keyMap): EncryptedProtocolMessageInterface
+    public function encrypt(AttributeKeyMap $keyMap, string $recentMerkleRoot): EncryptedProtocolMessageInterface
     {
         // Already encrypted
         return $this;
@@ -70,14 +70,18 @@ class EncryptedAddKey implements EncryptedProtocolMessageInterface, JsonSerializ
      * @throws SodiumException
      */
     #[Override]
-    public function decrypt(AttributeKeyMap $keyMap): ProtocolMessageInterface
+    public function decrypt(AttributeKeyMap $keyMap, string $recentMerkleRoot): ProtocolMessageInterface
     {
         $decrypted = [];
+        $encryptor = $keyMap->getVersion()->getAttributeEncryption();
         foreach ($this->encrypted as $key => $value) {
             $symKey = $keyMap->getKey($key);
             if ($symKey) {
-                $decrypted[$key] = $symKey->decrypt(
-                    Base64UrlSafe::decodeNoPadding($value)
+                $decrypted[$key] = $encryptor->decryptAttribute(
+                    $key,
+                    Base64UrlSafe::decodeNoPadding($value),
+                    $symKey,
+                    $recentMerkleRoot
                 );
             } else {
                 $decrypted[$key] = $value;

@@ -91,7 +91,7 @@ class PublicKeyTest extends TestCase
     public function testWrongAlgorithm(): void
     {
         $this->expectException(CryptoException::class);
-        $this->expectExceptionMessage('Unknown algorithm: ed448');
+        $this->expectExceptionMessage('Not a valid signing algorithm: ed448');
         PublicKey::fromString('ed448:foo');
     }
 
@@ -155,26 +155,6 @@ class PublicKeyTest extends TestCase
         $imported = PublicKey::importPem($pem);
         $this->assertSame($pk->getBytes(), $imported->getBytes());
         $this->assertSame($pk->toString(), $imported->toString());
-    }
-
-    /**
-     * @throws CryptoException
-     * @throws NotImplementedException
-     * @throws SodiumException
-     */
-    public function testInvalidAlgVerify(): void
-    {
-        $sk = SecretKey::generate();
-        $pk = $sk->getPublicKey();
-
-        $signature = $sk->sign('test');
-        $this->assertTrue($pk->verify($signature, 'test'));
-
-        // Let's pretend it's RSA
-        $rc = new ReflectionClass(PublicKey::class);
-        $rc->getProperty('algo')->setValue($pk, 'rsa');
-        $this->expectException(NotImplementedException::class);
-        $pk->verify($signature, 'test');
     }
 
     public static function signatureProvider(): array

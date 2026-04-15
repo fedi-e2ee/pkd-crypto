@@ -2,8 +2,12 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto;
 
+use FediE2EE\PKD\Crypto\Enums\ProtocolVersion;
+use FediE2EE\PKD\Crypto\Enums\SigningAlgorithm;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
+use ParagonIE\PQCrypto\Compat;
+use SensitiveParameter;
 use SodiumException;
 use function hash_equals, is_null, strlen, substr;
 
@@ -11,6 +15,7 @@ use function hash_equals, is_null, strlen, substr;
 //# A revocation token is a compact token that a user can issue at any time to revoke an existing public key.
 class Revocation
 {
+    use UtilTrait;
     //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revocation-tokens
     //# `REVOCATION_CONSTANT` is a domain-separated constant for revoking an existing key.
     private const REVOKE_VERSION = 'FediPKD1';
@@ -18,6 +23,16 @@ class Revocation
         "\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE" .
         "\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE\xFE" .
         'revoke-public-key';
+
+    public readonly ProtocolVersion $version;
+
+    public function __construct(?ProtocolVersion $version = null)
+    {
+        if (is_null($version)) {
+            $version = ProtocolVersion::default();
+        }
+        $this->version = $version;
+    }
 
     /**
      * Calculate a Third-Party revocation token for the given Secret Key.
@@ -55,6 +70,21 @@ class Revocation
         if ($len < 153) {
             throw new CryptoException('Token is too short');
         }
+        // 8 + 49 + 1312 + 2420
+        return match ($len) {
+            153 => $this->decodeEd25519($decoded),
+            3789 => $this->decodeMldsa44($decoded),
+            default => throw new CryptoException("Invalid token length: {$len}"),
+        };
+    }
+
+    /**
+     * @throws CryptoException
+     */
+    protected function decodeEd25519(
+        #[SensitiveParameter]
+        string $decoded
+    ): array {
         $header = substr($decoded, 0, 8);
         if (!hash_equals($header, self::REVOKE_VERSION)) {
             throw new CryptoException('Invalid revocation header');
@@ -63,12 +93,39 @@ class Revocation
         if (!hash_equals(self::REVOKE_CONSTANT, $c)) {
             throw new CryptoException('Invalid revocation constant');
         }
-        $pk = new PublicKey(substr($decoded, 57, 32));
+        $pk = new PublicKey(substr($decoded, 57, 32), SigningAlgorithm::ED25519);
         $signature = substr($decoded, 89, SODIUM_CRYPTO_SIGN_BYTES);
         if (strlen($signature) !== SODIUM_CRYPTO_SIGN_BYTES) {
             throw new CryptoException('error extracting signature');
         }
         $signed = substr($decoded, 0, 89);
+        return [$pk, $signed, $signature];
+    }
+
+    /**
+     * @throws CryptoException
+     */
+    protected function decodeMldsa44(
+        #[SensitiveParameter]
+        string $decoded
+    ): array {
+        $header = substr($decoded, 0, 8);
+        if (!hash_equals($header, self::REVOKE_VERSION)) {
+            throw new CryptoException('Invalid revocation header');
+        }
+        $c = substr($decoded, 8, 49);
+        if (!hash_equals(self::REVOKE_CONSTANT, $c)) {
+            throw new CryptoException('Invalid revocation constant');
+        }
+        $pk = new PublicKey(
+            substr($decoded, 57, Compat::MLDSA44_VERIFYINGKEY_BYTES),
+            SigningAlgorithm::MLDSA44
+        );
+        $signature = substr($decoded, 1369, Compat::MLDSA44_SIGNATURE_BYTES);
+        if (strlen($signature) !== Compat::MLDSA44_SIGNATURE_BYTES) {
+            throw new CryptoException('error extracting signature');
+        }
+        $signed = substr($decoded, 0, 1369);
         return [$pk, $signed, $signature];
     }
 

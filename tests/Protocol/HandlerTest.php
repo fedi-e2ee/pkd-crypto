@@ -58,15 +58,16 @@ class HandlerTest extends TestCase
         $publicKey = $secretKey->getPublicKey();
         $keyMap = new AttributeKeyMap();
         $keyMap->addKey('foo', new SymmetricKey(random_bytes(32)));
+        $root = (new Tree())->getEncodedRoot();
 
         $addKey = new AddKey(
             'fedie2ee@mastodon.social',
             $publicKey
         );
-        $encryptedAddKey = $addKey->encrypt($keyMap);
+        $encryptedAddKey = $addKey->encrypt($keyMap, $root);
 
         $bundler = new Handler();
-        $message = $bundler->handle($encryptedAddKey, $secretKey, $keyMap, str_repeat("\x00", 32));
+        $message = $bundler->handle($encryptedAddKey, $secretKey, $keyMap, $root);
         $json = $message->toJson();
         $this->assertIsString($json);
 
@@ -100,6 +101,7 @@ class HandlerTest extends TestCase
     {
         $secretKey = SecretKey::generate();
         $publicKey = $secretKey->getPublicKey();
+        $root = (new Tree())->getEncodedRoot();
         $keyMap = new AttributeKeyMap();
         $keyMap->addKey('foo', new SymmetricKey(random_bytes(32)));
 
@@ -107,10 +109,10 @@ class HandlerTest extends TestCase
             'fedie2ee@mastodon.social',
             $publicKey
         );
-        $encryptedAddKey = $addKey->encrypt($keyMap);
+        $encryptedAddKey = $addKey->encrypt($keyMap, $root);
 
         $bundler = new Handler();
-        $message = $bundler->handle($encryptedAddKey, $secretKey, $keyMap, str_repeat("\x00", 32));
+        $message = $bundler->handle($encryptedAddKey, $secretKey, $keyMap, $root);
 
         $ciphersuite = Factory::init('DHKEM(X25519, HKDF-SHA256), HKDF-SHA256, AES-128-GCM');
         $hpke = new HPKE($ciphersuite->kem, $ciphersuite->kdf, $ciphersuite->aead);
@@ -139,12 +141,13 @@ class HandlerTest extends TestCase
         $publicKey = $secretKey->getPublicKey();
         $keyMap = new AttributeKeyMap();
         $keyMap->addKey('foo', new SymmetricKey(random_bytes(32)));
+        $root = (new Tree())->getEncodedRoot();
 
         $addKey = new AddKey(
             'fedie2ee@mastodon.social',
             $publicKey
         );
-        $encryptedAddKey = $addKey->encrypt($keyMap);
+        $encryptedAddKey = $addKey->encrypt($keyMap, $root);
 
         $bundler = new Handler();
         $message = $bundler->handle($encryptedAddKey, $secretKey, $keyMap, str_repeat("\x00", 32));
@@ -268,13 +271,15 @@ class HandlerTest extends TestCase
         $this->assertArrayHasKey('operator', $message);
         $this->assertArrayHasKey('time', $message);
         // actor and operator are attribute-encrypted
-        $this->assertNotSame(
+        $this->assertSame(
             'https://example.com/users/foo',
-            $message['actor']
+            $message['actor'],
+            'BurnDown must NOT be encrypted'
         );
-        $this->assertNotSame(
+        $this->assertSame(
             'https://pkd.example.org',
-            $message['operator']
+            $message['operator'],
+            'BurnDown must NOT be encrypted'
         );
         $this->assertSame($dummyOtp, $bundle->getOtp());
     }
@@ -332,7 +337,7 @@ class HandlerTest extends TestCase
             actor: 'https://example.com/users/foo',
             publicKey: $publicKey
         );
-        $encryptedAddKey = $addKey->encrypt($keyMap);
+        $encryptedAddKey = $addKey->encrypt($keyMap, $merkleRoot);
         $originalMessage = $encryptedAddKey->toArray();
 
         $handler = new Handler();

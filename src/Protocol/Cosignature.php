@@ -8,12 +8,16 @@ use FediE2EE\PKD\Crypto\Exceptions\{
     NotImplementedException
 };
 use FediE2EE\PKD\Crypto\{
+    Enums\ProtocolVersion,
     Merkle\IncrementalTree,
     PublicKey,
     SecretKey,
     UtilTrait
 };
 use ParagonIE\ConstantTime\Base64UrlSafe;
+use ParagonIE\PQCrypto\Exception\MLDSAInternalException;
+use ParagonIE\PQCrypto\Exception\PQCryptoCompatException;
+use Random\RandomException;
 use SodiumException;
 use function array_key_exists, hash_equals, is_array, is_string, json_decode, json_encode, json_last_error_msg, time;
 
@@ -23,7 +27,17 @@ class Cosignature
 
     public const CONTEXT = 'fedi-e2ee-v1:cosignature';
 
-    public function __construct(protected IncrementalTree $state) {}
+    protected ProtocolVersion $version;
+
+    public function __construct(
+        protected IncrementalTree $state,
+        ?ProtocolVersion $version = null,
+    ) {
+        if (is_null($version)) {
+            $version = ProtocolVersion::default();
+        }
+        $this->version = $version;
+    }
 
     /**
      * Return a new instance of Cosignature with the new record appended.
@@ -49,12 +63,17 @@ class Cosignature
      * @param string $hostname HTTP Host of the PKD server to receive the cosignature
      * @return string
      *
+     * @throws CryptoException
      * @throws JsonException
      * @throws NotImplementedException
      * @throws SodiumException
+     * @throws MLDSAInternalException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      */
     public function cosign(SecretKey $sk, string $hostname): string
     {
+        self::assertKeyIsAllowed($sk, $this->version);
         $payload = [
             '!pkd-context' => self::CONTEXT,
             'current-time' => (string) (time()),
@@ -85,15 +104,21 @@ class Cosignature
      *
      * @param PublicKey $pk
      * @param string $json
+     * @param ?ProtocolVersion $version
      * @return array
      *
      * @throws CryptoException
      * @throws JsonException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
      * @throws SodiumException
      */
-    public static function verifyCosignature(PublicKey $pk, string $json): array
+    public static function verifyCosignature(PublicKey $pk, string $json, ?ProtocolVersion $version = null): array
     {
+        if (is_null($version)) {
+            $version = ProtocolVersion::default();
+        }
+        self::assertKeyIsAllowed($pk, $version);
         $payload = json_decode($json, true);
         // Must decode
         if (!is_array($payload)) {

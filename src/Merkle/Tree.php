@@ -4,12 +4,12 @@ namespace FediE2EE\PKD\Crypto\Merkle;
 
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use FediE2EE\PKD\Crypto\{
+    Enums\ProtocolVersion,
     UtilTrait,
     Exceptions\CryptoException
 };
 use SodiumException;
-use function array_key_exists,
-    array_search,
+use function array_search,
     array_unshift,
     count,
     hash,
@@ -34,21 +34,30 @@ class Tree
     protected array $leaves = [];
     protected ?string $root = null;
     private string $hashAlgo;
+    protected ProtocolVersion $version;
 
     /**
      * @param string[] $leaves Leaves to insert
-     * @param string $hashAlgo Hash function algorithm
+     * @param ?string $hashAlgo Hash function algorithm
      *
      * @throws CryptoException
      * @throws SodiumException
      */
     public function __construct(
-        array          $leaves = [],
-        string $hashAlgo = 'sha256'
+        array           $leaves = [],
+        ?string         $hashAlgo = null,
+        ProtocolVersion $version = null
     ) {
+        if (is_null($version)) {
+            $version = ProtocolVersion::default();
+        }
+        if (is_null($hashAlgo)) {
+            $hashAlgo = $version->getDefaultMerkleTreeHash();
+        }
         if (!static::isHashFunctionAllowed($hashAlgo)) {
             throw new CryptoException('This hash function is not permitted: ' . $hashAlgo);
         }
+        $this->version = $version;
         $this->hashAlgo = $hashAlgo;
         if (!empty($leaves)) {
             foreach ($leaves as $leaf) {
@@ -95,10 +104,11 @@ class Tree
             default => strlen(hash($this->hashAlgo, '', true)),
         };
         // Default according to spec:
+        $v = $this->version->value;
         if (is_null($this->root)) {
-            return 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(str_repeat("\0", $hashLength));
+            return 'pkd-mr-' . $v . ':' . Base64UrlSafe::encodeUnpadded(str_repeat("\0", $hashLength));
         }
-        return 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded($this->root);
+        return 'pkd-mr-' . $v . ':' . Base64UrlSafe::encodeUnpadded($this->root);
     }
 
     public function getSize(): int
@@ -233,9 +243,6 @@ class Tree
             return hash($this->hashAlgo, '', true);
         }
         if ($leafCount === 1) {
-            if (!array_key_exists($start, $this->leaves)) {
-                throw new \Exception('what');
-            }
             return $this->leaves[$start];
         }
 

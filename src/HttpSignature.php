@@ -2,15 +2,21 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto;
 
+use FediE2EE\PKD\Crypto\Enums\ProtocolVersion;
+use FediE2EE\PKD\Crypto\Enums\Purpose;
+use FediE2EE\PKD\Crypto\Enums\SigningAlgorithm;
 use FediE2EE\PKD\Crypto\Exceptions\{
+    CryptoException,
     HttpSignatureException,
-    NotImplementedException
-};
+    NotImplementedException};
 use ParagonIE\ConstantTime\Base64;
 use Psr\Http\Message\{
     MessageInterface,
     RequestInterface
 };
+use ParagonIE\PQCrypto\Exception\MLDSAInternalException;
+use ParagonIE\PQCrypto\Exception\PQCryptoCompatException;
+use Random\RandomException;
 use SodiumException;
 use function abs, array_map, implode, is_null, is_numeric, preg_match, preg_match_all, preg_quote, strtolower, time;
 
@@ -21,23 +27,34 @@ final class HttpSignature
 {
     private string $label;
     private int $timeoutWindow;
+    private ProtocolVersion $protocolVersion;
 
     /**
      * @throws HttpSignatureException
      */
-    public function __construct(string $label = 'sig1', int $timeoutWindow = 300)
-    {
+    public function __construct(
+        string $label = 'sig1',
+        int $timeoutWindow = 300,
+        ?ProtocolVersion $protocolVersion = null
+    ) {
+        if (is_null($protocolVersion)) {
+            $protocolVersion = ProtocolVersion::default();
+        }
         if ($timeoutWindow < 2 || $timeoutWindow > 86400) {
             throw new HttpSignatureException('Invalid timeout window size: ' . $timeoutWindow);
         }
         $this->label = $label;
         $this->timeoutWindow = $timeoutWindow;
+        $this->protocolVersion = $protocolVersion;
     }
 
     /**
      * Sign an HTTP message (request or response), using RFC 9421.
      *
-     * @throws NotImplementedException
+     * @throws CryptoException
+     * @throws MLDSAInternalException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      *
      * @psalm-suppress UnusedVariable
@@ -49,6 +66,14 @@ final class HttpSignature
         string $keyId = '',
         ?int $created = null
     ): MessageInterface {
+        if (!$this->protocolVersion->isAlgorithmPermitted(
+            $secretKey->getAlgo(),
+            Purpose::HTTP_SIGNATURES
+        )) {
+            throw new CryptoException(
+                'Signing algorithm ' . $secretKey->getAlgo()->value . ' is not permitted'
+            );
+        }
         if (is_null($created)) {
             // Default to the current time
             $created = time();
@@ -69,8 +94,10 @@ final class HttpSignature
     /**
      * Verify an HTTP Signed message, returning false if the signature is not valid.
      *
-     * @throws NotImplementedException
+     * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
      * @throws SodiumException
      */
     public function verify(
@@ -84,7 +111,9 @@ final class HttpSignature
      * Verify an HTTP Signed message, throwing an HttpSignatureException if there is no valid signature.
      * @api
      *
+     * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
      * @throws SodiumException
      */
@@ -98,7 +127,9 @@ final class HttpSignature
     /**
      * Internal function for the two public verify methods.
      *
+     * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
      * @throws SodiumException
      */
@@ -107,6 +138,14 @@ final class HttpSignature
         MessageInterface $message,
         bool $throwIfInvalid = false
     ): bool {
+        if (!$this->protocolVersion->isAlgorithmPermitted(
+            $publicKey->getAlgo(),
+            Purpose::HTTP_SIGNATURES
+        )) {
+            throw new CryptoException(
+                'Signing algorithm ' . $publicKey->getAlgo()->value . ' is not permitted'
+            );
+        }
         if (!$message->hasHeader('Signature-Input')) {
             if ($throwIfInvalid) {
                 throw new HttpSignatureException('HTTP header missing: Signature-Input');

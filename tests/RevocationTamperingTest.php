@@ -2,12 +2,14 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests;
 
+use FediE2EE\PKD\Crypto\Enums\SigningAlgorithm;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use FediE2EE\PKD\Crypto\Revocation;
 use FediE2EE\PKD\Crypto\SecretKey;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use SodiumException;
 
@@ -20,15 +22,18 @@ use SodiumException;
 #[CoversClass(Revocation::class)]
 class RevocationTamperingTest extends TestCase
 {
+    use ExtraneousDataProviderTrait;
+
     /**
      * A token with a modified version prefix must be rejected.
      *
      * @throws CryptoException
      * @throws SodiumException
      */
-    public function testRejectsModifiedVersionPrefix(): void
+    #[DataProvider("pkdAllowedSigningAlgorithmProvider")]
+    public function testRejectsModifiedVersionPrefix(SigningAlgorithm $alg): void
     {
-        $sk = SecretKey::generate();
+        $sk = SecretKey::generate($alg);
         $revocation = new Revocation();
         $token = $revocation->revokeThirdParty($sk);
 
@@ -49,7 +54,8 @@ class RevocationTamperingTest extends TestCase
      * @throws CryptoException
      * @throws SodiumException
      */
-    public function testRejectsZeroedVersionPrefix(): void
+    #[DataProvider("pkdAllowedSigningAlgorithmProvider")]
+    public function testRejectsZeroedVersionPrefix(SigningAlgorithm $alg): void
     {
         $sk = SecretKey::generate();
         $revocation = new Revocation();
@@ -144,10 +150,11 @@ class RevocationTamperingTest extends TestCase
      * @throws CryptoException
      * @throws SodiumException
      */
-    public function testRejectsSwappedPublicKeyBytes(): void
+    #[DataProvider("signingAlgorithmProvider")]
+    public function testRejectsSwappedPublicKeyBytes(SigningAlgorithm $alg): void
     {
-        $sk1 = SecretKey::generate();
-        $sk2 = SecretKey::generate();
+        $sk1 = SecretKey::generate($alg);
+        $sk2 = SecretKey::generate($alg);
         $revocation = new Revocation();
 
         $token = $revocation->revokeThirdParty($sk1);
@@ -155,9 +162,10 @@ class RevocationTamperingTest extends TestCase
 
         // Replace the public key bytes (bytes 57-89) with sk2's
         $pk2Bytes = $sk2->getPublicKey()->getBytes();
+        $pkLength = strlen($pk2Bytes);
         $tampered = substr($decoded, 0, 57)
             . $pk2Bytes
-            . substr($decoded, 89);
+            . substr($decoded, 57 + $pkLength);
         $tamperedToken = Base64UrlSafe::encodeUnpadded($tampered);
 
         // The embedded public key is now sk2's, but the signature was made by sk1 over sk1's data.

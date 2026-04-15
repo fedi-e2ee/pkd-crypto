@@ -25,7 +25,7 @@ use Random\RandomException;
 use SodiumException;
 use function is_null;
 
-class UndoFireproof implements ProtocolMessageInterface, JsonSerializable
+class UndoFireproof implements ProtocolMessageInterface
 {
     use ToStringTrait;
 
@@ -86,15 +86,16 @@ class UndoFireproof implements ProtocolMessageInterface, JsonSerializable
      * @throws SodiumException
      */
     #[Override]
-    public function encrypt(AttributeKeyMap $keyMap): EncryptedProtocolMessageInterface
+    public function encrypt(AttributeKeyMap $keyMap, string $recentMerkleRoot): EncryptedProtocolMessageInterface
     {
         $output = [];
         $plaintext = $this->toArray();
+        $encryptor = $keyMap->getVersion()->getAttributeEncryption();
         foreach ($plaintext as $key => $value) {
             $symKey = $keyMap->getKey($key);
             if ($symKey) {
                 $output[$key] = Base64UrlSafe::encodeUnpadded(
-                    $symKey->encrypt($value)
+                    $encryptor->encryptAttribute($key, $value, $symKey, $recentMerkleRoot)
                 );
             } else {
                 $output[$key] = $value;

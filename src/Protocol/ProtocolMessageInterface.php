@@ -3,10 +3,11 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Protocol;
 
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
+use JsonSerializable;
 
-interface ProtocolMessageInterface extends \JsonSerializable
+interface ProtocolMessageInterface extends JsonSerializable
 {
     public function getAction(): string;
     public function toArray(): array;
-    public function encrypt(AttributeKeyMap $keyMap): EncryptedProtocolMessageInterface;
+    public function encrypt(AttributeKeyMap $keyMap, string $recentMerkleRoot): EncryptedProtocolMessageInterface;
 }

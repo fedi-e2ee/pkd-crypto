@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests;
 
+use FediE2EE\PKD\Crypto\Enums\SigningAlgorithm;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use FediE2EE\PKD\Crypto\PublicKey;
@@ -27,7 +28,7 @@ class SecretKeyTest extends TestCase
         $secret = sodium_crypto_sign_secretkey($keypair);
         $public = sodium_crypto_sign_publickey($keypair);
 
-        $sk = new SecretKey($secret);
+        $sk = new SecretKey($secret, SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $this->assertInstanceOf(PublicKey::class, $pk);
@@ -45,7 +46,7 @@ class SecretKeyTest extends TestCase
             sodium_crypto_generichash('phpunit test case for fedi-e2ee/pkd-client')
         );
         $secret = sodium_crypto_sign_secretkey($keypair);
-        $sk = new SecretKey($secret);
+        $sk = new SecretKey($secret, SigningAlgorithm::ED25519);
         $pk = $sk->getPublicKey();
 
         $skPem = $sk->encodePem();
@@ -56,7 +57,7 @@ class SecretKeyTest extends TestCase
         $expected = "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA895bv6cvVy1h85m+bt0CG2sjvHpwHb9EyTWXmEZeAKg=\n-----END PUBLIC KEY-----";
         $this->assertSame($expected, $pkPem);
 
-        $sk2 = SecretKey::importPem($skPem);
+        $sk2 = SecretKey::importPem($skPem, SigningAlgorithm::ED25519);
         $this->assertSame($sk2->getBytes(), $sk->getBytes());
         $pk2 = PublicKey::importPem($pkPem);
         $this->assertSame($pk2->getBytes(), $pk->getBytes());
@@ -90,7 +91,7 @@ class SecretKeyTest extends TestCase
     {
         $this->expectException(CryptoException::class);
         $this->expectExceptionMessage('Secret key must be 64 bytes');
-        new SecretKey(random_bytes(32));
+        new SecretKey(random_bytes(32), SigningAlgorithm::ED25519);
     }
 
     /**
@@ -100,7 +101,7 @@ class SecretKeyTest extends TestCase
     {
         $this->expectException(CryptoException::class);
         $this->expectExceptionMessage('Secret key must be 64 bytes');
-        new SecretKey(random_bytes(65));
+        new SecretKey(random_bytes(65), SigningAlgorithm::ED25519);
     }
 
     /**
@@ -109,30 +110,14 @@ class SecretKeyTest extends TestCase
     public function testWrongAlgorithm(): void
     {
         $this->expectException(CryptoException::class);
-        $this->expectExceptionMessage('Unknown algorithm: ed448');
+        $this->expectExceptionMessage('Not a valid signing algorithm: ed448');
         new SecretKey('foo', 'ed448');
-    }
-
-    /**
-     * @throws CryptoException
-     * @throws NotImplementedException
-     * @throws SodiumException
-     */
-    public function testInvalidAlgSign(): void
-    {
-        $sk = SecretKey::generate();
-
-        $rc = new \ReflectionClass(SecretKey::class);
-        $rc->getProperty('algo')->setValue($sk, 'rsa');
-
-        $this->expectException(NotImplementedException::class);
-        $sk->sign('');
     }
 
     public function testMldsa44(): void
     {
-        $sk = SecretKey::generate('mldsa44');
-        $this->assertSame('mldsa44', $sk->getAlgo());
+        $sk = SecretKey::generate(SigningAlgorithm::MLDSA44);
+        $this->assertSame('mldsa44', $sk->getAlgo()->value);
         $this->assertSame(32, strlen($sk->getBytes()));
 
         // Test with deterministic inputs

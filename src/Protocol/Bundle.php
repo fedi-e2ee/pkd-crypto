@@ -11,9 +11,9 @@ use FediE2EE\PKD\Crypto\Exceptions\{
     NetworkException
 };
 use FediE2EE\PKD\Crypto\{
+    Enums\ProtocolVersion,
     SymmetricKey,
-    UtilTrait
-};
+    UtilTrait};
 use GuzzleHttp\Exception\GuzzleException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use function in_array, is_array, is_null, is_string, json_decode, json_encode, json_last_error, json_last_error_msg;
@@ -21,6 +21,7 @@ use function in_array, is_array, is_null, is_string, json_decode, json_encode, j
 class Bundle
 {
     use UtilTrait;
+    private readonly ProtocolVersion $version;
 
     public function __construct(
         private readonly string          $action,
@@ -31,15 +32,24 @@ class Bundle
         private readonly string          $pkdContext = 'https://github.com/fedi-e2ee/public-key-directory/v1',
         private readonly ?string         $otp = null,
         private readonly ?string         $revocationToken = null,
-    ) {}
+        ?ProtocolVersion $version = null,
+    ) {
+        if (is_null($version)) {
+            $version = ProtocolVersion::default();
+        }
+        $this->version = $version;
+    }
 
     /**
      * @throws BundleException
      * @throws CryptoException
      * @throws InputException
      */
-    public static function fromJson(string $json, ?AttributeKeyMap $symmetricKeys = null): self
-    {
+    public static function fromJson(
+        string $json,
+        ?AttributeKeyMap $symmetricKeys = null,
+        ?ProtocolVersion $version = null,
+    ): self {
         if (empty($json)) {
             throw new BundleException('Empty JSON string');
         }
@@ -58,6 +68,7 @@ class Bundle
                 signature: '',
                 symmetricKeys: new AttributeKeyMap(),
                 revocationToken: $data['revocation-token'],
+                version: $version,
             );
         }
 
@@ -106,6 +117,7 @@ class Bundle
             Base64UrlSafe::decodeNoPadding($data['signature']),
             $symmetricKeys,
             otp: $otp,
+            version: $version,
         );
     }
 
