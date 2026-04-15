@@ -879,8 +879,12 @@ class HttpSignatureTest extends TestCase
 
         $httpSignature = new HttpSignature();
         $request = new Request('POST', '/foo', ['Host' => 'example.com'], 'body');
+        // Let's ensure the signing time doesn't make it invalid
+        $start = microtime(true);
+        $httpSignature->sign($sk, $request, ['@method', 'host'], 'key');
+        $diff = microtime(true) - round($start, 2);
 
-        $created = time() - 299;
+        $created = (int) floor(microtime(true) - 299.0 - $diff);
         $signedRequest = $httpSignature->sign($sk, $request, ['@method', 'host'], 'key', $created);
         $this->assertTrue($httpSignature->verify($pk, $signedRequest));
 
@@ -1409,8 +1413,13 @@ class HttpSignatureTest extends TestCase
         $httpSignature = new HttpSignature();
         $request = new Request('POST', '/foo', ['Host' => 'example.com'], 'body');
 
+        // Let's ensure the signing time doesn't make it invalid
+        $start = microtime(true);
+        $httpSignature->sign($sk, $request, ['@method', 'host'], 'key');
+        $diff = microtime(true) - round($start, 2);
+
         // Exactly 300 seconds ago should pass (boundary)
-        $created = time() - 300;
+        $created = (int) floor(microtime(true) - 300.0 - $diff);
         $signedRequest = $httpSignature->sign($sk, $request, ['@method', 'host'], 'key', $created);
         $this->assertTrue(
             $httpSignature->verify($pk, $signedRequest),
