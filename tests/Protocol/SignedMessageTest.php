@@ -255,8 +255,9 @@ class SignedMessageTest extends TestCase
         $sk = SecretKey::generate();
         $pk = $sk->getPublicKey();
 
+        $addKey = new AddKey('https://example.com/@alice', $pk);
         $sm = new SignedMessage(
-            new AddKey('https://example.com/@alice', $pk),
+            $addKey,
             $recent
         );
 
@@ -265,7 +266,7 @@ class SignedMessageTest extends TestCase
 
         // Create new message and verify with explicit signature
         $sm2 = new SignedMessage(
-            new AddKey('https://example.com/@alice', $pk),
+            $addKey,
             $recent
         );
         $this->assertTrue($sm2->verify($pk, $signature));
