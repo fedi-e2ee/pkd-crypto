@@ -13,6 +13,7 @@
         </ignoreFiles>
     </projectFiles>
     <issueHandlers>
+        <ClassMustBeFinal errorLevel="info" />
         <MissingDependency errorLevel="info" />
         <PossiblyUnusedMethod errorLevel="info" />
         <UndefinedClass errorLevel="info" />
