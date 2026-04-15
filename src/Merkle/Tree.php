@@ -39,6 +39,7 @@ class Tree
     /**
      * @param string[] $leaves Leaves to insert
      * @param ?string $hashAlgo Hash function algorithm
+     * @param ?ProtocolVersion $version Protocol version
      *
      * @throws CryptoException
      * @throws SodiumException
@@ -46,7 +47,7 @@ class Tree
     public function __construct(
         array           $leaves = [],
         ?string         $hashAlgo = null,
-        ProtocolVersion $version = null
+        ?ProtocolVersion $version = null
     ) {
         if (is_null($version)) {
             $version = ProtocolVersion::default();

@@ -43,6 +43,7 @@ class IncrementalTree extends Tree
     /**
      * @param string[] $leaves Leaves to insert
      * @param ?string $hashAlgo Hash function algorithm
+     * @param ?ProtocolVersion $version Protocol version
      *
      * @throws CryptoException
      * @throws SodiumException
@@ -50,7 +51,7 @@ class IncrementalTree extends Tree
     public function __construct(
         array  $leaves = [],
         ?string $hashAlgo = null,
-        ProtocolVersion $version = null
+        ?ProtocolVersion $version = null
     ) {
         parent::__construct([], $hashAlgo, $version);
         if (is_null($version)) {

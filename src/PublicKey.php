@@ -50,7 +50,7 @@ final class PublicKey
     public function __construct(
         #[SensitiveParameter]
         string $bytes,
-        SigningAlgorithm|string $algo = 'ed25519'
+        SigningAlgorithm|string $algo = 'mldsa44'
     ) {
         if (is_string($algo)) {
             $algo = SigningAlgorithm::from($algo);

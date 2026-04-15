@@ -8,3 +8,5 @@ parameters:
 			identifier: function.alreadyNarrowedType
 		-
 			identifier: property.notFound
+		-
+			identifier: match.alwaysTrue
