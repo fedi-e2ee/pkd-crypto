@@ -18,6 +18,7 @@ use ParagonIE\PQCrypto\Exception\MLDSAInternalException;
 use ParagonIE\PQCrypto\Exception\PQCryptoCompatException;
 use Random\RandomException;
 use SodiumException;
+use ValueError;
 use function abs, array_map, implode, is_null, is_numeric, preg_match, preg_match_all, preg_quote, strtolower, time;
 
 /**
@@ -168,7 +169,14 @@ final class HttpSignature
             }
             return false;
         }
-        $alg = self::getSigningAlgFromQuotedString($params['alg']);
+        try {
+            $alg = self::getSigningAlgFromQuotedString($params['alg']);
+        } catch (ValueError|HttpSignatureException $err) {
+            if ($throwIfInvalid) {
+                throw new HttpSignatureException('Unsupported algorithm: ' . $params['alg'], 0, $err);
+            }
+            return false;
+        }
         if (!$this->protocolVersion->isAlgorithmPermitted($alg, Purpose::HTTP_SIGNATURES)) {
             if ($throwIfInvalid) {
                 throw new HttpSignatureException('Unsupported algorithm: ' . $params['alg']);
