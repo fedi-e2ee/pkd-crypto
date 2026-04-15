@@ -171,7 +171,7 @@ final class HttpSignature
         }
         try {
             $alg = self::getSigningAlgFromQuotedString($params['alg']);
-        } catch (ValueError|HttpSignatureException $err) {
+        } catch (HttpSignatureException $err) {
             if ($throwIfInvalid) {
                 throw new HttpSignatureException('Unsupported algorithm: ' . $params['alg'], 0, $err);
             }
