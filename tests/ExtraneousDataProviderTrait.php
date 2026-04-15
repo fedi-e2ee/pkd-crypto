@@ -22,6 +22,15 @@ trait ExtraneousDataProviderTrait
         ];
     }
 
+    public static function signingAlgorithmProviderFast(): array
+    {
+        $cases = [[SigningAlgorithm::ED25519]];
+        if (extension_loaded('pqcrypto')) {
+            $cases[] = [SigningAlgorithm::MLDSA44];
+        }
+        return $cases;
+    }
+
     public static function pkdAllowedSigningAlgorithmProvider(): array
     {
         return [

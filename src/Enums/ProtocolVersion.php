@@ -26,7 +26,10 @@ enum ProtocolVersion: string
 
     public function getHttpSignatureAlgorithms(): array
     {
-        return $this->getSigningKeyAlgorithms();
+        return match ($this) {
+            self::V1 => [SigningAlgorithm::ED25519, SigningAlgorithm::MLDSA44],
+            self::V2 => [SigningAlgorithm::MLDSA44],
+        };
     }
 
     public function getPublicKeyDirectoryAlgorithms(): array

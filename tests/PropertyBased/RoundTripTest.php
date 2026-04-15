@@ -182,7 +182,7 @@ class RoundTripTest extends TestCase
      *
      * fromString(toString(pk)) == pk
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("signingAlgorithmProviderFast")]
     public function testPublicKeyStringRoundtrip(SigningAlgorithm $alg): void
     {
         // Generate multiple random keys and test roundtrip
@@ -211,9 +211,9 @@ class RoundTripTest extends TestCase
     /**
      * Property: PublicKey PEM encode/import is a roundtrip.
      *
-     * importPem(encodePem(pk)) == pk
+     * importPem(encodePem(pk), alg) == pk
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("signingAlgorithmProviderFast")]
     public function testPublicKeyPemRoundtrip(SigningAlgorithm $alg): void
     {
         $this->forAll(
@@ -223,7 +223,7 @@ class RoundTripTest extends TestCase
             $publicKey = $secretKey->getPublicKey();
 
             $pem = $publicKey->encodePem();
-            $restored = PublicKey::importPem($pem);
+            $restored = PublicKey::importPem($pem, $alg);
 
             $this->assertSame(
                 $publicKey->getBytes(),
@@ -236,9 +236,9 @@ class RoundTripTest extends TestCase
     /**
      * Property: SecretKey PEM encode/import is a roundtrip.
      *
-     * importPem(encodePem(sk)) == sk
+     * importPem(encodePem(sk), alg) == sk
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("signingAlgorithmProviderFast")]
     public function testSecretKeyPemRoundtrip(SigningAlgorithm $alg): void
     {
         $this->forAll(
@@ -247,7 +247,7 @@ class RoundTripTest extends TestCase
             $secretKey = SecretKey::generate($alg);
 
             $pem = $secretKey->encodePem();
-            $restored = SecretKey::importPem($pem);
+            $restored = SecretKey::importPem($pem, $alg);
 
             $this->assertSame(
                 $secretKey->getBytes(),
@@ -262,7 +262,7 @@ class RoundTripTest extends TestCase
      *
      * fromMultibase(toMultibase(pk)) == pk
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("signingAlgorithmProviderFast")]
     public function testPublicKeyMultibaseRoundtrip(SigningAlgorithm $alg): void
     {
         $this->forAll(
@@ -288,7 +288,7 @@ class RoundTripTest extends TestCase
      *
      * verify(sign(message, sk), pk) == true
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("signingAlgorithmProviderFast")]
     public function testSignatureVerification(SigningAlgorithm $alg): void
     {
         $this->forAll(
@@ -328,7 +328,7 @@ class RoundTripTest extends TestCase
      *
      * verify(sign(m, sk1), pk2) == false (when sk1 != sk2)
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("signingAlgorithmProviderFast")]
     public function testWrongKeyFailsVerification(SigningAlgorithm $alg): void
     {
         $this->forAll(

@@ -6,7 +6,10 @@ use FediE2EE\PKD\Crypto\Enums\SigningAlgorithm;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use FediE2EE\PKD\Crypto\PublicKey;
+use ParagonIE\PQCrypto\Exception\MLDSAInternalException;
+use ParagonIE\PQCrypto\Exception\PQCryptoCompatException;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use FediE2EE\PKD\Crypto\SecretKey;
 use Random\RandomException;
@@ -15,12 +18,16 @@ use SodiumException;
 #[CoversClass(SecretKey::class)]
 class SecretKeyTest extends TestCase
 {
+    use ExtraneousDataProviderTrait;
+
     /**
      * @throws CryptoException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    public function testGetPublicKey(): void
+    public function testGetPublicKeyEd25519(): void
     {
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('phpunit test case for fedi-e2ee/pkd-client')
@@ -37,10 +44,31 @@ class SecretKeyTest extends TestCase
 
     /**
      * @throws CryptoException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testPEM(): void
+    #[DataProvider("signingAlgorithmProvider")]
+    public function testGetPublicKeyRoundTrip(SigningAlgorithm $alg): void
+    {
+        $sk = SecretKey::generate($alg);
+        $pk = $sk->getPublicKey();
+
+        $this->assertInstanceOf(PublicKey::class, $pk);
+        $this->assertSame($alg, $pk->getAlgo());
+        $this->assertSame($alg->publicKeyLength(), strlen($pk->getBytes()));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws SodiumException
+     */
+    public function testPEMEd25519KnownAnswer(): void
     {
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('phpunit test case for fedi-e2ee/pkd-client')
@@ -59,11 +87,23 @@ class SecretKeyTest extends TestCase
 
         $sk2 = SecretKey::importPem($skPem, SigningAlgorithm::ED25519);
         $this->assertSame($sk2->getBytes(), $sk->getBytes());
-        $pk2 = PublicKey::importPem($pkPem);
+        $pk2 = PublicKey::importPem($pkPem, SigningAlgorithm::ED25519);
         $this->assertSame($pk2->getBytes(), $pk->getBytes());
+    }
 
-        $random = SecretKey::generate();
-        $decoded = SecretKey::importPem($random->encodePem());
+    /**
+     * @throws CryptoException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    #[DataProvider("signingAlgorithmProvider")]
+    public function testPEMRoundTrip(SigningAlgorithm $alg): void
+    {
+        $random = SecretKey::generate($alg);
+        $decoded = SecretKey::importPem($random->encodePem(), $alg);
         $this->assertSame($decoded->getBytes(), $random->getBytes());
         $this->assertSame($decoded->getPublicKey()->toString(), $random->getPublicKey()->toString());
         $this->assertSame($decoded->getPublicKey()->encodePem(), $random->getPublicKey()->encodePem());

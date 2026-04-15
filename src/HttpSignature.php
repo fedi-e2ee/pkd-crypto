@@ -82,7 +82,8 @@ final class HttpSignature
             $this->label,
             $headersToSign,
             $keyId,
-            $created
+            $created,
+            $secretKey->getAlgo()
         );
         $signatureBase = $this->getSignatureBase($message, $headersToSign, $signatureInput);
         $signature = $secretKey->sign($signatureBase);
@@ -167,7 +168,8 @@ final class HttpSignature
             }
             return false;
         }
-        if ($params['alg'] !== '"ed25519"') {
+        $alg = self::getSigningAlgFromQuotedString($params['alg']);
+        if (!$this->protocolVersion->isAlgorithmPermitted($alg, Purpose::HTTP_SIGNATURES)) {
             if ($throwIfInvalid) {
                 throw new HttpSignatureException('Unsupported algorithm: ' . $params['alg']);
             }
@@ -232,6 +234,18 @@ final class HttpSignature
     }
 
     /**
+     * @throws HttpSignatureException
+     */
+    protected static function getSigningAlgFromQuotedString(string $algParam): SigningAlgorithm
+    {
+        return match ($algParam) {
+            '"ed25519"' => SigningAlgorithm::ED25519,
+            '"mldsa-44"', '"mldsa44"' => SigningAlgorithm::MLDSA44,
+            default => throw new HttpSignatureException("Unknown algorithm: {$algParam}"),
+        };
+    }
+
+    /**
      * @param MessageInterface $message
      * @param array<int, string> $headersToSign
      * @param string $signatureInput
@@ -284,11 +298,12 @@ final class HttpSignature
         string $label,
         array $headersToSign,
         string $keyId,
-        int $created
+        int $created,
+        SigningAlgorithm $algo = SigningAlgorithm::ED25519
     ): string {
         $covered = implode(' ', array_map(fn ($h) => '"' . strtolower($h) . '"', $headersToSign));
         $params = [
-            'alg="ed25519"',
+            'alg="' . $algo->value . '"',
             'keyid="' . $keyId . '"',
             'created=' . $created,
         ];

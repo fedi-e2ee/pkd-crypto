@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests;
 
+use FediE2EE\PKD\Crypto\Enums\SigningAlgorithm;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\Exceptions\EncodingException;
 use FediE2EE\PKD\Crypto\Exceptions\InvalidSignatureException;
@@ -14,13 +15,13 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Random\RandomException;
-use ReflectionClass;
-use ReflectionException;
 use SodiumException;
 
 #[CoversClass(PublicKey::class)]
 class PublicKeyTest extends TestCase
 {
+    use ExtraneousDataProviderTrait;
+
     public static function knownAnswersMultibase(): array
     {
         $mldsa = 'mldsa44:9R3VB-DV8IGP4szUw3j-E8KKm3C_-VMej8l4UiDJVW2_2yfCgcaizSOgdM-QioheqmhXGi3xbWYEb83OB3shT3MxUaxgUoD8FEUB4Oj5JMXR5O_jen6ZM91UEBJwn5Ek5fPnbgnBMnWFl5EPK6_2Of-WwDTdFpanqJdai-L9P6O8GAioRDXU9lTASUzqb1_dQ2k1huvmo5rIzgCekShV9GyyhxRTnZwPDqLwghsAooOr1fPLtx_Baz_2vIa8_IJlA4QFSaabCINNjWobAO3pM9aCxApewO3ft-coSrv-WMrOZ3gJpSwwmrRJ3hsRvxoJIvZt11pkF-SOlbMmDqQA__HHpjZEyzixFwHBUC8xb4H5TO1ZYATrqOpemYE8SY-9keIZduqr7xlNQ1STZ0-Tfmk60H4x8_R1ZIkI-JPJtwRmNW1-Qnl7OyYw2OZEnOtH7CFwjcSFORtMBoeDoUD4SQj7wNPC9y7rNDxfU8k6XuE7JajE6ERofZL4rDXJHi3TIlVQVVihe57X8sYNa7RlqO3-JoCGr05HbHuTrWO5659cQDkwR7GLZd6K_th2TW6RKXn9DQxN9LUlK3dTe6f-Pp4rZcQgu9eU1rrkKD9s34Slh3O_EuVGAa-iVJ7m9IGB22_UulEQooLoGLlegy3M0LVD8Au9qjqie0ULFkr027hDpBvQZnEpznGv22KCoRPBrc0bSHLItHiZRGK9QFWty316q6vLjn4whNGglKWp18i6I38_e4sD84FZg1kewpYB4jd456fhbQcQm6DNRwqHsNvPL6MeUK-9rmEwIhJhQIT-aFylbAoch7N6gkjgv3U5irfBdY2r7nBg1odeuiC6tpk6WHd5ou7gVj4I9mDAs_gMUBaCPmLLMLhEdBZItHqfVw4nfFYHkFkg9KRg5ciekQZ25oI0cUqn0Z_f-oQzBr-PSnKzkVVtGGHtfdKCr4thcvnvcH1ks9GKrzYwxDpKO0B9AuPhtu0xYOdPXbHZfjcZInSn0rWLt4BwS_1yFt3jwOURGaPiGqINqMfZ-9Pvv__a0Z1K2zGunGWOAFryrP1ehOywNtAWIuwaim3mocsyEO0OxXkOy0CtlqrYmlfKangGB_mkE9tNOFpdnjZa5MRZirRqE802lGZGxt1uDJPuPiFyL8QyO7ByDBz9uavdrlOl6Yoa409EIANXkWf8yX-c3QAWg1q7c8uzBRSXlUbL3-rfGvCffcfDV9FPgDKC_kROqbJKeSumMoVvyLgszUt-amo0H6sSC4fiCMM9dsDRg5QQgB0bNyZeG54vdUH44qKysvW_MyGCFHtXjfPIV3u50y1UlG4Pg4UIGmMKV3Bpsb4AXcQ-U6UKaf4n-yOwGMeqxiZfJhjsKMKFiFTB7w72cKMGlUY3gtMBaURfTHlgHKB8fubNUbI4jEU8DG90WuGFuOibQkhD4Mcyln9QJDRB6e3uNWXrTfl1eVelJLza1-bVD7lSr8CHMhmEIw-BoQ7pIuQcoUxY4_MFuBhYO-JeaMEyNaYhPziJIVm9rOtFjNu_qANLKxyP2a8NraeL3lC5llF3NNF6xE4fpqEUrcTu4shgqbpmWFkkn6PRK6AStE1wlWmnw2SshjSWSlLUWUh5zOXOqSZQ1vQEv3L9zG6OUiwrsWMEC7IdcwDUndKeEO0geQ4eP6pnpCHmJTuC_hJCKLah0H-kBvmTqRIeqSaHg8LoCrboT1bdrCMLSfVq0cW3VL8LGvEZ3vCPCZw6Fw';
@@ -61,12 +62,12 @@ class PublicKeyTest extends TestCase
      * @throws CryptoException
      * @throws SodiumException
      */
-    public function testEncodePem(): void
+    public function testEncodePemEd25519KnownAnswer(): void
     {
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('phpunit PublicKeyTest.php')
         );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair), SigningAlgorithm::ED25519);
         $encoded = $pk->encodePem();
         $expected = "-----BEGIN PUBLIC KEY-----\n" .
             'MCowBQYDK2VwAyEA/oXGYTQRev2uQ5jJvmubXo+moXZFmhKPcnHLFllM0K0=' . "\n" .
@@ -104,7 +105,7 @@ class PublicKeyTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('test pem line length')
         );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair), SigningAlgorithm::ED25519);
         $encoded = $pk->encodePem();
 
         // Extract the base64 content lines between header and footer
@@ -129,7 +130,7 @@ class PublicKeyTest extends TestCase
         $keypair = sodium_crypto_sign_seed_keypair(
             sodium_crypto_generichash('test multibase default')
         );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair), SigningAlgorithm::ED25519);
 
         $default = $pk->toMultibase();
         $this->assertSame('u', $default[0], 'Default toMultibase should use base64url prefix "u"');
@@ -143,20 +144,31 @@ class PublicKeyTest extends TestCase
 
     /**
      * @throws CryptoException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testPemRoundTrip(): void
+    #[DataProvider("signingAlgorithmProvider")]
+    public function testPemRoundTrip(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('test pem round trip')
-        );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $sk = SecretKey::generate($alg);
+        $pk = $sk->getPublicKey();
         $pem = $pk->encodePem();
-        $imported = PublicKey::importPem($pem);
+        $imported = PublicKey::importPem($pem, $alg);
         $this->assertSame($pk->getBytes(), $imported->getBytes());
         $this->assertSame($pk->toString(), $imported->toString());
     }
 
+    /**
+     * @throws CryptoException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
+     */
     public static function signatureProvider(): array
     {
         $sk = SecretKey::generate();
@@ -174,7 +186,10 @@ class PublicKeyTest extends TestCase
 
     /**
      * @throws CryptoException
+     * @throws InvalidSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
      * @throws SodiumException
      */
     #[DataProvider("signatureProvider")]
