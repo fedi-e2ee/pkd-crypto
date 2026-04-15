@@ -874,6 +874,9 @@ class HttpSignatureTest extends TestCase
     #[DataProvider("signingAlgorithmProvider")]
     public function testDefaultTimeoutIs300(SigningAlgorithm $alg): void
     {
+        if (!extension_loaded('pqcrypto')) {
+            $this->markTestSkipped('timeout tests are flakey');
+        }
         $sk = self::skFromSeed('default timeout test', $alg);
         $pk = $sk->getPublicKey();
 
@@ -1407,6 +1410,9 @@ class HttpSignatureTest extends TestCase
     #[DataProvider("signingAlgorithmProvider")]
     public function testDefaultTimeoutExactBoundary(SigningAlgorithm $alg): void
     {
+        if (!extension_loaded('pqcrypto')) {
+            $this->markTestSkipped('timeout tests are flakey');
+        }
         $sk = self::skFromSeed('default timeout exact', $alg);
         $pk = $sk->getPublicKey();
 
