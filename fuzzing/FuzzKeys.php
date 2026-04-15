@@ -15,6 +15,7 @@ use PhpFuzzer\Config;
 use RuntimeException;
 use SodiumException;
 use TypeError;
+use ValueError;
 
 /** @var Config $config */
 
@@ -33,7 +34,7 @@ $config->setTarget(function (string $input): void {
     try {
         new PublicKey($input, 'unknown-algo');
         throw new RuntimeException('Should reject unknown algorithm');
-    } catch (CryptoException) {
+    } catch (CryptoException|ValueError) {
         // Expected
     }
 
@@ -47,7 +48,7 @@ $config->setTarget(function (string $input): void {
     try {
         new SecretKey($input, 'unknown-algo');
         throw new RuntimeException('Should reject unknown algorithm');
-    } catch (CryptoException) {
+    } catch (CryptoException|ValueError) {
         // Expected
     }
 
