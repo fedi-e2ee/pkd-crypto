@@ -2,10 +2,15 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto;
 
+use FediE2EE\PKD\Crypto\Enums\SigningAlgorithm;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use ParagonIE\ConstantTime\Base64;
 use ParagonIE\ConstantTime\Hex;
+use ParagonIE\PQCrypto\Compat;
+use ParagonIE\PQCrypto\Exception\MLDSAInternalException;
+use ParagonIE\PQCrypto\Exception\PQCryptoCompatException;
+use Random\RandomException;
 use SensitiveParameter;
 use SodiumException;
 use function chunk_split,
@@ -27,18 +32,22 @@ final class SecretKey
 {
     use UtilTrait;
     private const PEM_PREFIX_ED25519 = '302e020100300506032b657004220420';
+    private const PEM_PREFIX_ML_DSA_44_SEED = '3034020100300b060960864801650304031104228020';
     private string $bytes;
-    private string $algo;
+    private SigningAlgorithm $algo;
 
+    /**
+     * @throws CryptoException
+     */
     public function __construct(
         #[SensitiveParameter]
         string $bytes,
-        string $algo = 'ed25519'
+        SigningAlgorithm|string $algo = 'mldsa44'
     ) {
-        $expectedLength = match($algo) {
-            'ed25519' => 64,
-            default => throw new CryptoException('Unknown algorithm: ' . $algo)
-        };
+        if (is_string($algo)) {
+            $algo = SigningAlgorithm::fromString($algo);
+        }
+        $expectedLength = $algo->signingKeyLength();
         if (strlen($bytes) !== $expectedLength) {
             throw new CryptoException('Secret key must be ' . $expectedLength . ' bytes');
         }
@@ -53,16 +62,24 @@ final class SecretKey
      *
      * @throws CryptoException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public static function generate(string $algo = 'ed25519'): self
+    public static function generate(SigningAlgorithm|string $algo = 'mldsa44'): self
     {
+        if (is_string($algo)) {
+            $algo = SigningAlgorithm::fromString($algo);
+        }
         // We're using a switch-case to make this extensible in the future
         switch ($algo) {
-            case 'ed25519':
+            case SigningAlgorithm::ED25519:
                 $keypair = sodium_crypto_sign_keypair();
                 $bytes = sodium_crypto_sign_secretkey($keypair);
                 return new SecretKey($bytes, $algo);
+            case SigningAlgorithm::MLDSA44:
+                ['signingKey' => $sk, ] = Compat::mldsa44_keygen();
+                return new SecretKey($sk->bytes(), $algo);
             default:
                 throw new NotImplementedException('');
         }
@@ -75,9 +92,16 @@ final class SecretKey
     public function encodePem(): string
     {
         $seed = substr($this->bytes, 0, 32);
-        $encoded = Base64::encode(
-            Hex::decode(self::PEM_PREFIX_ED25519) . $seed
-        );
+        $encoded = match ($this->algo) {
+            SigningAlgorithm::ED25519 =>
+                Base64::encode(
+                    Hex::decode(self::PEM_PREFIX_ED25519) . $seed
+                ),
+            SigningAlgorithm::MLDSA44 =>
+                Base64::encode(
+                    Hex::decode(self::PEM_PREFIX_ML_DSA_44_SEED) . $seed
+                ),
+        };
         return "-----BEGIN PRIVATE KEY-----\n" .
             self::dos2unix(chunk_split($encoded, 64)).
             "-----END PRIVATE KEY-----";
@@ -87,17 +111,21 @@ final class SecretKey
      * Load a secret key from a PEM-encoded string.
      *
      * @param string $pem
-     * @param string $algo
+     * @param SigningAlgorithm|string $algo
      * @return self
      *
      * @throws CryptoException
      * @throws SodiumException
      */
-    public static function importPem(string $pem, string $algo = 'ed25519'): SecretKey
+    public static function importPem(string $pem, SigningAlgorithm|string $algo = 'mldsa44'): SecretKey
     {
-        if (!hash_equals('ed25519', $algo)) {
-            throw new CryptoException('Only ed25519 keys are supported');
+        if (is_string($algo)) {
+            $algo = SigningAlgorithm::fromString($algo);
         }
+        $prefix = match($algo->value) {
+            'ed25519' => Hex::decode(self::PEM_PREFIX_ED25519),
+            'mldsa44' => Hex::decode(self::PEM_PREFIX_ML_DSA_44_SEED),
+        };
         $formattedKey = str_replace('-----BEGIN PRIVATE KEY-----', '', $pem);
         $formattedKey = str_replace('-----END PRIVATE KEY-----', '', $formattedKey);
         /**
@@ -109,15 +137,26 @@ final class SecretKey
         }
         $formattedKey = self::stripNewlines($formattedKey);
         $key = Base64::decode($formattedKey);
-        $prefix = Hex::decode(self::PEM_PREFIX_ED25519);
         if (!hash_equals(substr($key, 0, strlen($prefix)), $prefix)) {
             throw new CryptoException('Invalid PEM prefix');
         }
         $seed = substr($key, strlen($prefix));
+        return match ($algo->value) {
+            'ed25519' => self::secretKeyFromSeedEd25519($seed),
+            'mldsa44' => new SecretKey($seed, $algo),
+        };
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws SodiumException
+     */
+    private static function secretKeyFromSeedEd25519(string $seed): SecretKey
+    {
         $keypair = sodium_crypto_sign_seed_keypair($seed);
         return new SecretKey(
             sodium_crypto_sign_secretkey($keypair),
-            $algo
+            SigningAlgorithm::ED25519
         );
     }
 
@@ -136,7 +175,7 @@ final class SecretKey
      *
      * @api
      */
-    public function getAlgo(): string
+    public function getAlgo(): SigningAlgorithm
     {
         return $this->algo;
     }
@@ -145,18 +184,23 @@ final class SecretKey
      * Get the public key that corresponds to this secret key.
      *
      * @throws CryptoException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
      * @throws SodiumException
      */
     public function getPublicKey(): PublicKey
     {
         // We're using a switch-case to make this extensible in the future
         switch ($this->algo) {
-            case 'ed25519':
+            case SigningAlgorithm::ED25519:
                 $pk = sodium_crypto_sign_publickey_from_secretkey($this->bytes);
                 return new PublicKey($pk, $this->algo);
+            case SigningAlgorithm::MLDSA44:
+                ['verificationKey' => $vk] = Compat::mldsa44_seed_keypair($this->bytes);
+                return new PublicKey($vk->bytes(), $this->algo);
             default:
-                throw new NotImplementedException('');
+                throw new NotImplementedException('unknown algorithm: ' . $this->algo);
         }
     }
 
@@ -175,16 +219,22 @@ final class SecretKey
      *
      * @param string $message
      * @return string
-     * @throws NotImplementedException
+     *
+     * @throws CryptoException
+     * @throws MLDSAInternalException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
     public function sign(string $message): string
     {
         switch ($this->algo) {
-            case 'ed25519':
+            case SigningAlgorithm::ED25519:
                 return sodium_crypto_sign_detached($message, $this->bytes);
+            case SigningAlgorithm::MLDSA44:
+                return Compat::mldsa44_sign($this->bytes, $message)->bytes();
             default:
-                throw new NotImplementedException('');
+                throw new CryptoException('Unknown algorithm: ' . $this->algo->value);
         }
     }
 }

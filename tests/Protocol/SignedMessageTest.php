@@ -16,6 +16,7 @@ use FediE2EE\PKD\Crypto\Protocol\{
     ProtocolMessageInterface,
     SignedMessage
 };
+use ParagonIE\PQCrypto\Compat;
 use FediE2EE\PKD\Crypto\{
     SecretKey,
     SymmetricKey
@@ -49,9 +50,9 @@ class SignedMessageTest extends TestCase
             $recent
         );
         $signature = $sm->sign($sk);
-        $this->assertMatchesRegularExpression('/^[A-Za-z0-9-_]{86,88}$/', $signature);
+        $this->assertMatchesRegularExpression('/^[A-Za-z0-9-_]{3226,3228}$/', $signature);
         $decoded = Base64UrlSafe::decodeNoPadding($signature);
-        $this->assertSame(64, mb_strlen($decoded, '8bit'));
+        $this->assertSame(Compat::MLDSA44_SIGNATURE_BYTES, mb_strlen($decoded, '8bit'));
         $this->assertTrue($sm->verify($pk));
     }
 
@@ -74,7 +75,7 @@ class SignedMessageTest extends TestCase
 
         // Plaintext vs encrypted
         $plaintext = new AddKey('https://example.com/@alice', $pk);
-        $encrypted = $plaintext->encrypt($map);
+        $encrypted = $plaintext->encrypt($map, $recent);
 
         $sm1 = SignedMessage::init($plaintext, $recent, $sk);
         $sm2 = SignedMessage::init($encrypted, $recent, $sk);
@@ -254,8 +255,9 @@ class SignedMessageTest extends TestCase
         $sk = SecretKey::generate();
         $pk = $sk->getPublicKey();
 
+        $addKey = new AddKey('https://example.com/@alice', $pk);
         $sm = new SignedMessage(
-            new AddKey('https://example.com/@alice', $pk),
+            $addKey,
             $recent
         );
 
@@ -264,7 +266,7 @@ class SignedMessageTest extends TestCase
 
         // Create new message and verify with explicit signature
         $sm2 = new SignedMessage(
-            new AddKey('https://example.com/@alice', $pk),
+            $addKey,
             $recent
         );
         $this->assertTrue($sm2->verify($pk, $signature));
@@ -307,7 +309,7 @@ class SignedMessageTest extends TestCase
             ->addKey('public-key', SymmetricKey::generate());
 
         $addKey = new AddKey('https://example.com/@alice', $pk);
-        $encrypted = $addKey->encrypt($map);
+        $encrypted = $addKey->encrypt($map, $recent);
         $sm = new SignedMessage($encrypted, $recent);
 
         $this->expectException(CryptoException::class);
@@ -391,7 +393,7 @@ class SignedMessageTest extends TestCase
                 return random_bytes(32);
             }
 
-            public function encrypt(AttributeKeyMap $keyMap): EncryptedProtocolMessageInterface
+            public function encrypt(AttributeKeyMap $keyMap, string $recentMerkleRoot): EncryptedProtocolMessageInterface
             {
                 throw new NotImplementedException();
             }
@@ -440,9 +442,10 @@ class SignedMessageTest extends TestCase
         $sk = SecretKey::generate();
         $pk = $sk->getPublicKey();
 
+        $addKey = new AddKey('https://example.com/@alice', $pk);
         // Sign one message to obtain a valid signature
         $sm1 = SignedMessage::init(
-            new AddKey('https://example.com/@alice', $pk),
+            $addKey,
             $recent,
             $sk
         );
@@ -450,7 +453,7 @@ class SignedMessageTest extends TestCase
 
         // Create a second unsigned message with identical content
         $sm2 = new SignedMessage(
-            new AddKey('https://example.com/@alice', $pk),
+            $addKey,
             $recent
         );
 

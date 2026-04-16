@@ -10,6 +10,7 @@ use FediE2EE\PKD\Crypto\Exceptions\{
 };
 use FediE2EE\PKD\Crypto\{
     ActivityPub\WebFinger,
+    Enums\ProtocolVersion,
     Protocol\Actions\BurnDown,
     SecretKey,
     UtilTrait};
@@ -26,6 +27,7 @@ class Handler
 {
     use UtilTrait;
     private static ?WebFinger $wf = null;
+    private ProtocolVersion $version;
 
     public static function getWebFinger(): WebFinger
     {
@@ -39,6 +41,14 @@ class Handler
     {
         self::$wf = $wf;
         return self::$wf;
+    }
+
+    public function __construct(?ProtocolVersion $version = null)
+    {
+        if (is_null($version)) {
+            $version = ProtocolVersion::default();
+        }
+        $this->version = $version;
     }
 
     /**
@@ -56,13 +66,14 @@ class Handler
         AttributeKeyMap $keyMap,
         string $recentMerkleRoot = ''
     ): Bundle {
+        self::assertKeyIsAllowed($secretKey, $this->version);
         $otp = null;
         if ($message instanceof BurnDown) {
             $otp = $message->getOTP();
         }
         if (!($message instanceof EncryptedProtocolMessageInterface)) {
             if (!in_array($message->getAction(), Parser::PLAINTEXT_ACTIONS, true)) {
-                $message = $message->encrypt($keyMap);
+                $message = $message->encrypt($keyMap, $recentMerkleRoot);
             }
         }
         $signedMessage = new SignedMessage($message, $recentMerkleRoot);

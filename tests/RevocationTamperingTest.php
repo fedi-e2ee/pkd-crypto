@@ -2,13 +2,18 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests;
 
+use FediE2EE\PKD\Crypto\Enums\SigningAlgorithm;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use FediE2EE\PKD\Crypto\Revocation;
 use FediE2EE\PKD\Crypto\SecretKey;
 use ParagonIE\ConstantTime\Base64UrlSafe;
+use ParagonIE\PQCrypto\Exception\MLDSAInternalException;
+use ParagonIE\PQCrypto\Exception\PQCryptoCompatException;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Random\RandomException;
 use SodiumException;
 
 /**
@@ -20,15 +25,21 @@ use SodiumException;
 #[CoversClass(Revocation::class)]
 class RevocationTamperingTest extends TestCase
 {
+    use ExtraneousDataProviderTrait;
+
     /**
      * A token with a modified version prefix must be rejected.
      *
      * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testRejectsModifiedVersionPrefix(): void
+    #[DataProvider("pkdAllowedSigningAlgorithmProvider")]
+    public function testRejectsModifiedVersionPrefix(SigningAlgorithm $alg): void
     {
-        $sk = SecretKey::generate();
+        $sk = SecretKey::generate($alg);
         $revocation = new Revocation();
         $token = $revocation->revokeThirdParty($sk);
 
@@ -47,11 +58,15 @@ class RevocationTamperingTest extends TestCase
      * A token with a zeroed version prefix must be rejected.
      *
      * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testRejectsZeroedVersionPrefix(): void
+    #[DataProvider("pkdAllowedSigningAlgorithmProvider")]
+    public function testRejectsZeroedVersionPrefix(SigningAlgorithm $alg): void
     {
-        $sk = SecretKey::generate();
+        $sk = SecretKey::generate($alg);
         $revocation = new Revocation();
         $token = $revocation->revokeThirdParty($sk);
 
@@ -68,11 +83,15 @@ class RevocationTamperingTest extends TestCase
      * A token with a modified REVOCATION_CONSTANT must be rejected.
      *
      * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testRejectsModifiedRevocationConstant(): void
+    #[DataProvider("pkdAllowedSigningAlgorithmProvider")]
+    public function testRejectsModifiedRevocationConstant(SigningAlgorithm $alg): void
     {
-        $sk = SecretKey::generate();
+        $sk = SecretKey::generate($alg);
         $revocation = new Revocation();
         $token = $revocation->revokeThirdParty($sk);
 
@@ -94,11 +113,15 @@ class RevocationTamperingTest extends TestCase
      * A token with partially modified REVOCATION_CONSTANT (single byte flip) must be rejected.
      *
      * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testRejectsSingleByteFlipInConstant(): void
+    #[DataProvider("pkdAllowedSigningAlgorithmProvider")]
+    public function testRejectsSingleByteFlipInConstant(SigningAlgorithm $alg): void
     {
-        $sk = SecretKey::generate();
+        $sk = SecretKey::generate($alg);
         $revocation = new Revocation();
         $token = $revocation->revokeThirdParty($sk);
 
@@ -118,12 +141,17 @@ class RevocationTamperingTest extends TestCase
      * A token with the public key from a different keypair must fail signature verification.
      *
      * @throws CryptoException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testRejectsCrossKeyPublicKey(): void
+    #[DataProvider("pkdAllowedSigningAlgorithmProvider")]
+    public function testRejectsCrossKeyPublicKey(SigningAlgorithm $alg): void
     {
-        $sk1 = SecretKey::generate();
-        $sk2 = SecretKey::generate();
+        $sk1 = SecretKey::generate($alg);
+        $sk2 = SecretKey::generate($alg);
         $revocation = new Revocation();
 
         $token = $revocation->revokeThirdParty($sk1);
@@ -144,10 +172,11 @@ class RevocationTamperingTest extends TestCase
      * @throws CryptoException
      * @throws SodiumException
      */
-    public function testRejectsSwappedPublicKeyBytes(): void
+    #[DataProvider("signingAlgorithmProvider")]
+    public function testRejectsSwappedPublicKeyBytes(SigningAlgorithm $alg): void
     {
-        $sk1 = SecretKey::generate();
-        $sk2 = SecretKey::generate();
+        $sk1 = SecretKey::generate($alg);
+        $sk2 = SecretKey::generate($alg);
         $revocation = new Revocation();
 
         $token = $revocation->revokeThirdParty($sk1);
@@ -155,9 +184,10 @@ class RevocationTamperingTest extends TestCase
 
         // Replace the public key bytes (bytes 57-89) with sk2's
         $pk2Bytes = $sk2->getPublicKey()->getBytes();
+        $pkLength = strlen($pk2Bytes);
         $tampered = substr($decoded, 0, 57)
             . $pk2Bytes
-            . substr($decoded, 89);
+            . substr($decoded, 57 + $pkLength);
         $tamperedToken = Base64UrlSafe::encodeUnpadded($tampered);
 
         // The embedded public key is now sk2's, but the signature was made by sk1 over sk1's data.
@@ -173,11 +203,15 @@ class RevocationTamperingTest extends TestCase
      * A token with a modified signature must fail verification.
      *
      * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testRejectsModifiedSignature(): void
+    #[DataProvider("pkdAllowedSigningAlgorithmProvider")]
+    public function testRejectsModifiedSignature(SigningAlgorithm $alg): void
     {
-        $sk = SecretKey::generate();
+        $sk = SecretKey::generate($alg);
         $revocation = new Revocation();
         $token = $revocation->revokeThirdParty($sk);
 
@@ -200,11 +234,14 @@ class RevocationTamperingTest extends TestCase
      *
      * @throws CryptoException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testRejectsTruncatedToken(): void
+    #[DataProvider("pkdAllowedSigningAlgorithmProvider")]
+    public function testRejectsTruncatedToken(SigningAlgorithm $alg): void
     {
-        $sk = SecretKey::generate();
+        $sk = SecretKey::generate($alg);
         $revocation = new Revocation();
         $token = $revocation->revokeThirdParty($sk);
 

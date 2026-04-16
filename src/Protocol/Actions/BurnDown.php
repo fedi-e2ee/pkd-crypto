@@ -8,8 +8,8 @@ use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
 use FediE2EE\PKD\Crypto\Exceptions\{
     InputException,
     JsonException,
-    NetworkException
-};
+    NetworkException,
+    NotImplementedException};
 use FediE2EE\PKD\Crypto\Protocol\{
     EncryptedActions\EncryptedBurnDown,
     EncryptedProtocolMessageInterface,
@@ -25,7 +25,7 @@ use Random\RandomException;
 use SodiumException;
 use function is_null;
 
-class BurnDown implements ProtocolMessageInterface, JsonSerializable
+class BurnDown implements ProtocolMessageInterface
 {
     use ToStringTrait;
 
@@ -107,24 +107,11 @@ class BurnDown implements ProtocolMessageInterface, JsonSerializable
     }
 
     /**
-     * @throws RandomException
-     * @throws SodiumException
+     * @throws NotImplementedException
      */
     #[Override]
-    public function encrypt(AttributeKeyMap $keyMap): EncryptedProtocolMessageInterface
+    public function encrypt(AttributeKeyMap $keyMap, string $recentMerkleRoot): EncryptedProtocolMessageInterface
     {
-        $output = [];
-        $plaintext = $this->toArray();
-        foreach ($plaintext as $key => $value) {
-            $symKey = $keyMap->getKey($key);
-            if ($symKey) {
-                $output[$key] = Base64UrlSafe::encodeUnpadded(
-                    $symKey->encrypt($value)
-                );
-            } else {
-                $output[$key] = $value;
-            }
-        }
-        return new EncryptedBurnDown($output);
+        throw new NotImplementedException('BurnDowns are not encrypted');
     }
 }

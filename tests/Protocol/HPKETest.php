@@ -101,7 +101,7 @@ class HPKETest extends TestCase
 
         // HPKE encryption!
         $handler = new Handler();
-        $bundle = $handler->handle($dummy->encrypt($keyMap), $sk, $keyMap, $root);
+        $bundle = $handler->handle($dummy->encrypt($keyMap, $root), $sk, $keyMap, $root);
         $encrypted = $handler->hpkeEncrypt($bundle, $encapsKey, $ciphersuite);
         $this->assertIsString($encrypted);
         $this->assertTrue((new HPKEAdapter($ciphersuite))->isHpkeCiphertext($encrypted));
@@ -165,7 +165,7 @@ class HPKETest extends TestCase
             ->addRandomKey('public-key');
 
         $handler = new Handler();
-        $bundle = $handler->handle($dummy->encrypt($keyMap), $sk, $keyMap, $root);
+        $bundle = $handler->handle($dummy->encrypt($keyMap, $root), $sk, $keyMap, $root);
         $encrypted = $handler->hpkeEncrypt($bundle, $encapsKey, $ciphersuite);
         $this->assertIsString($encrypted);
         $this->assertTrue((new HPKEAdapter($ciphersuite))->isHpkeCiphertext($encrypted));

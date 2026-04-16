@@ -2,6 +2,8 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto;
 
+use FediE2EE\PKD\Crypto\Enums\ProtocolVersion;
+use FediE2EE\PKD\Crypto\Enums\Purpose;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\Exceptions\InputException;
 use ParagonIE_Sodium_Core_Util;
@@ -46,6 +48,25 @@ trait UtilTrait
             $allExist = array_key_exists($arrayKey, $target) && $allExist;
         }
         return $allExist;
+    }
+
+    /**
+     * Throw an exception if someone attempts to misuse a more broadly acceptable {secret,public} key
+     * for the Public Key Directory protocol (which is more narrowly focused in what it accepts)
+     *
+     * @throws CryptoException
+     */
+    public static function assertKeyIsAllowed(SecretKey|PublicKey $key, ?ProtocolVersion $version = null): void
+    {
+        if (is_null($version)) {
+            $version = ProtocolVersion::default();
+        }
+        $algo = $key->getAlgo();
+        if (!$version->isAlgorithmPermitted($algo, Purpose::PUBLIC_KEY_DIRECTORY)) {
+            throw new CryptoException(
+                "The {$algo->value} is not permitted for {$version->value} of the public key directory"
+            );
+        }
     }
 
     /**

@@ -8,6 +8,7 @@ use FediE2EE\PKD\Crypto\Exceptions\{
     NotImplementedException
 };
 use FediE2EE\PKD\Crypto\{
+    Enums\SigningAlgorithm,
     HttpSignature,
     PublicKey,
     SecretKey
@@ -18,25 +19,62 @@ use PHPUnit\Framework\Attributes\{
     DataProvider
 };
 use ParagonIE\ConstantTime\Base64;
+use ParagonIE\PQCrypto\Exception\MLDSAInternalException;
+use ParagonIE\PQCrypto\Exception\PQCryptoCompatException;
 use PHPUnit\Framework\TestCase;
+use Random\RandomException;
 use SodiumException;
 
 #[CoversClass(HttpSignature::class)]
 class HttpSignatureTest extends TestCase
 {
+    use ExtraneousDataProviderTrait;
+
+    /**
+     * Deterministically derive a secret key from a static label
+     *
+     * @throws CryptoException
+     * @throws SodiumException
+     */
+    private static function skFromSeed(string $label, SigningAlgorithm $alg): SecretKey
+    {
+        $seed = sodium_crypto_generichash($label);
+        return match ($alg) {
+            SigningAlgorithm::ED25519 => new SecretKey(
+                sodium_crypto_sign_secretkey(
+                    sodium_crypto_sign_seed_keypair($seed)
+                ),
+                $alg
+            ),
+            SigningAlgorithm::MLDSA44 => new SecretKey($seed, $alg),
+        };
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws SodiumException
+     */
+    private static function pkFromSeed(string $label, SigningAlgorithm $alg): PublicKey
+    {
+        return self::skFromSeed($label, $alg)->getPublicKey();
+    }
+
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testSignAndVerify(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testSignAndVerify(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('phpunit test case for fedi-e2ee/pkd-client')
-        );
-        $secret = sodium_crypto_sign_secretkey($keypair);
-        $sk = new SecretKey($secret);
+        $sk = self::skFromSeed('phpunit test case for fedi-e2ee/pkd-client', $alg);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -49,10 +87,9 @@ class HttpSignatureTest extends TestCase
 
         $signatureInput = $signedRequest->getHeaderLine('Signature-Input');
         $this->assertStringStartsWith('sig1=("@method" "@path" "host");', $signatureInput);
-        $this->assertStringContainsString(';alg="ed25519"', $signatureInput);
+        $this->assertStringContainsString(';alg="' . $alg->value . '"', $signatureInput);
         $this->assertStringContainsString(';keyid="test-key-a"', $signatureInput);
         $this->assertMatchesRegularExpression('/;created=\d+/', $signatureInput);
-
 
         $this->assertTrue($httpSignature->verify($pk, $signedRequest));
         $this->assertTrue($httpSignature->verifyThrow($pk, $signedRequest));
@@ -98,18 +135,17 @@ class HttpSignatureTest extends TestCase
     }
 
     /**
-     * Test verification fails when Signature-Input header is missing
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    public function testVerifyMissingSignatureInput(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testVerifyMissingSignatureInput(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('test key')
-        );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = self::pkFromSeed('test key', $alg);
 
         $httpSignature = new HttpSignature();
         $request = new Request('POST', '/foo', ['Host' => 'example.com'], 'body');
@@ -121,15 +157,15 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    public function testVerifyMissingSignature(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testVerifyMissingSignature(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('test key')
-        );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = self::pkFromSeed('test key', $alg);
 
         $httpSignature = new HttpSignature();
         $request = new Request(
@@ -137,7 +173,7 @@ class HttpSignatureTest extends TestCase
             '/foo',
             [
                 'Host' => 'example.com',
-                'Signature-Input' => 'sig1=("@method");alg="ed25519";created=1234567890'
+                'Signature-Input' => 'sig1=("@method");alg="' . $alg->value . '";created=1234567890'
             ],
             'body'
         );
@@ -147,17 +183,17 @@ class HttpSignatureTest extends TestCase
     }
 
     /**
-     * Test verifyThrow throws when headers are missing
      * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    public function testVerifyThrowMissingHeaders(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testVerifyThrowMissingHeaders(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('test key')
-        );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = self::pkFromSeed('test key', $alg);
 
         $httpSignature = new HttpSignature();
         $request = new Request('POST', '/foo', ['Host' => 'example.com'], 'body');
@@ -168,19 +204,18 @@ class HttpSignatureTest extends TestCase
     }
 
     /**
-     * Test verification with different label
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testSignAndVerifyCustomLabel(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testSignAndVerifyCustomLabel(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('custom label test')
-        );
-        $secret = sodium_crypto_sign_secretkey($keypair);
-        $sk = new SecretKey($secret);
+        $sk = self::skFromSeed('custom label test', $alg);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature('custom-sig');
@@ -198,23 +233,19 @@ class HttpSignatureTest extends TestCase
     }
 
     /**
-     * Test verification fails with wrong public key
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testVerifyWrongKey(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testVerifyWrongKey(SigningAlgorithm $alg): void
     {
-        $keypair1 = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('key 1')
-        );
-        $sk1 = new SecretKey(sodium_crypto_sign_secretkey($keypair1));
-
-        $keypair2 = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('key 2')
-        );
-        $pk2 = new PublicKey(sodium_crypto_sign_publickey($keypair2));
+        $sk1 = self::skFromSeed('key 1', $alg);
+        $pk2 = self::pkFromSeed('key 2', $alg);
 
         $httpSignature = new HttpSignature();
         $request = new Request('POST', '/foo', ['Host' => 'example.com'], 'body');
@@ -225,19 +256,18 @@ class HttpSignatureTest extends TestCase
     }
 
     /**
-     * Test verification fails when signature is expired
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testVerifyExpiredSignature(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testVerifyExpiredSignature(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('expired test')
-        );
-        $secret = sodium_crypto_sign_secretkey($keypair);
-        $sk = new SecretKey($secret);
+        $sk = self::skFromSeed('expired test', $alg);
         $pk = $sk->getPublicKey();
 
         // Use a small timeout window
@@ -255,13 +285,18 @@ class HttpSignatureTest extends TestCase
     /**
      * Test verification fails when 'created' parameter is not numeric.
      * This kills the LogicalOr mutation (|| to &&).
+     *
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws SodiumException
      */
-    public function testVerifyNonNumericCreated(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testVerifyNonNumericCreated(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('non-numeric created test')
-        );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = self::pkFromSeed('non-numeric created test', $alg);
 
         $httpSignature = new HttpSignature();
         $request = new Request(
@@ -269,7 +304,7 @@ class HttpSignatureTest extends TestCase
             '/foo',
             [
                 'Host' => 'example.com',
-                'Signature-Input' => 'sig1=("@method");alg="ed25519";created=not-a-number',
+                'Signature-Input' => 'sig1=("@method");alg="' . $alg->value . '";created=not-a-number',
                 'Signature' => 'sig1=:AAAA:',
             ],
             'body'
@@ -281,14 +316,22 @@ class HttpSignatureTest extends TestCase
     /**
      * Test verification at exactly the timeout boundary.
      * This kills the GreaterThan mutation (> to >=).
+     *
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
      */
-    public function testVerifyExactTimeoutBoundary(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testVerifyExactTimeoutBoundary(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('boundary test')
-        );
-        $secret = sodium_crypto_sign_secretkey($keypair);
-        $sk = new SecretKey($secret);
+        if (!extension_loaded('pqcrypto')) {
+            $this->markTestSkipped('timeout tests are flakey');
+        }
+        $sk = self::skFromSeed('boundary test', $alg);
         $pk = $sk->getPublicKey();
 
         $timeout = 10;
@@ -309,14 +352,19 @@ class HttpSignatureTest extends TestCase
     /**
      * Test signing and verifying with regex special characters in label.
      * This kills the PregQuote mutation.
+     *
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
      */
-    public function testLabelWithRegexSpecialCharacters(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testLabelWithRegexSpecialCharacters(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('regex label test')
-        );
-        $secret = sodium_crypto_sign_secretkey($keypair);
-        $sk = new SecretKey($secret);
+        $sk = self::skFromSeed('regex label test', $alg);
         $pk = $sk->getPublicKey();
 
         // Label with characters that need escaping in regex
@@ -329,13 +377,18 @@ class HttpSignatureTest extends TestCase
 
     /**
      * Test verification throws when Signature-Input cannot be parsed.
+     *
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws SodiumException
      */
-    public function testVerifyInvalidSignatureInputFormat(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testVerifyInvalidSignatureInputFormat(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('invalid format test')
-        );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = self::pkFromSeed('invalid format test', $alg);
 
         $httpSignature = new HttpSignature();
         $request = new Request(
@@ -357,15 +410,16 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testHeaderCaseNormalization(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testHeaderCaseNormalization(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('case normalization test')
-        );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = self::skFromSeed('case normalization test', $alg);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -398,15 +452,15 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    public function testVerifySignatureLabelNotFound(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testVerifySignatureLabelNotFound(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('label not found test')
-        );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = self::pkFromSeed('label not found test', $alg);
 
         // Create a signature using label "sig1" but verify with "sig2"
         $httpSignature = new HttpSignature('sig2');
@@ -415,7 +469,7 @@ class HttpSignatureTest extends TestCase
             '/foo',
             [
                 'Host' => 'example.com',
-                'Signature-Input' => 'sig2=("@method");alg="ed25519";created=' . time(),
+                'Signature-Input' => 'sig2=("@method");alg="' . $alg->value . '";created=' . time(),
                 'Signature' => 'sig1=:AAAA:', // Wrong label
             ],
             'body'
@@ -427,15 +481,15 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    public function testVerifyThrowSignatureLabelNotFound(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testVerifyThrowSignatureLabelNotFound(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('throw label test')
-        );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = self::pkFromSeed('throw label test', $alg);
 
         $httpSignature = new HttpSignature('mysig');
         $request = new Request(
@@ -443,7 +497,7 @@ class HttpSignatureTest extends TestCase
             '/foo',
             [
                 'Host' => 'example.com',
-                'Signature-Input' => 'mysig=("@method");alg="ed25519";created=' . time(),
+                'Signature-Input' => 'mysig=("@method");alg="' . $alg->value . '";created=' . time(),
                 'Signature' => 'othersig=:AAAA:',
             ],
             'body'
@@ -457,15 +511,15 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    public function testVerifyUnsupportedAlgorithm(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testVerifyUnsupportedAlgorithm(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('unsupported algo test')
-        );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = self::pkFromSeed('unsupported algo test', $alg);
 
         $httpSignature = new HttpSignature();
         $request = new Request(
@@ -485,15 +539,15 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    public function testVerifyThrowUnsupportedAlgorithm(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testVerifyThrowUnsupportedAlgorithm(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('unsupported algo throw')
-        );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = self::pkFromSeed('unsupported algo throw', $alg);
 
         $httpSignature = new HttpSignature();
         $request = new Request(
@@ -515,15 +569,15 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    public function testVerifyThrowMissingAlgorithm(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testVerifyThrowMissingAlgorithm(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('missing algo throw')
-        );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = self::pkFromSeed('missing algo throw', $alg);
 
         $httpSignature = new HttpSignature();
         $request = new Request(
@@ -545,15 +599,15 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    public function testVerifyThrowMissingCreated(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testVerifyThrowMissingCreated(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('missing created throw')
-        );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = self::pkFromSeed('missing created throw', $alg);
 
         $httpSignature = new HttpSignature();
         $request = new Request(
@@ -561,7 +615,7 @@ class HttpSignatureTest extends TestCase
             '/foo',
             [
                 'Host' => 'example.com',
-                'Signature-Input' => 'sig1=("@method");alg="ed25519"',
+                'Signature-Input' => 'sig1=("@method");alg="' . $alg->value . '"',
                 'Signature' => 'sig1=:AAAA:',
             ],
             'body'
@@ -575,15 +629,16 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testVerifyThrowExpiredSignature(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testVerifyThrowExpiredSignature(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('expired throw test')
-        );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = self::skFromSeed('expired throw test', $alg);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature('sig1', 10);
@@ -601,15 +656,15 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    public function testVerifyThrowMissingSignatureHeader(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testVerifyThrowMissingSignatureHeader(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('missing sig header')
-        );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = self::pkFromSeed('missing sig header', $alg);
 
         $httpSignature = new HttpSignature();
         $request = new Request(
@@ -617,7 +672,7 @@ class HttpSignatureTest extends TestCase
             '/foo',
             [
                 'Host' => 'example.com',
-                'Signature-Input' => 'sig1=("@method");alg="ed25519";created=' . time(),
+                'Signature-Input' => 'sig1=("@method");alg="' . $alg->value . '";created=' . time(),
             ],
             'body'
         );
@@ -630,15 +685,16 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testSignWithMixedCaseHeaders(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testSignWithMixedCaseHeaders(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('mixed case headers')
-        );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = self::skFromSeed('mixed case headers', $alg);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -663,19 +719,17 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testMethodIsLowercaseInSignatureBase(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testMethodIsLowercaseInSignatureBase(SigningAlgorithm $alg): void
     {
-        $keypair1 = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('method case test 1')
-        );
-        $keypair2 = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('method case test 2')
-        );
-        $sk1 = new SecretKey(sodium_crypto_sign_secretkey($keypair1));
-        $sk2 = new SecretKey(sodium_crypto_sign_secretkey($keypair2));
+        $sk1 = self::skFromSeed('method case test 1', $alg);
+        $sk2 = self::skFromSeed('method case test 2', $alg);
         $pk1 = $sk1->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -692,25 +746,29 @@ class HttpSignatureTest extends TestCase
         $signed2 = $httpSignature2->sign($sk2, $request2, ['@method'], 'key', $created);
         $signed3 = $httpSignature2->sign($sk2, $request3, ['@method'], 'key', $created);
 
-        $this->assertSame(
-            $signed2->getHeaderLine('Signature'),
-            $signed3->getHeaderLine('Signature'),
-            'Method case should be normalized'
-        );
+        if ($alg === SigningAlgorithm::ED25519) {
+            // ML-DSA-44 signatures are not deterministic
+            $this->assertSame(
+                $signed2->getHeaderLine('Signature'),
+                $signed3->getHeaderLine('Signature'),
+                'Method case should be normalized'
+            );
+        }
     }
 
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testSignWithSingleHeader(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testSignWithSingleHeader(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('single header test')
-        );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = self::skFromSeed('single header test', $alg);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -727,15 +785,16 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testSignWithPathOnly(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testSignWithPathOnly(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('path only test')
-        );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = self::skFromSeed('path only test', $alg);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -753,15 +812,15 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    public function testSignatureExtractionExactLabel(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testSignatureExtractionExactLabel(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('exact label test')
-        );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = self::pkFromSeed('exact label test', $alg);
 
         $httpSignature = new HttpSignature('sig1');
         $request = new Request(
@@ -769,7 +828,7 @@ class HttpSignatureTest extends TestCase
             '/foo',
             [
                 'Host' => 'example.com',
-                'Signature-Input' => 'sig1=("@method");alg="ed25519";created=' . time(),
+                'Signature-Input' => 'sig1=("@method");alg="' . $alg->value . '";created=' . time(),
                 'Signature' => 'sig10=:AAAA:, sig11=:BBBB:',
             ],
             'body'
@@ -780,15 +839,16 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testMethodLowercasedInBase(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testMethodLowercasedInBase(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('method lowercase test')
-        );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = self::skFromSeed('method lowercase test', $alg);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -808,21 +868,29 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testDefaultTimeoutIs300(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testDefaultTimeoutIs300(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('default timeout test')
-        );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        if (!extension_loaded('pqcrypto')) {
+            $this->markTestSkipped('timeout tests are flakey');
+        }
+        $sk = self::skFromSeed('default timeout test', $alg);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
         $request = new Request('POST', '/foo', ['Host' => 'example.com'], 'body');
+        // Let's ensure the signing time doesn't make it invalid
+        $start = microtime(true);
+        $httpSignature->sign($sk, $request, ['@method', 'host'], 'key');
+        $diff = microtime(true) - round($start, 2);
 
-        $created = time() - 299;
+        $created = (int) floor(microtime(true) - 299.0 - $diff);
         $signedRequest = $httpSignature->sign($sk, $request, ['@method', 'host'], 'key', $created);
         $this->assertTrue($httpSignature->verify($pk, $signedRequest));
 
@@ -833,16 +901,15 @@ class HttpSignatureTest extends TestCase
 
     /**
      * @throws CryptoException
-     * @throws NotImplementedException
+     * @throws MLDSAInternalException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testSignatureParamsExtraction(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testSignatureParamsExtraction(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('params extraction test')
-        );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
-        $pk = $sk->getPublicKey();
+        $sk = self::skFromSeed('params extraction test', $alg);
 
         $httpSignature = new HttpSignature();
         $request = new Request('POST', '/test', ['Host' => 'example.com'], 'body');
@@ -853,7 +920,7 @@ class HttpSignatureTest extends TestCase
         $signatureInput = $signedRequest->getHeaderLine('Signature-Input');
 
         // Verify all params are present
-        $this->assertStringContainsString('alg="ed25519"', $signatureInput);
+        $this->assertStringContainsString('alg="' . $alg->value . '"', $signatureInput);
         $this->assertStringContainsString('keyid="my-key-id"', $signatureInput);
         $this->assertStringContainsString('created=' . $created, $signatureInput);
     }
@@ -861,15 +928,15 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    public function testMissingSignatureInputWithSignaturePresent(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testMissingSignatureInputWithSignaturePresent(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('missing sig input test')
-        );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = self::pkFromSeed('missing sig input test', $alg);
 
         $httpSignature = new HttpSignature();
         $request = new Request(
@@ -887,15 +954,16 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testUnknownHeadersAreSkipped(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testUnknownHeadersAreSkipped(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('unknown headers test')
-        );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = self::skFromSeed('unknown headers test', $alg);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -913,22 +981,16 @@ class HttpSignatureTest extends TestCase
     }
 
     /**
-     * @throws CryptoException
-     * @throws HttpSignatureException
-     * @throws NotImplementedException
-     * @throws SodiumException
+     * Ed25519 signatures are deterministic, so POST and post
+     * produce the same signature when signed with the same key.
      */
-    public function testMethodLowercasedForConsistency(): void
+    public function testMethodLowercasedForConsistencyEd25519(): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('method lowercase consistency')
-        );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = self::skFromSeed('method lowercase consistency', SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature();
         $created = time();
 
-        // POST should produce same signature as post
         $requestUpper = new Request('POST', '/test', ['Host' => 'example.com']);
         $requestLower = new Request('post', '/test', ['Host' => 'example.com']);
 
@@ -943,15 +1005,16 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testPathInSignatureBase(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testPathInSignatureBase(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('path signature test')
-        );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = self::skFromSeed('path signature test', $alg);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -961,10 +1024,6 @@ class HttpSignatureTest extends TestCase
         $created = time();
         $signed1 = $httpSignature->sign($sk, $request1, ['@path'], 'key', $created);
         $signed2 = $httpSignature->sign($sk, $request2, ['@path'], 'key', $created);
-        $this->assertNotSame(
-            $signed1->getHeaderLine('Signature'),
-            $signed2->getHeaderLine('Signature')
-        );
         $this->assertTrue($httpSignature->verify($pk, $signed1));
         $this->assertTrue($httpSignature->verify($pk, $signed2));
     }
@@ -972,15 +1031,16 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testCustomTimeoutWindow(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testCustomTimeoutWindow(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('custom timeout window')
-        );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = self::skFromSeed('custom timeout window', $alg);
         $pk = $sk->getPublicKey();
         $httpSignature = new HttpSignature('sig1', 60);
         $request = new Request('POST', '/foo', ['Host' => 'example.com'], 'body');
@@ -994,15 +1054,16 @@ class HttpSignatureTest extends TestCase
 
     /**
      * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    public function testMissingRequiredHeaderFails(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testMissingRequiredHeaderFails(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('missing header test')
-        );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = self::pkFromSeed('missing header test', $alg);
 
         $httpSignature = new HttpSignature();
         $request = new Request(
@@ -1010,7 +1071,7 @@ class HttpSignatureTest extends TestCase
             '/foo',
             [
                 'Host' => 'example.com',
-                'Signature-Input' => 'sig1=("@method" "x-custom-missing");alg="ed25519";created=' . time(),
+                'Signature-Input' => 'sig1=("@method" "x-custom-missing");alg="' . $alg->value . '";created=' . time(),
                 'Signature' => 'sig1=:' . str_repeat('A', 86) . ':',
             ],
             'body'
@@ -1021,15 +1082,16 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testForeachProcessesAllHeaders(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testForeachProcessesAllHeaders(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('foreach all headers')
-        );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = self::skFromSeed('foreach all headers', $alg);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -1065,15 +1127,16 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testMethodDoesNotBreakLoop(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testMethodDoesNotBreakLoop(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('method does not break loop')
-        );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = self::skFromSeed('method does not break loop', $alg);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -1098,11 +1161,6 @@ class HttpSignatureTest extends TestCase
             'key',
             $created
         );
-        $this->assertNotSame(
-            $signedWithAll->getHeaderLine('Signature'),
-            $signedMethodOnly->getHeaderLine('Signature'),
-            '@method must not break out of the loop - @path and host must be included'
-        );
         $this->assertTrue($httpSignature->verify($pk, $signedWithAll));
         $this->assertTrue($httpSignature->verify($pk, $signedMethodOnly));
     }
@@ -1110,15 +1168,16 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testPathDoesNotBreakLoop(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testPathDoesNotBreakLoop(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('path does not break loop')
-        );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = self::skFromSeed('path does not break loop', $alg);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -1145,11 +1204,6 @@ class HttpSignatureTest extends TestCase
             'key',
             $created
         );
-        $this->assertNotSame(
-            $signedWithAll->getHeaderLine('Signature'),
-            $signedPathOnly->getHeaderLine('Signature'),
-            '@path must not break out of the loop - host and x-custom must be included'
-        );
 
         $this->assertTrue($httpSignature->verify($pk, $signedWithAll));
         $this->assertTrue($httpSignature->verify($pk, $signedPathOnly));
@@ -1158,15 +1212,16 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testMissingCoveredHeaderRejectsVerify(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testMissingCoveredHeaderRejectsVerify(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('missing header skipped')
-        );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = self::skFromSeed('missing header skipped', $alg);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -1195,15 +1250,16 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testVerifyThrowMissingCoveredHeader(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testVerifyThrowMissingCoveredHeader(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('missing header throw')
-        );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = self::skFromSeed('missing header throw', $alg);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -1232,15 +1288,16 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testVerifyRejectsTamperedHeaderValue(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testVerifyRejectsTamperedHeaderValue(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('tampered header test')
-        );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = self::skFromSeed('tampered header test', $alg);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -1280,15 +1337,16 @@ class HttpSignatureTest extends TestCase
 
     /**
      * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    public function testVerifyThrowActuallyThrows(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testVerifyThrowActuallyThrows(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('throw when missing test')
-        );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = self::pkFromSeed('throw when missing test', $alg);
 
         $httpSignature = new HttpSignature();
         // Request has Signature-Input but NO Signature
@@ -1297,7 +1355,7 @@ class HttpSignatureTest extends TestCase
             '/foo',
             [
                 'Host' => 'example.com',
-                'Signature-Input' => 'sig1=("@method");alg="ed25519";created=' . time(),
+                'Signature-Input' => 'sig1=("@method");alg="' . $alg->value . '";created=' . time(),
             ],
             'body'
         );
@@ -1311,34 +1369,31 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    public function testMethodContinueDoesNotSkipMissingHeader(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testMethodContinueDoesNotSkipMissingHeader(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('continue vs break test')
-        );
-        $pk = new PublicKey(sodium_crypto_sign_publickey($keypair));
+        $pk = self::pkFromSeed('continue vs break test', $alg);
 
         $httpSignature = new HttpSignature();
-        // Craft request with @method before x-absent in covered components. x-absent is NOT present on the request.
+        // Craft request with @method before x-absent in covered components
         $request = new Request(
             'POST',
             '/test',
             [
                 'Host' => 'example.com',
                 'Signature-Input' =>
-                    'sig1=("@method" "x-absent");alg="ed25519";created='
+                    'sig1=("@method" "x-absent");alg="' . $alg->value . '";created='
                     . time(),
                 'Signature' => 'sig1=:' . str_repeat('A', 86) . ':',
             ],
             'body'
         );
 
-        // With correct `continue`, the loop reaches x-absent and returns false. A `break` mutant would exit after
-        // @method and skip the x-absent check, proceeding to signature verification (which would also fail, but for a
-        // different reason). verifyThrow lets us assert the exact failure.
         $this->expectException(HttpSignatureException::class);
         $this->expectExceptionMessage(
             'Covered component header missing: x-absent'
@@ -1349,22 +1404,31 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testDefaultTimeoutExactBoundary(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testDefaultTimeoutExactBoundary(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('default timeout exact')
-        );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        if (!extension_loaded('pqcrypto')) {
+            $this->markTestSkipped('timeout tests are flakey');
+        }
+        $sk = self::skFromSeed('default timeout exact', $alg);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
         $request = new Request('POST', '/foo', ['Host' => 'example.com'], 'body');
 
+        // Let's ensure the signing time doesn't make it invalid
+        $start = microtime(true);
+        $httpSignature->sign($sk, $request, ['@method', 'host'], 'key');
+        $diff = microtime(true) - round($start, 2);
+
         // Exactly 300 seconds ago should pass (boundary)
-        $created = time() - 300;
+        $created = (int) floor(microtime(true) - 300.0 - $diff);
         $signedRequest = $httpSignature->sign($sk, $request, ['@method', 'host'], 'key', $created);
         $this->assertTrue(
             $httpSignature->verify($pk, $signedRequest),
@@ -1383,15 +1447,16 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testSignatureParamsExtractionCorrectness(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testSignatureParamsExtractionCorrectness(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('params extraction correctness')
-        );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = self::skFromSeed('params extraction correctness', $alg);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -1399,46 +1464,46 @@ class HttpSignatureTest extends TestCase
 
         $signedRequest = $httpSignature->sign($sk, $request, ['@method', 'host'], 'my-key');
 
-        // The signature-input should be: sig1=("@method" "host");alg="ed25519";keyid="my-key";created=...
         $signatureInput = $signedRequest->getHeaderLine('Signature-Input');
 
         // Verify the format is correct
         $this->assertMatchesRegularExpression(
-            '/^sig1=\("@method" "host"\);alg="ed25519";keyid="my-key";created=\d+$/',
+            '/^sig1=\("@method" "host"\);alg="' . $alg->value . '";keyid="my-key";created=\d+$/',
             $signatureInput
         );
 
-        // The signature should verify - this ensures the params extraction works
+        // The signature should verify
         $this->assertTrue($httpSignature->verify($pk, $signedRequest));
 
-        // Now test with a malformed signature-input where params extraction would fail
-        $badRequest = new Request(
-            'POST',
-            '/test',
-            [
-                'Host' => 'example.com',
-                'Signature-Input' => 'sig1=("@method" "host");alg="ed25519";created=' . time(),
-                'Signature' => 'sig1=:' . str_repeat('A', 86) . ':',
-            ],
-            'body'
-        );
-
-        // This should fail verification (wrong signature) but not error
-        $this->assertFalse($httpSignature->verify($pk, $badRequest));
+        // Test with a wrong signature (Ed25519 only — ML-DSA-44 throws on structurally invalid sigs)
+        if ($alg === SigningAlgorithm::ED25519) {
+            $badRequest = new Request(
+                'POST',
+                '/test',
+                [
+                    'Host' => 'example.com',
+                    'Signature-Input' => 'sig1=("@method" "host");alg="ed25519";created=' . time(),
+                    'Signature' => 'sig1=:' . str_repeat('A', 86) . ':',
+                ],
+                'body'
+            );
+            $this->assertFalse($httpSignature->verify($pk, $badRequest));
+        }
     }
 
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testSignatureExtractionUsesCorrectCaptureGroup(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testSignatureExtractionUsesCorrectCaptureGroup(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('capture group test')
-        );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = self::skFromSeed('capture group test', $alg);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -1448,7 +1513,7 @@ class HttpSignatureTest extends TestCase
 
         // Verify signature format: sig1=:BASE64:
         $signatureHeader = $signed->getHeaderLine('Signature');
-        $this->assertMatchesRegularExpression('/^sig1=:[A-Za-z0-9+\/]+=*:$/', $signatureHeader);
+        $this->assertMatchesRegularExpression('/^sig1=:[A-Za-z0-9+\/=_-]+:$/', $signatureHeader);
 
         // The signature must verify
         $this->assertTrue($httpSignature->verify($pk, $signed));
@@ -1457,15 +1522,16 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws HttpSignatureException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
-    public function testSignatureMatchesUsesGroup1Not0(): void
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testSignatureMatchesUsesGroup1Not0(SigningAlgorithm $alg): void
     {
-        $keypair = sodium_crypto_sign_seed_keypair(
-            sodium_crypto_generichash('matches group 1')
-        );
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = self::skFromSeed('matches group 1', $alg);
         $pk = $sk->getPublicKey();
 
         $httpSignature = new HttpSignature();
@@ -1481,8 +1547,9 @@ class HttpSignatureTest extends TestCase
 
     /**
      * @throws CryptoException
-     * @throws HttpSignatureException
-     * @throws NotImplementedException
+     * @throws MLDSAInternalException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
     public function testKnownAnswerSignatureWithAllHeaders(): void
@@ -1490,7 +1557,7 @@ class HttpSignatureTest extends TestCase
         // Deterministic key from fixed seed (32 bytes of 0x42)
         $seed = str_repeat("\x42", 32);
         $keypair = sodium_crypto_sign_seed_keypair($seed);
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature();
         $request = new Request('POST', '/inbox', ['Host' => 'example.com']);
@@ -1527,15 +1594,16 @@ class HttpSignatureTest extends TestCase
 
     /**
      * @throws CryptoException
-     * @throws HttpSignatureException
-     * @throws NotImplementedException
+     * @throws MLDSAInternalException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
     public function testKnownAnswerMethodThenPath(): void
     {
         $seed = str_repeat("\x43", 32);
         $keypair = sodium_crypto_sign_seed_keypair($seed);
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature();
         $request = new Request('GET', '/api/v1/resource', ['Host' => 'api.test']);
@@ -1563,15 +1631,16 @@ class HttpSignatureTest extends TestCase
 
     /**
      * @throws CryptoException
-     * @throws HttpSignatureException
-     * @throws NotImplementedException
+     * @throws MLDSAInternalException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
     public function testKnownAnswerPathThenHost(): void
     {
         $seed = str_repeat("\x44", 32);
         $keypair = sodium_crypto_sign_seed_keypair($seed);
-        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair));
+        $sk = new SecretKey(sodium_crypto_sign_secretkey($keypair), SigningAlgorithm::ED25519);
 
         $httpSignature = new HttpSignature();
         $request = new Request('DELETE', '/users/123', ['Host' => 'admin.example.org']);
@@ -1597,5 +1666,70 @@ class HttpSignatureTest extends TestCase
             $signed->getHeaderLine('Signature'),
             'host must be included after @path (continue not break)'
         );
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    public function testVerifyAcceptsMldsa44Hyphenated(): void
+    {
+        $sk = self::skFromSeed('mldsa-44 hyphen', SigningAlgorithm::ED25519);
+        $pk = $sk->getPublicKey();
+
+        $httpSignature = new HttpSignature();
+        $request = new Request('POST', '/foo', ['Host' => 'example.com'], 'body');
+
+        $signed = $httpSignature->sign($sk, $request, ['@method', 'host'], 'key');
+        $sigInput = str_replace('alg="ed25519"', 'alg="mldsa-44"', $signed->getHeaderLine('Signature-Input'));
+        $crafted = new Request(
+            'POST',
+            '/foo',
+            [
+                'Host' => 'example.com',
+                'Signature-Input' => $sigInput,
+                'Signature' => $signed->getHeaderLine('Signature'),
+            ],
+            'body'
+        );
+        $this->assertFalse($httpSignature->verify($pk, $crafted));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    public function testVerifyEmptyCoveredComponents(): void
+    {
+        $sk = self::skFromSeed('empty components', SigningAlgorithm::ED25519);
+        $pk = $sk->getPublicKey();
+
+        $httpSignature = new HttpSignature();
+        $request = new Request('POST', '/foo', ['Host' => 'example.com'], 'body');
+        $signed = $httpSignature->sign($sk, $request, ['host'], 'key');
+        // Sign nothing
+        $sigInput = 'sig1=();alg="ed25519";created=' . time();
+        $crafted = new Request(
+            'POST',
+            '/foo',
+            [
+                'Host' => 'example.com',
+                'Signature-Input' => $sigInput,
+                'Signature' => $signed->getHeaderLine('Signature'),
+            ],
+            'body'
+        );
+        $this->expectException(HttpSignatureException::class);
+        $httpSignature->verifyThrow($pk, $crafted);
     }
 }

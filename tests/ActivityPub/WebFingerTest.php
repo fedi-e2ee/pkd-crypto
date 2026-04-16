@@ -10,12 +10,12 @@ use FediE2EE\PKD\Crypto\Exceptions\{
 };
 use GuzzleHttp\{
     Client,
+    Exception\ConnectException,
     Exception\GuzzleException,
     Handler\MockHandler,
     HandlerStack,
     Middleware,
-    Psr7\Response
-};
+    Psr7\Response};
 use ParagonIE\Certainty\Exception\CertaintyException;
 use PHPUnit\Framework\Attributes\{
     CoversClass,
@@ -41,7 +41,13 @@ class WebFingerTest extends TestCase
     #[DataProvider("knownAnswers")]
     public function testKnownAnswers(string $input, string $expected): void
     {
-        $actual = (new WebFinger())->canonicalize($input);
+        try {
+            $actual = (new WebFinger())->canonicalize($input);
+        } catch (ConnectException $e) {
+            if (str_contains($e->getMessage(), 'timed out')) {
+                $this->markTestSkipped("Timed out after 5 seconds");
+            }
+        }
         $this->assertSame($expected, $actual, $input);
     }
 

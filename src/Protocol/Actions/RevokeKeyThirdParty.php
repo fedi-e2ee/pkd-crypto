@@ -13,7 +13,7 @@ use FediE2EE\PKD\Crypto\SecretKey;
 use JsonSerializable;
 use Override;
 
-class RevokeKeyThirdParty implements ProtocolMessageInterface, JsonSerializable
+class RevokeKeyThirdParty implements ProtocolMessageInterface
 {
     use ToStringTrait;
 
@@ -66,7 +66,7 @@ class RevokeKeyThirdParty implements ProtocolMessageInterface, JsonSerializable
      * @throws NotImplementedException
      */
     #[Override]
-    public function encrypt(AttributeKeyMap $keyMap): EncryptedProtocolMessageInterface
+    public function encrypt(AttributeKeyMap $keyMap, string $recentMerkleRoot): EncryptedProtocolMessageInterface
     {
         throw new NotImplementedException('RevokeKeyThirdParty messages are not encrypted');
     }

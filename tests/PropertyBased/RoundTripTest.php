@@ -7,11 +7,14 @@ use Eris\TestTrait;
 use FediE2EE\PKD\Crypto\AttributeEncryption\Version1;
 use FediE2EE\PKD\Crypto\Encoding\Base58BtcVarTime;
 use FediE2EE\PKD\Crypto\Encoding\Multibase;
+use FediE2EE\PKD\Crypto\Enums\SigningAlgorithm;
 use FediE2EE\PKD\Crypto\PublicKey;
 use FediE2EE\PKD\Crypto\SecretKey;
 use FediE2EE\PKD\Crypto\SymmetricKey;
+use FediE2EE\PKD\Crypto\Tests\ExtraneousDataProviderTrait;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -27,6 +30,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(SecretKey::class)]
 class RoundTripTest extends TestCase
 {
+    use ExtraneousDataProviderTrait;
     use TestTrait;
     use ErisPhpUnit12Trait {
         ErisPhpUnit12Trait::getTestCaseAnnotations insteadof TestTrait;
@@ -178,13 +182,14 @@ class RoundTripTest extends TestCase
      *
      * fromString(toString(pk)) == pk
      */
-    public function testPublicKeyStringRoundtrip(): void
+    #[DataProvider("signingAlgorithmProviderFast")]
+    public function testPublicKeyStringRoundtrip(SigningAlgorithm $alg): void
     {
         // Generate multiple random keys and test roundtrip
         $this->forAll(
             Generators::choose(1, 100)  // Just a counter to generate multiple keys
-        )->then(function (int $_counter): void {
-            $secretKey = SecretKey::generate();
+        )->then(function (int $_counter) use ($alg): void {
+            $secretKey = SecretKey::generate($alg);
             $publicKey = $secretKey->getPublicKey();
 
             $stringForm = $publicKey->toString();
@@ -206,18 +211,19 @@ class RoundTripTest extends TestCase
     /**
      * Property: PublicKey PEM encode/import is a roundtrip.
      *
-     * importPem(encodePem(pk)) == pk
+     * importPem(encodePem(pk), alg) == pk
      */
-    public function testPublicKeyPemRoundtrip(): void
+    #[DataProvider("signingAlgorithmProviderFast")]
+    public function testPublicKeyPemRoundtrip(SigningAlgorithm $alg): void
     {
         $this->forAll(
             Generators::choose(1, 100)
-        )->then(function (int $_counter): void {
-            $secretKey = SecretKey::generate();
+        )->then(function (int $_counter) use ($alg): void {
+            $secretKey = SecretKey::generate($alg);
             $publicKey = $secretKey->getPublicKey();
 
             $pem = $publicKey->encodePem();
-            $restored = PublicKey::importPem($pem);
+            $restored = PublicKey::importPem($pem, $alg);
 
             $this->assertSame(
                 $publicKey->getBytes(),
@@ -230,17 +236,18 @@ class RoundTripTest extends TestCase
     /**
      * Property: SecretKey PEM encode/import is a roundtrip.
      *
-     * importPem(encodePem(sk)) == sk
+     * importPem(encodePem(sk), alg) == sk
      */
-    public function testSecretKeyPemRoundtrip(): void
+    #[DataProvider("signingAlgorithmProviderFast")]
+    public function testSecretKeyPemRoundtrip(SigningAlgorithm $alg): void
     {
         $this->forAll(
             Generators::choose(1, 100)
-        )->then(function (int $_counter): void {
-            $secretKey = SecretKey::generate();
+        )->then(function (int $_counter) use ($alg): void {
+            $secretKey = SecretKey::generate($alg);
 
             $pem = $secretKey->encodePem();
-            $restored = SecretKey::importPem($pem);
+            $restored = SecretKey::importPem($pem, $alg);
 
             $this->assertSame(
                 $secretKey->getBytes(),
@@ -255,13 +262,14 @@ class RoundTripTest extends TestCase
      *
      * fromMultibase(toMultibase(pk)) == pk
      */
-    public function testPublicKeyMultibaseRoundtrip(): void
+    #[DataProvider("signingAlgorithmProviderFast")]
+    public function testPublicKeyMultibaseRoundtrip(SigningAlgorithm $alg): void
     {
         $this->forAll(
             Generators::choose(1, 100),
             Generators::bool()  // useUnsafe flag
-        )->then(function (int $_counter, bool $useUnsafe): void {
-            $secretKey = SecretKey::generate();
+        )->then(function (int $_counter, bool $useUnsafe) use ($alg): void {
+            $secretKey = SecretKey::generate($alg);
             $publicKey = $secretKey->getPublicKey();
 
             $multibase = $publicKey->toMultibase($useUnsafe);
@@ -280,12 +288,13 @@ class RoundTripTest extends TestCase
      *
      * verify(sign(message, sk), pk) == true
      */
-    public function testSignatureVerification(): void
+    #[DataProvider("signingAlgorithmProviderFast")]
+    public function testSignatureVerification(SigningAlgorithm $alg): void
     {
         $this->forAll(
             Generators::string()  // message to sign
-        )->then(function (string $message): void {
-            $secretKey = SecretKey::generate();
+        )->then(function (string $message) use ($alg): void {
+            $secretKey = SecretKey::generate($alg);
             $publicKey = $secretKey->getPublicKey();
 
             $signature = $secretKey->sign($message);
@@ -305,7 +314,7 @@ class RoundTripTest extends TestCase
         $this->forAll(
             Generators::string()
         )->then(function (string $message): void {
-            $secretKey = SecretKey::generate();
+            $secretKey = SecretKey::generate(SigningAlgorithm::ED25519);
 
             $sig1 = $secretKey->sign($message);
             $sig2 = $secretKey->sign($message);
@@ -319,13 +328,14 @@ class RoundTripTest extends TestCase
      *
      * verify(sign(m, sk1), pk2) == false (when sk1 != sk2)
      */
-    public function testWrongKeyFailsVerification(): void
+    #[DataProvider("signingAlgorithmProviderFast")]
+    public function testWrongKeyFailsVerification(SigningAlgorithm $alg): void
     {
         $this->forAll(
             Generators::string()
-        )->then(function (string $message): void {
-            $secretKey1 = SecretKey::generate();
-            $secretKey2 = SecretKey::generate();
+        )->then(function (string $message) use ($alg): void {
+            $secretKey1 = SecretKey::generate($alg);
+            $secretKey2 = SecretKey::generate($alg);
 
             $signature = $secretKey1->sign($message);
             $isValid = $secretKey2->getPublicKey()->verify($signature, $message);

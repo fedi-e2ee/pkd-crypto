@@ -29,9 +29,9 @@ use FediE2EE\PKD\Crypto\Protocol\EncryptedActions\{
 };
 use FediE2EE\PKD\Crypto\{
     AttributeEncryption\AttributeKeyMap,
+    Enums\ProtocolVersion,
     PublicKey,
-    UtilTrait
-};
+    UtilTrait};
 use GuzzleHttp\Exception\GuzzleException;
 use ParagonIE\HPKE\{
     HPKE,
@@ -47,7 +47,7 @@ class Parser
     use UtilTrait;
 
     /** Actions with no attribute encryption (truly plaintext fields). */
-    public const PLAINTEXT_ACTIONS = ['Checkpoint', 'RevokeKeyThirdParty'];
+    public const PLAINTEXT_ACTIONS = ['BurnDown', 'Checkpoint', 'RevokeKeyThirdParty'];
 
     /**
      * Extract a message with encrypted attributes from a Bundle.
@@ -143,9 +143,12 @@ class Parser
      * @throws CryptoException
      * @throws InputException
      */
-    public static function fromJson(string $json, ?AttributeKeyMap $symmetricKeys = null): Bundle
-    {
-        return Bundle::fromJson($json, $symmetricKeys);
+    public static function fromJson(
+        string $json,
+        ?AttributeKeyMap $symmetricKeys = null,
+        ?ProtocolVersion $version = null
+    ): Bundle {
+        return Bundle::fromJson($json, $symmetricKeys, $version);
     }
 
     /**

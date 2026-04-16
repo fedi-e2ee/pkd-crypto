@@ -16,7 +16,7 @@ use JsonSerializable;
 use Override;
 use function is_null;
 
-class Checkpoint implements ProtocolMessageInterface, JsonSerializable
+class Checkpoint implements ProtocolMessageInterface
 {
     use ToStringTrait;
 
@@ -128,7 +128,7 @@ class Checkpoint implements ProtocolMessageInterface, JsonSerializable
      * @throws NotImplementedException
      */
     #[Override]
-    public function encrypt(AttributeKeyMap $keyMap): EncryptedProtocolMessageInterface
+    public function encrypt(AttributeKeyMap $keyMap, string $recentMerkleRoot): EncryptedProtocolMessageInterface
     {
         throw new NotImplementedException('Checkpoints are not encrypted');
     }
