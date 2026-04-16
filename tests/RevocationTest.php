@@ -54,9 +54,11 @@ class RevocationTest extends TestCase
     }
 
     /**
-     * @return void
      * @throws CryptoException
+     * @throws MLDSAInternalException
      * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
      * @throws SodiumException
      */
     #[DataProvider('pkdAllowedSigningAlgorithmProvider')]
