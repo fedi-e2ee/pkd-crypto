@@ -71,7 +71,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testSignAndVerify(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('phpunit test case for fedi-e2ee/pkd-client', $alg);
@@ -142,7 +142,7 @@ class HttpSignatureTest extends TestCase
      * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testVerifyMissingSignatureInput(SigningAlgorithm $alg): void
     {
         $pk = self::pkFromSeed('test key', $alg);
@@ -162,7 +162,7 @@ class HttpSignatureTest extends TestCase
      * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testVerifyMissingSignature(SigningAlgorithm $alg): void
     {
         $pk = self::pkFromSeed('test key', $alg);
@@ -190,7 +190,7 @@ class HttpSignatureTest extends TestCase
      * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testVerifyThrowMissingHeaders(SigningAlgorithm $alg): void
     {
         $pk = self::pkFromSeed('test key', $alg);
@@ -212,7 +212,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testSignAndVerifyCustomLabel(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('custom label test', $alg);
@@ -241,7 +241,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testVerifyWrongKey(SigningAlgorithm $alg): void
     {
         $sk1 = self::skFromSeed('key 1', $alg);
@@ -264,7 +264,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testVerifyExpiredSignature(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('expired test', $alg);
@@ -293,7 +293,7 @@ class HttpSignatureTest extends TestCase
      * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testVerifyNonNumericCreated(SigningAlgorithm $alg): void
     {
         $pk = self::pkFromSeed('non-numeric created test', $alg);
@@ -325,7 +325,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testVerifyExactTimeoutBoundary(SigningAlgorithm $alg): void
     {
         if (!extension_loaded('pqcrypto')) {
@@ -361,7 +361,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testLabelWithRegexSpecialCharacters(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('regex label test', $alg);
@@ -385,7 +385,7 @@ class HttpSignatureTest extends TestCase
      * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testVerifyInvalidSignatureInputFormat(SigningAlgorithm $alg): void
     {
         $pk = self::pkFromSeed('invalid format test', $alg);
@@ -416,7 +416,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testHeaderCaseNormalization(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('case normalization test', $alg);
@@ -457,7 +457,7 @@ class HttpSignatureTest extends TestCase
      * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testVerifySignatureLabelNotFound(SigningAlgorithm $alg): void
     {
         $pk = self::pkFromSeed('label not found test', $alg);
@@ -486,7 +486,7 @@ class HttpSignatureTest extends TestCase
      * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testVerifyThrowSignatureLabelNotFound(SigningAlgorithm $alg): void
     {
         $pk = self::pkFromSeed('throw label test', $alg);
@@ -516,7 +516,7 @@ class HttpSignatureTest extends TestCase
      * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testVerifyUnsupportedAlgorithm(SigningAlgorithm $alg): void
     {
         $pk = self::pkFromSeed('unsupported algo test', $alg);
@@ -544,7 +544,7 @@ class HttpSignatureTest extends TestCase
      * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testVerifyThrowUnsupportedAlgorithm(SigningAlgorithm $alg): void
     {
         $pk = self::pkFromSeed('unsupported algo throw', $alg);
@@ -574,7 +574,7 @@ class HttpSignatureTest extends TestCase
      * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testVerifyThrowMissingAlgorithm(SigningAlgorithm $alg): void
     {
         $pk = self::pkFromSeed('missing algo throw', $alg);
@@ -604,7 +604,7 @@ class HttpSignatureTest extends TestCase
      * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testVerifyThrowMissingCreated(SigningAlgorithm $alg): void
     {
         $pk = self::pkFromSeed('missing created throw', $alg);
@@ -635,7 +635,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testVerifyThrowExpiredSignature(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('expired throw test', $alg);
@@ -661,7 +661,7 @@ class HttpSignatureTest extends TestCase
      * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testVerifyThrowMissingSignatureHeader(SigningAlgorithm $alg): void
     {
         $pk = self::pkFromSeed('missing sig header', $alg);
@@ -691,7 +691,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testSignWithMixedCaseHeaders(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('mixed case headers', $alg);
@@ -725,7 +725,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testMethodIsLowercaseInSignatureBase(SigningAlgorithm $alg): void
     {
         $sk1 = self::skFromSeed('method case test 1', $alg);
@@ -765,7 +765,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testSignWithSingleHeader(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('single header test', $alg);
@@ -791,7 +791,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testSignWithPathOnly(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('path only test', $alg);
@@ -817,7 +817,7 @@ class HttpSignatureTest extends TestCase
      * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testSignatureExtractionExactLabel(SigningAlgorithm $alg): void
     {
         $pk = self::pkFromSeed('exact label test', $alg);
@@ -845,7 +845,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testMethodLowercasedInBase(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('method lowercase test', $alg);
@@ -874,7 +874,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testDefaultTimeoutIs300(SigningAlgorithm $alg): void
     {
         if (!extension_loaded('pqcrypto')) {
@@ -906,7 +906,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testSignatureParamsExtraction(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('params extraction test', $alg);
@@ -933,7 +933,7 @@ class HttpSignatureTest extends TestCase
      * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testMissingSignatureInputWithSignaturePresent(SigningAlgorithm $alg): void
     {
         $pk = self::pkFromSeed('missing sig input test', $alg);
@@ -960,7 +960,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testUnknownHeadersAreSkipped(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('unknown headers test', $alg);
@@ -1011,7 +1011,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testPathInSignatureBase(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('path signature test', $alg);
@@ -1037,7 +1037,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testCustomTimeoutWindow(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('custom timeout window', $alg);
@@ -1060,7 +1060,7 @@ class HttpSignatureTest extends TestCase
      * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testMissingRequiredHeaderFails(SigningAlgorithm $alg): void
     {
         $pk = self::pkFromSeed('missing header test', $alg);
@@ -1088,7 +1088,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testForeachProcessesAllHeaders(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('foreach all headers', $alg);
@@ -1133,7 +1133,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testMethodDoesNotBreakLoop(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('method does not break loop', $alg);
@@ -1174,7 +1174,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testPathDoesNotBreakLoop(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('path does not break loop', $alg);
@@ -1218,7 +1218,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testMissingCoveredHeaderRejectsVerify(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('missing header skipped', $alg);
@@ -1256,7 +1256,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testVerifyThrowMissingCoveredHeader(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('missing header throw', $alg);
@@ -1294,7 +1294,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testVerifyRejectsTamperedHeaderValue(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('tampered header test', $alg);
@@ -1343,7 +1343,7 @@ class HttpSignatureTest extends TestCase
      * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testVerifyThrowActuallyThrows(SigningAlgorithm $alg): void
     {
         $pk = self::pkFromSeed('throw when missing test', $alg);
@@ -1374,7 +1374,7 @@ class HttpSignatureTest extends TestCase
      * @throws PQCryptoCompatException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testMethodContinueDoesNotSkipMissingHeader(SigningAlgorithm $alg): void
     {
         $pk = self::pkFromSeed('continue vs break test', $alg);
@@ -1410,7 +1410,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testDefaultTimeoutExactBoundary(SigningAlgorithm $alg): void
     {
         if (!extension_loaded('pqcrypto')) {
@@ -1453,7 +1453,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testSignatureParamsExtractionCorrectness(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('params extraction correctness', $alg);
@@ -1500,7 +1500,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testSignatureExtractionUsesCorrectCaptureGroup(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('capture group test', $alg);
@@ -1528,7 +1528,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("signingAlgorithmProvider")]
+    #[DataProvider("ed25519OnlyProvider")]
     public function testSignatureMatchesUsesGroup1Not0(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('matches group 1', $alg);
@@ -1666,5 +1666,70 @@ class HttpSignatureTest extends TestCase
             $signed->getHeaderLine('Signature'),
             'host must be included after @path (continue not break)'
         );
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    public function testVerifyAcceptsMldsa44Hyphenated(): void
+    {
+        $sk = self::skFromSeed('mldsa-44 hyphen', SigningAlgorithm::ED25519);
+        $pk = $sk->getPublicKey();
+
+        $httpSignature = new HttpSignature();
+        $request = new Request('POST', '/foo', ['Host' => 'example.com'], 'body');
+
+        $signed = $httpSignature->sign($sk, $request, ['@method', 'host'], 'key');
+        $sigInput = str_replace('alg="ed25519"', 'alg="mldsa-44"', $signed->getHeaderLine('Signature-Input'));
+        $crafted = new Request(
+            'POST',
+            '/foo',
+            [
+                'Host' => 'example.com',
+                'Signature-Input' => $sigInput,
+                'Signature' => $signed->getHeaderLine('Signature'),
+            ],
+            'body'
+        );
+        $this->assertFalse($httpSignature->verify($pk, $crafted));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    public function testVerifyEmptyCoveredComponents(): void
+    {
+        $sk = self::skFromSeed('empty components', SigningAlgorithm::ED25519);
+        $pk = $sk->getPublicKey();
+
+        $httpSignature = new HttpSignature();
+        $request = new Request('POST', '/foo', ['Host' => 'example.com'], 'body');
+        $signed = $httpSignature->sign($sk, $request, ['host'], 'key');
+        // Sign nothing
+        $sigInput = 'sig1=();alg="ed25519";created=' . time();
+        $crafted = new Request(
+            'POST',
+            '/foo',
+            [
+                'Host' => 'example.com',
+                'Signature-Input' => $sigInput,
+                'Signature' => $signed->getHeaderLine('Signature'),
+            ],
+            'body'
+        );
+        $this->expectException(HttpSignatureException::class);
+        $httpSignature->verifyThrow($pk, $crafted);
     }
 }

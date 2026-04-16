@@ -7,6 +7,9 @@ use FediE2EE\PKD\Crypto\Enums\SigningAlgorithm;
 
 trait ExtraneousDataProviderTrait
 {
+    /**
+     * @return SigningAlgorithm[][]
+     */
     public static function protocolVersionsProvider(): array
     {
         return [
@@ -14,6 +17,9 @@ trait ExtraneousDataProviderTrait
         ];
     }
 
+    /**
+     * @return SigningAlgorithm[][]
+     */
     public static function signingAlgorithmProvider(): array
     {
         return [
@@ -22,6 +28,9 @@ trait ExtraneousDataProviderTrait
         ];
     }
 
+    /**
+     * @return SigningAlgorithm[][]
+     */
     public static function signingAlgorithmProviderFast(): array
     {
         $cases = [[SigningAlgorithm::ED25519]];
@@ -31,6 +40,19 @@ trait ExtraneousDataProviderTrait
         return $cases;
     }
 
+    /**
+     * @return SigningAlgorithm[][]
+     */
+    public static function ed25519OnlyProvider(): array
+    {
+        return [
+            [SigningAlgorithm::ED25519],
+        ];
+    }
+
+    /**
+     * @return SigningAlgorithm[][]
+     */
     public static function pkdAllowedSigningAlgorithmProvider(): array
     {
         return [
