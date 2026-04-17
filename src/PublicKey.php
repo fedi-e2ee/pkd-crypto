@@ -139,7 +139,7 @@ final class PublicKey
      *
      * @throws CryptoException
      */
-    public static function importPem(string $pem, SigningAlgorithm|string $algo = 'ed25519'): PublicKey
+    public static function importPem(string $pem, SigningAlgorithm|string $algo = 'mldsa44'): PublicKey
     {
         if (is_string($algo)) {
             $algo = SigningAlgorithm::from($algo);
