@@ -24,7 +24,7 @@ class HPKEAdapter
         public readonly string $info = self::DEFAULT_INFO,
     ) {}
 
-    public static function default(): static
+    public static function default(): self
     {
         return new HPKEAdapter(Factory::xwing_hkdf_sha256_chacha20poly1305());
     }
