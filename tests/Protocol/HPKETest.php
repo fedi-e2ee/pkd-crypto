@@ -27,7 +27,10 @@ use ParagonIE\HPKE\{
     HPKEException,
     Interfaces\DecapsKeyInterface,
     Interfaces\EncapsKeyInterface,
-    KEM\DHKEM\DecapsKey
+    KEM\DHKEM\DecapsKey,
+    KEM\PostQuantumKEM,
+    KEM\PQKEM\Algorithm,
+    KEM\PQKEM\DecapsKey as PQDecapsKey
 };
 use PHPUnit\Framework\Attributes\{
     CoversClass,
@@ -47,6 +50,8 @@ class HPKETest extends TestCase
     public static function ciphersuites(): array
     {
         return [
+            [Factory::xwing_hkdf_sha256_chacha20poly1305()],
+            [Factory::mlkem768_hkdf_sha256_aes128gcm()],
             [Factory::dhkem_x25519sha256_hkdf_sha256_chacha20poly1305()],
             [Factory::dhkem_x25519sha256_hkdf_sha256_aes128gcm()],
         ];
@@ -55,16 +60,34 @@ class HPKETest extends TestCase
     /**
      * @throws HPKEException
      * @throws InsecureCurveException
+     * @throws NotImplementedException
      * @throws SodiumException
      */
     #[DataProvider("ciphersuites")]
     public function testKeyID(HPKE $ciphersuite): void
     {
-        $sk = new DecapsKey($ciphersuite->kem->curve, hash('sha256', 'test', true));
+        if ($ciphersuite->kem instanceof PostQuantumKEM) {
+            $seed = match($ciphersuite->kem->algorithm) {
+                Algorithm::MLKem768 =>
+                    hash('sha512', 'test', true),
+                Algorithm::XWing =>
+                    hash('sha256', 'test', true),
+                default =>
+                    throw new NotImplementedException("Unknown algorithm: {$ciphersuite->kem->algorithm->value}"),
+            };
+            $sk = new PQDecapsKey($ciphersuite->kem->algorithm, $seed);
+            $expected = match($ciphersuite->kem->algorithm) {
+                Algorithm::MLKem768 => 'JnTzl7aIkJ21bIKyIVFHINyBi6Y3Uy32-cgFrgUtwTI',
+                Algorithm::XWing => 'MUpCQXYT9-5fVKpB5J0txws5_FD-rUmqNDofWnVZ8vY',
+            };
+        } else {
+            $sk = new DecapsKey($ciphersuite->kem->curve, hash('sha256', 'test', true));
+            $expected = '0eUvFqsTCHdJi7EGyqA5kB1cMXHX97Lui2uYOGN-R9A';
+        }
         $pk = $sk->getEncapsKey();
         $adapter = new HPKEAdapter($ciphersuite);
         $this->assertSame(
-            '0eUvFqsTCHdJi7EGyqA5kB1cMXHX97Lui2uYOGN-R9A',
+            $expected,
             Base64UrlSafe::encodeUnpadded($adapter->keyId($pk))
         );
     }
@@ -82,7 +105,12 @@ class HPKETest extends TestCase
     #[DataProvider("ciphersuites")]
     public function testRoundTrip(HPKE $ciphersuite): void
     {
-        [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();
+
+        if ($ciphersuite->kem instanceof PostQuantumKEM) {
+            [$decapsKey, $encapsKey] = (new PostQuantumKEM($ciphersuite->kem->algorithm))->generateKeys();
+        } else {
+            [$decapsKey, $encapsKey] = $ciphersuite->kem->generateKeys();
+        }
         $this->assertInstanceOf(DecapsKeyInterface::class, $decapsKey);
         $this->assertInstanceOf(EncapsKeyInterface::class, $encapsKey);
 

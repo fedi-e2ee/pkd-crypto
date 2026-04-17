@@ -18,7 +18,8 @@ use ParagonIE\ConstantTime\Base64UrlSafe;
 use ParagonIE\HPKE\{
     HPKE,
     HPKEException,
-    KEM\DHKEM\EncapsKey
+    KEM\DHKEM\EncapsKey,
+    KEM\PQKEM\EncapsKey as PQEncapsKey,
 };
 use SodiumException;
 use function in_array, is_null;
@@ -95,9 +96,9 @@ class Handler
      * @throws JsonException
      */
     public function hpkeEncrypt(
-        Bundle    $bundle,
-        EncapsKey $encapsKey,
-        HPKE      $hpke,
+        Bundle                $bundle,
+        EncapsKey|PQEncapsKey $encapsKey,
+        HPKE                  $hpke,
     ): string {
         return (new HPKEAdapter($hpke))->seal(
             encapsKey: $encapsKey,

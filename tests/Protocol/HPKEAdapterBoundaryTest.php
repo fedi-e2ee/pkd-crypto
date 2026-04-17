@@ -19,6 +19,7 @@ class HPKEAdapterBoundaryTest extends TestCase
     public static function ciphersuites(): array
     {
         return [
+            [Factory::mlkem768_hkdf_sha256_chacha20poly1305()],
             [Factory::dhkem_x25519sha256_hkdf_sha256_chacha20poly1305()],
         ];
     }

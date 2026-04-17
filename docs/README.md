@@ -34,13 +34,13 @@ You'll need to grab the HPKE `EncapsKey` from the Public key Directory Server, a
 
 ```php
 use ParagonIE\ConstantTime\Base64UrlSafe;
-use ParagonIE\HPKE\KEM\DHKEM\{
-    Curve,
+use ParagonIE\HPKE\KEM\PQKEM\{
+    Algorithm,
     EncapsKey
 };
 
 $valueFromServer = ""; /* ... grab from server ... */
-$serverEncapsKey = new EncapsKey(Curve::X25519, Base64UrlSafe::decodeNoPadding($valueFromServer));
+$serverEncapsKey = new EncapsKey(Algorithm::XWing, Base64UrlSafe::decodeNoPadding($valueFromServer));
 $recentMerkleRoot = ""; /* ... grab from server ... */
 ```
 
@@ -55,7 +55,7 @@ $handler = new Handler();
 $bundle = $handler->handle($message, $secretKey, $keyMap, $reecentMerkleRoot);
 
 // HPKE encryption
-$hpke = Factory::init('DHKEM(X25519, HKDF-SHA256), HKDF-SHA256, ChaCha20Poly1305');
+$hpke = Factory::init('MLKEM768-X25519, HKDF-SHA256, ChaCha20Poly1305');
 $encrypted = $handler->hpkeEncrypt($bundle, $encapsKey, $hpke);
 ```
 
