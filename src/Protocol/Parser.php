@@ -167,8 +167,8 @@ class Parser
      */
     public function decryptAndParse(
         string $encrypted,
-        DecapsKey $decapsKey,
-        EncapsKey $encapsKey,
+        DecapsKey|PQDecapsKey $decapsKey,
+        EncapsKey|PQEncapsKey $encapsKey,
         HPKE $hpke,
         ?PublicKey $publicKey = null
     ): ParsedMessage {
