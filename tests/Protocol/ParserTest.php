@@ -37,8 +37,8 @@ use FediE2EE\PKD\Crypto\{
 use ParagonIE\HPKE\{
     Factory,
     HPKEException,
-    KEM\DHKEM\Curve,
-    KEM\DHKEM\DecapsKey
+    KEM\PQKEM\Algorithm,
+    KEM\PQKEM\DecapsKey
 };
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -62,7 +62,7 @@ class ParserTest extends TestCase
     public function testParser(): void
     {
         $recent = 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(random_bytes(32));
-        $hpke = Factory::dhkem_x25519sha256_hkdf_sha256_chacha20poly1305();
+        $hpke = Factory::mlkem768x25519_hkdf_sha256_chacha20poly1305();
         [$decapsKey, $encapsKey] = $hpke->kem->generateKeys();
 
         $secretKey = SecretKey::generate();
@@ -134,9 +134,9 @@ class ParserTest extends TestCase
         $bundle = $handler->handle($message, $secretKey, $keyMap, $merkleRoot);
 
         // HPKE encryption
-        $hpke = Factory::init('DHKEM(X25519, HKDF-SHA256), HKDF-SHA256, ChaCha20Poly1305');
+        $hpke = Factory::init('MLKEM768-X25519, HKDF-SHA256, ChaCha20Poly1305');
         $decapsKey = new DecapsKey(
-            Curve::X25519,
+            Algorithm::XWing,
             random_bytes(32)
         );
         $encapsKey = $decapsKey->getEncapsKey();

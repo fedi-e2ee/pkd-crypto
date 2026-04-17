@@ -57,6 +57,10 @@ class FullRoundTripTest extends TestCase
     public static function ciphersuites(): array
     {
         return [
+            [Factory::mlkem768x25519_hkdf_sha256_chacha20poly1305()],
+            [Factory::mlkem768x25519_hkdf_sha256_aes128gcm()],
+            [Factory::mlkem768_hkdf_sha256_chacha20poly1305()],
+            [Factory::mlkem768_hkdf_sha256_aes128gcm()],
             [Factory::dhkem_x25519sha256_hkdf_sha256_chacha20poly1305()],
             [Factory::dhkem_x25519sha256_hkdf_sha256_aes128gcm()],
         ];

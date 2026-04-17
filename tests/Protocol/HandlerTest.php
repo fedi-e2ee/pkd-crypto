@@ -32,9 +32,9 @@ use ParagonIE\HPKE\{
     HPKE
 };
 use ParagonIE\HPKE\HPKEException;
-use ParagonIE\HPKE\KEM\DHKEM\{
-    Curve,
-    DecapsKey
+use ParagonIE\HPKE\KEM\PQKEM\{
+    Algorithm,
+    DecapsKey as PQDecapsKey
 };
 use PHPUnit\Framework\TestCase;
 use Random\RandomException;
@@ -114,7 +114,7 @@ class HandlerTest extends TestCase
         $bundler = new Handler();
         $message = $bundler->handle($encryptedAddKey, $secretKey, $keyMap, $root);
 
-        $ciphersuite = Factory::init('DHKEM(X25519, HKDF-SHA256), HKDF-SHA256, AES-128-GCM');
+        $ciphersuite = Factory::init('MLKEM768-X25519, HKDF-SHA256, AES-128-GCM');
         $hpke = new HPKE($ciphersuite->kem, $ciphersuite->kdf, $ciphersuite->aead);
         [$skR, $pkR] = $hpke->kem->generateKeys();
 
@@ -223,9 +223,9 @@ class HandlerTest extends TestCase
         $bundle = $handler->handle($message, $secretKey, $keyMap, $merkleRoot);
 
         // HPKE encryption
-        $hpke = Factory::init('DHKEM(X25519, HKDF-SHA256), HKDF-SHA256, ChaCha20Poly1305');
-        $decapsKey = new DecapsKey(
-            Curve::X25519,
+        $hpke = Factory::init('MLKEM768-X25519, HKDF-SHA256, ChaCha20Poly1305');
+        $decapsKey = new PQDecapsKey(
+            Algorithm::XWing,
             random_bytes(32)
         );
         $encapsKey = $decapsKey->getEncapsKey();

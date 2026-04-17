@@ -37,7 +37,9 @@ use ParagonIE\HPKE\{
     HPKE,
     HPKEException,
     KEM\DHKEM\DecapsKey,
-    KEM\DHKEM\EncapsKey
+    KEM\DHKEM\EncapsKey,
+    KEM\PQKEM\DecapsKey as PQDecapsKey,
+    KEM\PQKEM\EncapsKey as PQEncapsKey
 };
 use SodiumException;
 use function array_key_exists, in_array, is_null;
@@ -316,8 +318,8 @@ class Parser
      */
     public function hpkeDecrypt(
         string $encrypted,
-        DecapsKey $decapsKey,
-        EncapsKey $encapsKey,
+        DecapsKey|PQDecapsKey $decapsKey,
+        EncapsKey|PQEncapsKey $encapsKey,
         HPKE $hpke
     ): Bundle {
         return static::fromJson(

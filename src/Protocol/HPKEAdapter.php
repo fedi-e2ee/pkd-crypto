@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Protocol;
 
 use ParagonIE\ConstantTime\Base64UrlSafe;
+use ParagonIE\HPKE\Factory;
 use ParagonIE\HPKE\HPKE;
 use ParagonIE\HPKE\HPKEException;
 use ParagonIE\HPKE\Interfaces\{
@@ -22,6 +23,11 @@ class HPKEAdapter
         private readonly HPKE  $hpke,
         public readonly string $info = self::DEFAULT_INFO,
     ) {}
+
+    public static function default(): static
+    {
+        return new static(Factory::xwing_hkdf_sha256_chacha20poly1305());
+    }
 
     /**
      * Is this string an HPKE-encrypted ciphertext with the hpke: prefix?
