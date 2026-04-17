@@ -26,7 +26,7 @@ class HPKEAdapter
 
     public static function default(): static
     {
-        return new static(Factory::xwing_hkdf_sha256_chacha20poly1305());
+        return new HPKEAdapter(Factory::xwing_hkdf_sha256_chacha20poly1305());
     }
 
     /**
