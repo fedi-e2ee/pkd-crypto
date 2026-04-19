@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Enums;
 
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
+use ParagonIE\PQCrypto\Compat;
 use ValueError;
 
 enum SigningAlgorithm: string
@@ -22,6 +23,14 @@ enum SigningAlgorithm: string
         return match ($this) {
             self::ED25519 => 32,
             self::MLDSA44 => 1312,
+        };
+    }
+
+    public function signatureLength(): int
+    {
+        return match ($this) {
+            self::ED25519 => 64,
+            self::MLDSA44 => Compat::MLDSA44_SIGNATURE_BYTES,
         };
     }
 
