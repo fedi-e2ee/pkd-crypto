@@ -12,7 +12,8 @@ use FediE2EE\PKD\Crypto\Exceptions\{
 use ParagonIE\ConstantTime\Base64;
 use Psr\Http\Message\{
     MessageInterface,
-    RequestInterface
+    RequestInterface,
+    ResponseInterface
 };
 use ParagonIE\PQCrypto\Exception\MLDSAInternalException;
 use ParagonIE\PQCrypto\Exception\PQCryptoCompatException;
@@ -53,6 +54,7 @@ final class HttpSignature
      * Sign an HTTP message (request or response), using RFC 9421.
      *
      * @throws CryptoException
+     * @throws HttpSignatureException
      * @throws MLDSAInternalException
      * @throws PQCryptoCompatException
      * @throws RandomException
@@ -74,6 +76,13 @@ final class HttpSignature
             throw new CryptoException(
                 'Signing algorithm ' . $secretKey->getAlgo()->value . ' is not permitted'
             );
+        }
+        // RFC 9421 permits an empty covered set, but an empty set authenticates
+        // nothing about the message and parseSignatureInput() refuses to parse
+        // "sig1=();..." -- signing with one produces a header the same class
+        // cannot verify. Reject at sign time.
+        if (empty($headersToSign)) {
+            throw new HttpSignatureException('At least one covered component is required when signing');
         }
         if (is_null($created)) {
             // Default to the current time
@@ -211,6 +220,17 @@ final class HttpSignature
                 }
                 continue;
             }
+            if ($lower === '@status') {
+                if (!$message instanceof ResponseInterface) {
+                    if ($throwIfInvalid) {
+                        throw new HttpSignatureException(
+                            'Covered component "@status" requires a response message'
+                        );
+                    }
+                    return false;
+                }
+                continue;
+            }
             if (!$message->hasHeader($lower)) {
                 if ($throwIfInvalid) {
                     throw new HttpSignatureException(
@@ -276,6 +296,12 @@ final class HttpSignature
             if ($header === '@path') {
                 if ($message instanceof RequestInterface) {
                     $lines[] = "\"@path\": " . $message->getUri()->getPath();
+                }
+                continue;
+            }
+            if ($header === '@status') {
+                if ($message instanceof ResponseInterface) {
+                    $lines[] = "\"@status\": " . $message->getStatusCode();
                 }
                 continue;
             }

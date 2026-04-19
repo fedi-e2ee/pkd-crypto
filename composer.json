@@ -36,7 +36,6 @@
     "giorgiosironi/eris": "^1",
     "guzzlehttp/psr7": "^2",
     "phpunit/phpunit": "^8|^9|^10|^11|^12",
-    "roave/security-advisories": "dev-latest",
     "soatok/code-style": ">= 0",
     "phpstan/phpstan": "^2.1",
     "vimeo/psalm": "^6"

@@ -13,7 +13,10 @@ use FediE2EE\PKD\Crypto\{
     PublicKey,
     SecretKey
 };
-use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\{
+    Request,
+    Response
+};
 use PHPUnit\Framework\Attributes\{
     CoversClass,
     DataProvider
@@ -1730,6 +1733,98 @@ class HttpSignatureTest extends TestCase
             'body'
         );
         $this->expectException(HttpSignatureException::class);
+        $httpSignature->verifyThrow($pk, $crafted);
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws MLDSAInternalException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testSignEmptyCoveredThrows(SigningAlgorithm $alg): void
+    {
+        $sk = self::skFromSeed('sign rejects empty covered', $alg);
+        $httpSignature = new HttpSignature();
+        $request = new Request('POST', '/foo', ['Host' => 'example.com'], 'body');
+
+        $this->expectException(HttpSignatureException::class);
+        $this->expectExceptionMessage(
+            'At least one covered component is required when signing'
+        );
+        $httpSignature->sign($sk, $request, [], 'key');
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testSignAndVerifyStatusOnResponse(SigningAlgorithm $alg): void
+    {
+        $sk = self::skFromSeed('status component', $alg);
+        $pk = $sk->getPublicKey();
+
+        $httpSignature = new HttpSignature();
+        $response = new Response(200, ['Content-Type' => 'application/json'], '{}');
+
+        $signed = $httpSignature->sign(
+            $sk,
+            $response,
+            ['@status', 'content-type'],
+            'key'
+        );
+        /** @var Response $signed */
+        $this->assertTrue($httpSignature->verify($pk, $signed));
+
+        $sigInput = $signed->getHeaderLine('Signature-Input');
+        $this->assertStringStartsWith('sig1=("@status" "content-type");', $sigInput);
+
+        // Flipping the status invalidates the signature (binding property).
+        $tamperedStatus = $signed->withStatus(500);
+        $this->assertFalse($httpSignature->verify($pk, $tamperedStatus));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    #[DataProvider("ed25519OnlyProvider")]
+    public function testVerifyThrowStatusOnRequest(SigningAlgorithm $alg): void
+    {
+        $sk = self::skFromSeed('status on request', $alg);
+        $pk = $sk->getPublicKey();
+
+        // Sign against a response, then replay the signed headers onto a request message.
+        // The verifier must refuse because @status is response-only.
+        $httpSignature = new HttpSignature();
+        $response = new Response(200, ['Content-Type' => 'application/json'], '{}');
+        $signed = $httpSignature->sign($sk, $response, ['@status'], 'key');
+        $crafted = new Request(
+            'POST',
+            '/foo',
+            [
+                'Host' => 'example.com',
+                'Signature-Input' => $signed->getHeaderLine('Signature-Input'),
+                'Signature' => $signed->getHeaderLine('Signature'),
+            ],
+            'body'
+        );
+
+        $this->expectException(HttpSignatureException::class);
+        $this->expectExceptionMessage('Covered component "@status" requires a response message');
         $httpSignature->verifyThrow($pk, $crafted);
     }
 }
