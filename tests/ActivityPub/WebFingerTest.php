@@ -12,6 +12,7 @@ use GuzzleHttp\{
     Client,
     Exception\ConnectException,
     Exception\GuzzleException,
+    Exception\ServerException,
     Handler\MockHandler,
     HandlerStack,
     Middleware,
@@ -43,9 +44,12 @@ class WebFingerTest extends TestCase
     {
         try {
             $actual = (new WebFinger())->canonicalize($input);
-        } catch (ConnectException $e) {
+        } catch (ConnectException|ServerException $e) {
             if (str_contains($e->getMessage(), 'timed out')) {
                 $this->markTestSkipped("Timed out after 5 seconds");
+            }
+            if (str_contains($e->getMessage(), 'Server error')) {
+                $this->markTestSkipped("Intermittent error");
             }
         }
         $this->assertSame($expected, $actual, $input);
