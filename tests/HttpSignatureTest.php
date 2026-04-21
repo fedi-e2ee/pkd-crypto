@@ -566,6 +566,7 @@ class HttpSignatureTest extends TestCase
 
         $this->expectException(HttpSignatureException::class);
         $this->expectExceptionMessage('Unsupported algorithm');
+        $this->expectExceptionCode(0);
         $httpSignature->verifyThrow($pk, $request);
     }
 

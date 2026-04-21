@@ -17,6 +17,7 @@ class SigningAlgorithmTest extends TestCase
         $this->assertSame('ed25519', $ed->value);
         $this->assertSame('mldsa44', $ml->value);
         $this->expectException(CryptoException::class);
+        $this->expectExceptionCode(0);
         SigningAlgorithm::fromString('rsa');
     }
 

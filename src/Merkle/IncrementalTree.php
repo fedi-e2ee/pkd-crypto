@@ -83,7 +83,7 @@ class IncrementalTree extends Tree
 
         $level = 0;
         $currentIndex = $index;
-        for ($iterations = 0; $iterations < $this->size; ++$iterations) {
+        while (true) {
             $siblingIndex = ($currentIndex % 2 === 0) ? $currentIndex + 1 : $currentIndex - 1;
             $siblingKey = "{$level}-{$siblingIndex}";
 
