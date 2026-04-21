@@ -4,6 +4,7 @@ namespace FediE2EE\PKD\Crypto\Tests\Enums;
 
 use FediE2EE\PKD\Crypto\Enums\SigningAlgorithm;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
+use ParagonIE\PQCrypto\Compat;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -21,11 +22,30 @@ class SigningAlgorithmTest extends TestCase
         SigningAlgorithm::fromString('rsa');
     }
 
+    /**
+     * Asserts the error code on the CryptoException is exactly 0,
+     * killing Increment/DecrementInteger mutations on that literal.
+     */
+    public function testFromStringExceptionCode(): void
+    {
+        try {
+            SigningAlgorithm::fromString('rsa');
+            $this->fail('Expected CryptoException');
+        } catch (CryptoException $e) {
+            $this->assertSame(0, $e->getCode());
+            $this->assertSame(
+                'Not a valid signing algorithm: rsa',
+                $e->getMessage()
+            );
+        }
+    }
+
     public function testEd25519(): void
     {
         $alg = SigningAlgorithm::ED25519;
         $this->assertSame(32, $alg->publicKeyLength());
         $this->assertSame(64, $alg->signingKeyLength());
+        $this->assertSame(64, $alg->signatureLength());
     }
 
     public function testMldsa44(): void
@@ -33,5 +53,6 @@ class SigningAlgorithmTest extends TestCase
         $alg = SigningAlgorithm::MLDSA44;
         $this->assertSame(1312, $alg->publicKeyLength());
         $this->assertSame(32, $alg->signingKeyLength());
+        $this->assertSame(Compat::MLDSA44_SIGNATURE_BYTES, $alg->signatureLength());
     }
 }

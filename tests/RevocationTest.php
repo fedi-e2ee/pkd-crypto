@@ -82,4 +82,58 @@ class RevocationTest extends TestCase
         $this->expectException(InvalidSignatureException::class);
         $revocation->verifyRevocationToken($badToken, $pk, true);
     }
+
+    /**
+     * @throws CryptoException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    #[DataProvider('signingAlgorithmProvider')]
+    public function testVerifyRevocationTokenReturnsTrueWhenValid(SigningAlgorithm $alg): void
+    {
+        $sk = SecretKey::generate($alg);
+        $revocation = new Revocation();
+        $token = $revocation->revokeThirdParty($sk);
+        $result = $revocation->verifyRevocationToken($token, $sk->getPublicKey(), true);
+        $this->assertTrue(
+            $result,
+            'verifyRevocationToken with throwIfInvalid=true must return true'
+        );
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    #[DataProvider('signingAlgorithmProvider')]
+    public function testDecodeReturnsConsistentStructure(SigningAlgorithm $alg): void
+    {
+        $sk = SecretKey::generate($alg);
+        $revocation = new Revocation();
+        $token = $revocation->revokeThirdParty($sk);
+
+        [$pk, $signed, $signature] = $revocation->decode($token);
+        $this->assertSame(
+            $sk->getPublicKey()->getBytes(),
+            $pk->getBytes(),
+            'decoded public key must match the secret key source'
+        );
+        $this->assertSame($alg, $pk->getAlgo());
+        $this->assertSame(
+            $alg->signatureLength(),
+            strlen($signature),
+            'extracted signature length must match the algorithm'
+        );
+        $this->assertTrue(
+            $pk->verify($signature, $signed),
+            'extracted signature must verify against extracted signed data'
+        );
+    }
 }

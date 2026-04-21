@@ -23,12 +23,32 @@ use PHPUnit\Framework\Attributes\{
     DataProvider,
     Group
 };
+use ParagonIE\Certainty\Fetch;
 use PHPUnit\Framework\TestCase;
 use SodiumException;
 
 #[CoversClass(WebFinger::class)]
 class WebFingerTest extends TestCase
 {
+    private ?Client $http = null;
+
+    /**
+     * @throws CertaintyException
+     * @throws SodiumException
+     */
+    private function http(): Client
+    {
+        if (is_null($this->http)) {
+            $fetcher = new Fetch(dirname(__DIR__, 2) . '/vendor/paragonie/certainty/data');
+            $this->http = new Client([
+                'verify' => $fetcher
+                    ->getLatestBundle(false, false)
+                    ->getFilePath()
+            ]);
+        }
+        return $this->http;
+    }
+
     public static function knownAnswers(): array
     {
         return [
@@ -43,7 +63,7 @@ class WebFingerTest extends TestCase
     public function testKnownAnswers(string $input, string $expected): void
     {
         try {
-            $actual = (new WebFinger())->canonicalize($input);
+            $actual = (new WebFinger($this->http()))->canonicalize($input);
         } catch (ConnectException|ServerException $e) {
             if (str_contains($e->getMessage(), 'timed out')) {
                 $this->markTestSkipped("Timed out after 5 seconds");
@@ -58,8 +78,8 @@ class WebFingerTest extends TestCase
     #[Group('network')]
     public function testRemoteFetchLocation(): void
     {
-        $fetcher = (new WebFinger())->getCaCertFetcher();
-        $filePath = $fetcher->getLatestBundle()->getFilePath();
+        $fetcher = (new WebFinger($this->http()))->getCaCertFetcher();
+        $filePath = $fetcher->getLatestBundle(true, false)->getFilePath();
         $expected = dirname(__DIR__, 2) . '/cache';
         $this->assertStringStartsWith($expected, $filePath);
     }
@@ -126,7 +146,7 @@ class WebFingerTest extends TestCase
     #[DataProvider("weirdInputs")]
     public function testCanonicalEdgeCases(string $weird): void
     {
-        $webFinger = new WebFinger();
+        $webFinger = new WebFinger($this->http());
         $this->expectException(InputException::class);
         $webFinger->canonicalize($weird);
     }

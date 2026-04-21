@@ -10,6 +10,7 @@ use FediE2EE\PKD\Crypto\Exceptions\{
     NetworkException,
     NotImplementedException
 };
+use FediE2EE\PKD\Crypto\Enums\SigningAlgorithm;
 use FediE2EE\PKD\Crypto\Protocol\{
     Actions\AddKey,
     EncryptedProtocolMessageInterface,
@@ -17,6 +18,8 @@ use FediE2EE\PKD\Crypto\Protocol\{
     SignedMessage
 };
 use ParagonIE\PQCrypto\Compat;
+use ParagonIE\PQCrypto\Exception\MLDSAInternalException;
+use ParagonIE\PQCrypto\Exception\PQCryptoCompatException;
 use FediE2EE\PKD\Crypto\{
     SecretKey,
     SymmetricKey
@@ -513,5 +516,62 @@ class SignedMessageTest extends TestCase
         $this->expectException(CryptoException::class);
         $this->expectExceptionMessage('Protocol Message is not signed');
         $sm2->getSignature();
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws MLDSAInternalException
+     * @throws NetworkException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    public function testSignRejectsDisallowedAlgorithm(): void
+    {
+        $recent = 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(random_bytes(32));
+        $ed = SecretKey::generate(SigningAlgorithm::ED25519);
+        $mldsa = SecretKey::generate(SigningAlgorithm::MLDSA44);
+        // Inner message uses an allowed key so the AddKey construction itself is fine
+        $sm = new SignedMessage(
+            new AddKey('https://example.com/@alice', $mldsa->getPublicKey()),
+            $recent
+        );
+
+        $this->expectException(CryptoException::class);
+        $this->expectExceptionMessage('ed25519 is not permitted');
+        $sm->sign($ed);
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws MLDSAInternalException
+     * @throws NetworkException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    public function testVerifyRejectsDisallowedAlgorithm(): void
+    {
+        $recent = 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(random_bytes(32));
+        $mldsa = SecretKey::generate(SigningAlgorithm::MLDSA44);
+        $ed = SecretKey::generate(SigningAlgorithm::ED25519);
+
+        $sm = SignedMessage::init(
+            new AddKey('https://example.com/@alice', $mldsa->getPublicKey()),
+            $recent,
+            $mldsa
+        );
+
+        $this->expectException(CryptoException::class);
+        $this->expectExceptionMessage('ed25519 is not permitted');
+        $sm->verify($ed->getPublicKey());
     }
 }

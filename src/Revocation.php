@@ -71,7 +71,7 @@ class Revocation
     /**
      * @throws CryptoException
      */
-    protected function decodeEd25519(
+    private function decodeEd25519(
         #[SensitiveParameter]
         string $decoded
     ): array {
@@ -95,7 +95,7 @@ class Revocation
     /**
      * @throws CryptoException
      */
-    protected function decodeMldsa44(
+    private function decodeMldsa44(
         #[SensitiveParameter]
         string $decoded
     ): array {
