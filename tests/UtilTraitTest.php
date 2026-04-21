@@ -2,12 +2,20 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests;
 
+use FediE2EE\PKD\Crypto\Enums\ProtocolVersion;
+use FediE2EE\PKD\Crypto\Enums\SigningAlgorithm;
+use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
+use FediE2EE\PKD\Crypto\SecretKey;
 use FediE2EE\PKD\Crypto\UtilTrait;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
 use FediE2EE\PKD\Crypto\Exceptions\InputException;
+use ParagonIE\PQCrypto\Exception\MLDSAInternalException;
+use ParagonIE\PQCrypto\Exception\PQCryptoCompatException;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Random\RandomException;
+use SodiumException;
 
 /**
  * @covers UtilTrait
@@ -178,5 +186,52 @@ class UtilTraitTest extends TestCase
         $input = "\x09\x0a\x0b\x0c\x0d\x0e";
         $expected = "\x09\x0b\x0c\x0e";
         $this->assertSame($expected, self::stripNewlines($input));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    public function testAssertKeyIsAllowedIsPublic(): void
+    {
+        $ed = SecretKey::generate(SigningAlgorithm::ED25519);
+        $this->expectException(CryptoException::class);
+        $this->expectExceptionMessage('ed25519 is not permitted');
+        self::assertKeyIsAllowed($ed, ProtocolVersion::V1);
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    public function testAssertKeyIsAllowedDefaultsVersionWhenNull(): void
+    {
+        $ed = SecretKey::generate(SigningAlgorithm::ED25519);
+        $this->expectException(CryptoException::class);
+        $this->expectExceptionMessage('ed25519 is not permitted');
+        // Passing null must fall through to ProtocolVersion::default() (V1).
+        self::assertKeyIsAllowed($ed, null);
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws MLDSAInternalException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    public function testAssertKeyIsAllowedPermitsMldsa44(): void
+    {
+        $this->expectNotToPerformAssertions();
+        $mldsa = SecretKey::generate(SigningAlgorithm::MLDSA44);
+        self::assertKeyIsAllowed($mldsa, ProtocolVersion::V1);
+        self::assertKeyIsAllowed($mldsa->getPublicKey(), ProtocolVersion::V1);
     }
 }

@@ -2,14 +2,20 @@
 declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests\Protocol;
 
+use FediE2EE\PKD\Crypto\Enums\SigningAlgorithm;
 use FediE2EE\PKD\Crypto\Exceptions\CryptoException;
+use FediE2EE\PKD\Crypto\Exceptions\JsonException;
+use FediE2EE\PKD\Crypto\Exceptions\NotImplementedException;
 use FediE2EE\PKD\Crypto\Merkle\IncrementalTree;
 use FediE2EE\PKD\Crypto\Protocol\{
     Cosignature,
     HistoricalRecord
 };
 use FediE2EE\PKD\Crypto\SecretKey;
+use ParagonIE\PQCrypto\Exception\MLDSAInternalException;
+use ParagonIE\PQCrypto\Exception\PQCryptoCompatException;
 use PHPUnit\Framework\TestCase;
+use Random\RandomException;
 use SodiumException;
 
 class CosignatureTest extends TestCase
@@ -107,5 +113,42 @@ class CosignatureTest extends TestCase
         // Verify state was not modified (because clone is used and verification failed)
         $stateAfter = $cosignature->getTree()->toJson();
         $this->assertSame($stateBefore, $stateAfter);
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws JsonException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    public function testCosignRejectsDisallowedAlgorithm(): void
+    {
+        $sk = SecretKey::generate(SigningAlgorithm::ED25519);
+        $cosignature = new Cosignature(new IncrementalTree());
+
+        $this->expectException(CryptoException::class);
+        $this->expectExceptionMessage('ed25519 is not permitted');
+        $cosignature->cosign($sk, 'example.com');
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws JsonException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    public function testVerifyCosignatureRejectsDisallowedAlgorithm(): void
+    {
+        $edPk = SecretKey::generate(SigningAlgorithm::ED25519)->getPublicKey();
+
+        $this->expectException(CryptoException::class);
+        $this->expectExceptionMessage('ed25519 is not permitted');
+        Cosignature::verifyCosignature($edPk, '{}');
     }
 }

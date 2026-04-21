@@ -1827,4 +1827,68 @@ class HttpSignatureTest extends TestCase
         $this->expectExceptionMessage('Covered component "@status" requires a response message');
         $httpSignature->verifyThrow($pk, $crafted);
     }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    public function testSignatureBaseIncludesHeaderAfterStatus(): void
+    {
+        $sk = self::skFromSeed('status continue base', SigningAlgorithm::ED25519);
+        $pk = $sk->getPublicKey();
+
+        $httpSignature = new HttpSignature();
+        $response = new Response(200, ['Content-Type' => 'application/json'], '{}');
+
+        $signed = $httpSignature->sign(
+            $sk,
+            $response,
+            ['@status', 'content-type'],
+            'key'
+        );
+
+        /** @var Response $signed */
+        $tampered = $signed->withHeader('Content-Type', 'text/plain');
+        $this->assertFalse(
+            $httpSignature->verify($pk, $tampered),
+            'content-type listed after @status must be covered by signature'
+        );
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    public function testVerifyChecksHeadersListedAfterStatus(): void
+    {
+        $sk = self::skFromSeed('status continue verify', SigningAlgorithm::ED25519);
+        $pk = $sk->getPublicKey();
+
+        $httpSignature = new HttpSignature();
+        $response = new Response(
+            200,
+            ['Content-Type' => 'application/json'],
+            '{}'
+        );
+        $signed = $httpSignature->sign(
+            $sk,
+            $response,
+            ['@status', 'x-absent'],
+            'key'
+        );
+
+        $this->expectException(HttpSignatureException::class);
+        $this->expectExceptionMessage('Covered component header missing: x-absent');
+        $httpSignature->verifyThrow($pk, $signed);
+    }
 }

@@ -3,14 +3,15 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Crypto\Tests\Protocol;
 
 use FediE2EE\PKD\Crypto\AttributeEncryption\AttributeKeyMap;
+use FediE2EE\PKD\Crypto\Enums\SigningAlgorithm;
 use FediE2EE\PKD\Crypto\Exceptions\{
     BundleException,
     CryptoException,
     InputException,
     JsonException,
+    NetworkException,
     NotImplementedException,
-    ParserException,
-};
+    ParserException};
 use FediE2EE\PKD\Crypto\Protocol\Actions\{
     AddKey,
     BurnDown
@@ -36,6 +37,8 @@ use ParagonIE\HPKE\KEM\PQKEM\{
     Algorithm,
     DecapsKey as PQDecapsKey
 };
+use ParagonIE\PQCrypto\Exception\MLDSAInternalException;
+use ParagonIE\PQCrypto\Exception\PQCryptoCompatException;
 use PHPUnit\Framework\TestCase;
 use Random\RandomException;
 use SodiumException;
@@ -349,5 +352,35 @@ class HandlerTest extends TestCase
         $bundleMessage = $bundle->getMessage();
         $this->assertSame($originalMessage['actor'], $bundleMessage['actor'], 'double-encrypted test');
         $this->assertSame($originalMessage['public-key'], $bundleMessage['public-key'], 'double-encrypted test');
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws GuzzleException
+     * @throws InputException
+     * @throws JsonException
+     * @throws MLDSAInternalException
+     * @throws NetworkException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    public function testHandleRejectsDisallowedAlgorithm(): void
+    {
+        $ed = SecretKey::generate(SigningAlgorithm::ED25519);
+        // Inner message uses a permitted key
+        $allowedPk = SecretKey::generate(SigningAlgorithm::MLDSA44)->getPublicKey();
+        $addKey = new AddKey(
+            'https://example.com/users/alice',
+            $allowedPk
+        );
+        $keyMap = new AttributeKeyMap();
+        $keyMap->addKey('actor', SymmetricKey::generate());
+
+        $handler = new Handler();
+        $this->expectException(CryptoException::class);
+        $this->expectExceptionMessage('ed25519 is not permitted');
+        $handler->handle($addKey, $ed, $keyMap, (new Tree())->getEncodedRoot());
     }
 }
