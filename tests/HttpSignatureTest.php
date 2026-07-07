@@ -74,7 +74,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("ed25519OnlyProvider")]
+    #[DataProvider("signingAlgorithmProvider")]
     public function testSignAndVerify(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('phpunit test case for fedi-e2ee/pkd-client', $alg);
@@ -96,6 +96,30 @@ class HttpSignatureTest extends TestCase
 
         $this->assertTrue($httpSignature->verify($pk, $signedRequest));
         $this->assertTrue($httpSignature->verifyThrow($pk, $signedRequest));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
+     */
+    public function testMldsa44SignsWithCanonicalHttpAlgorithm(): void
+    {
+        $sk = self::skFromSeed('canonical mldsa http alg', SigningAlgorithm::MLDSA44);
+        $pk = $sk->getPublicKey();
+
+        $httpSignature = new HttpSignature();
+        $request = new Request('POST', '/foo', ['Host' => 'example.com'], 'body');
+        $signed = $httpSignature->sign($sk, $request, ['@method', 'host'], 'key');
+        $signatureInput = $signed->getHeaderLine('Signature-Input');
+
+        $this->assertStringContainsString('alg="ml-dsa-44"', $signatureInput);
+        $this->assertStringNotContainsString('alg="mldsa44"', $signatureInput);
+        $this->assertTrue($httpSignature->verify($pk, $signed));
     }
 
     public static function invalidTimeoutsProvider(): array
@@ -1599,6 +1623,55 @@ class HttpSignatureTest extends TestCase
     /**
      * @throws CryptoException
      * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws SodiumException
+     */
+    public function testKnownAnswerMldsa44WireVector(): void
+    {
+        $seed = str_repeat("\x45", 32);
+        $sk = new SecretKey($seed, SigningAlgorithm::MLDSA44);
+        $pk = $sk->getPublicKey();
+
+        $expectedPublicKey = '8/Ud04MLtWJ5XWhbMoQPw6/rLmykKA47B1RMT1L44Wn8H+ug0FhCRkuL9vCxZ26C9nwsnrNt9CP/acTQswDZ0y38BbPUpOErHMV53AMnHSzRqyY7xWujlt+m0G98fjjhVSSgjab7kG86bf9JmyxsQIWdrINH49joDQyYuf46zRIMDb/y4dKlD08xj/KLwLrWXama5j0WcM1W9MudY6GyOyTd9IAG6Sm1L6eBUP3kbCrKva55Ixviot5CyT88nG0VCOpYrWpMGJa2nh4BBShnBsFFpVtfi3O4C9z0bNISo5Tn+wJSqNTxZFlGn6KtjN7WZU2OyVfWKyu0DzNbcMHFtto3vDuDspiV1dxsfdxtAmQgByncX3RDPMDuVvvOCrvo6KSVnB+Z0jLEaFyN5xMiaAgHIsfjiyyduL71zL+JuGDG7FqYqBriz37d9vp0gj0SWb1yJ+WjQuzhcKcuuGY1MjeANrCYmpcHjmm+KVs+ayH8TuBalol7mFLPJY89qKhptnUl5j1xIk9Zusc9yzMjyAORQfMm5VBK9DbYlk+pHqe4vIDaBrCVl3nwn3Qp1H4Ey3nu5T7jE54CoIQnw73h1NHwzmykorr9UQXqN2k+x8TP5rehmgzS4Nh7IleE2e8K8xjxZZIVUIHicBxwofFWlLbqvwivqTYZAK4h0UAD9vzGeY/s0guy/TdRPOFP4CIhYbMFGLQrw0Eoa0Dl5ErMm8eIPLqA9X2K4Ip3PzJhYqt5MFzVpqsJ9SJAeJGr/rLqYCW4U6U4VEuy65nIbtoURDlJpdROkn0sIutYn45N9451xGY3x9BFVKXnZwRh6pkno+CHiJV5QC1xrHQn98rDatANCodgghhFq3WdjHz8Z6uWJsiyg4LXlBLEwJEqTRhXCx7w/Sdbiz/ZF5Y0gQBaZ8Ai1jNVxy+0ZIoCb5z67RdtyMlt++4KpgZlIc/6oV4rvmOTx0ulVjNcQhHS6h3aaNZPc2UzzYmHPIQ8n0AJY/mCE2HRk4w5JyCSPQzSwZRnwPH7oSCC/FTFGSq+5JX8KgL3p+GUOd6qmF2EqhISbuKKn0adIBTrvJxe6pBsfmGSXgMV6vLHllBBCoJhZrUioHM6b9bPW9W6427iY8jqmyPbAEqQcUGS7hNpsmTNaTrdu5FuU63OAxNFuxxGkXtCuzUjGdek47dB4viXLlOSJQFm0idLHt/DcIepevSFKFflajL6dh6ULHiiQWjxpDOODdzXyZCFt7PZ6QhKL2HXFHxZPEolZR+rkTlGXdhYBFm2t2l5u1CaTSvZkFmpGE5jsFB0zUU+1XdaczaKyDe2SvKSr8g2wbllIRiWnPIyBEuEBSdL0UtNkrZclm3rTspqfeOru796u7yRDAXlbki9mFCgqHSd729NiS66SwgcrYWtL866tbxvl4bG05BfkuCC2ZXX4AbCp+ikk0nndnfpRny5O4qGLHKjWWX3Q0AN+0PAnsJuWE0yGmRav5hzdJlO+RKaD+9NcX8Mx9IlYbqlLg6aYz1Cwp9qiKraqWv43w/LBEyRmW45s0Kg+f1vMH3BPAvXrDUND6eq3s134LgYF99lc7RcuynlPHvnVVoDRkECLZaCXTVhYM/Wq5Tv/kNiY8Wt7/Wq2lZvD8z0JWQDkIKe/Wl91Eo+fQ6XyO+kEa0mvc7XhdOSbggPsfxs4z8gZwo/tGYpxsIUbPLC0pCejYvIvAglukRAvOD/c7YPhtko8SA0yZkLHWTdT7jXbPvmVA==';
+        $expectedSignatureInput =
+            'sig1=("@method" "@path" "host" "date");alg="ml-dsa-44";'
+            . 'keyid="test-key-mldsa44";created=1783368000';
+        $expectedSignatureBase = implode("\n", [
+            '"@method": get',
+            '"@path": /foo',
+            '"host": example.com',
+            '"date": Mon, 06 Jul 2026 20:00:00 GMT',
+            '"@signature-params": ("@method" "@path" "host" "date");'
+            . 'alg="ml-dsa-44";keyid="test-key-mldsa44";created=1783368000',
+        ]);
+        $expectedSignature = <<<'B64'
+mpmjgJEfGuNGIzzwxgbFexnomUNRynj2OuSDIoTCvXhC4bHf+VMG9Wps+FFQfpV6yk0QtFgcN5Qu0mQxim4mqFSnGVfAXpX9imVo13GCJk2hPKOeRVnWtOAM+QU+pe7+VSanp1QhLsRIKf8bpUbkI94zqBwCd2LMMKiBhjZBWS0inlwXaNv7zA90CG7nrLbLLvIccmX8hU6GQPrV2Ry8NlJCxeyb9ehZqpvndgEghxqIgu+mpM1trlV1k1Wm3+qssFOLfsD5H0UDJjkyFuGXnfNOKDl8uIj1miyAqht7BjQQy+1fnMzphV7nD8RJZGP/9iX61VIlIbY2tHVcsfZNfTx5Cj3a9CvMRCQ3DvRcGcqsa698O56awImQ/kyh9dhgGELwBDNE2bsSiUlx2Ubw/51OWpDnHFzMfrnwhgrDx38c/U1H4ZZiNNwOwOjXFEVhNnHAujhELzuHeBHJYPoCJ1kOWI7It7XmkjQvGZldPKLXa3UDfsWqNrBgjbhzS4E9+gao6WlJ0st/CUNFgvj/q6Tl8Qx6h8aMY+fr6GlNvSMnyzf1UwCFMzx1iUZKqOgmjacILq/bMh+uk2/lPLncXDaN5SP7HP/pyK8xnWXExbUOex2SHmxSTRnVcj193tHrUh2eOBw6Rbyj5z0fydGkvyym+ruNRAm1o1bKGyl4SQHQ/HhaJ8zlQnqjy7buJ75FuZCVuNIKow8I+KG2iPl0jR9NvfrdKCmbSjVlHldBKHODYWnr9B04/coaUIF/HvcNwe+v/icQaJ1cCjFPYCfT+rvROTGZwjoNiS4isFwxdz2m9KjQgWu4nCJLSWIz5v8kiaaXWRZFEgkJAX810ZVXvQIUfQkbz1V6hRVlLufVgzryS3RFRUB+dQ18ncRHlafhvk/idnvkJHRIMJq1SuSiKk9kfBypfqpxiSKI7L6N/avbmDyP9yi8GJZ0mEl/9YAqkhYU3TeSsa2IJiXOboUdzRoPSSJClQcj15cJmMzfapb5a6HscGrQmPXNa8rhZq+vH3SO3QP73I31zxIzKoAsF64BQTZ8um5daFaK99sQ05bB+6McU+8MU8cAnxXR52peMBbuUF+lTQwKVk/wXCNFWs7njFilQmDACGlC29cNzU8inFkPnLm8KGNRY6UJPjjJUOZHkMP5LTLf9QdEx6ti4IsQEca9D1JnD4O0BFEXL+Wwi/nngkLP1OtVK8FQFsh1Tg7bpE7mEnjquUELM4kJAHm+hodkE9p122tqyGj//QqpP2cj7WEfzC+CiYzIuqKOYrf/1SzuaGKIYsRa6WVF69JWTVVEeNWq2of0Em9teGXEIotMfmpxroYrwdRC2ZBq0gEUht01DZYITvjzKsqsJ1Cwt3H33AxnTb065nd1nCLM1AFO85E/y63VIZJBIhp7wCtpSBxDXIjQ1W3iutPMC5WZ+21o3fM4TTqysiPs0/wELZAp8jrKp3+5JCppNuCTm3eILZLh8ZabVDFjZOKWj1YEfHnY8AwNvY9O/H8sKhjp2N8jp9rB8+oD4POWTquuppPwjo4WIMnCgCqI+ZKo2RQLmMjqavFdAxhrbq81zeUU3Td2THn7TrJkmPYaZ2BCB9Kfcxs8JmVVZ6RebwkjESMd2G9YpjFn1HWgenpXvsp3acFBODGpKzEu8h4SAfyKfqbKh72Ju7m0qHunttAbFYzXb8WCtYk3PbeV9FA6bvcWyva6hx+ouycpeY4YqasvQt4le9ZYCUjvwsEWCI1pz5ya5gqJHHuyHuX6lmk0c84Lrg+cZxG65vSI3eruGM5A35LuszG77905Pj1e7Ep7sGVJyiK3saYdBKpRb9BFzx5J6oksCkKPYd1sUR7C10Kur4dJmvSscXevnb53pZz5CvmrvGJM522+AKBZA5hBZVePdJnJD8bEUgSPhdq/hnktIbPebsUQYHkyFqT88W04TB/8fUVVk9JiU99vCBed2BqiYh6xooZmv3G+nGX2+7BeEEH22P2RSVpAP1prcG7HGtiiQYB89IjW2q98B1TyeXRA6J+/1g1/jUk5MaL5JLWoWBMOkAKSU/L6ivs287dAHwhpleUGGqSpEPEGuZ9RbIRAwNJTs0Hgozgw0Y4eFH1uvbDPjGtR5wnrZaNgAThItQaIRtutrP5NugbNMLdRdUF93L2LWa5R0Ve7NSbCLUt7g65btHxxxAUmG/6Zxam3Om8PKHwD0ELsnzHXWWjWERxHoKo9YBrDTsgwnGvmYpsHzP+zIXyJmjr1aQQS93AjzMqKylFf3JGh/d6tjhC5uRJVzEajhso3BRBsTIjBk3XoXwhddd2N9YAS2S1ABc1bAv71lUOPut+OKj7T4RFViePFsJsLBbSGHhaHkPuQIjIahto0+Whk6OHToz+Wgjj3169aqkQHuFCMiQbAKX1exsbpzsM6pP90YlATUK7WnIRASAtwAFrcJaJeHBKNV2ZdV7cRQgGpTrfRgmMSQhDVkX+1qQGzZunw1t6wv3L8OHQAn29JD6BPwq0b13iv04H6BVqkheJ/gS/LgWdH/imKhgWU4E0ex5e/4jKqajGkLci/XrnkFx2LAgrFEQmL8vt+7GkkQiL9WnhjhXLiHpuK+NeXKQVQ8odH0fjaFvw6HGVPk9i6tRjIcCjRNvRjS1QsDrd+4lYxKraauciJL4+DRoh4aYFnW9SmvDgi5r6hdqZed6LB1T8rfgIxbsooRsX7oc854A3Z58hMCCeDlO730tZ3HK68Vi6C+gi7JSNRCjYZBnGirJEYo/A+sb4LzuxKfhkECYfxah6hVEB6iJrQ607COxT7/5iGBA0qoGvEGLI2rUqE6msAZZ1+NzL5eCO7aVqd43flah5HpNhiuNsH6cmnAmmJ7NcIuW2/AOhimqrGvtlq+NeH4iQsdBOTWe3r/1H/cwlJDqNxuOQBVi9RDYqQr6Ub8Ous2eVL5M9HPt/rPX1PFcc27pvGyehbDcQIFGNVQ8jMXlcjA2dsBFIflIHfWmFXDL8KB7md6DgcmtjkIjcUwnAmYXYISAmJR0SipZ+WT/4QTv4H7kdaHcToT7JyrvACscDme0vXa+SkaPK+riwEhTX5kCbXCTbEYvh9yndSvD8dr+K55HxhenF+K9QfJC8xMkNKZm5ylcPX3wIfJExZjpG0tfn9IDlWhLPUDyAoNTo8Q0RXbpKdq7m9wMTi9fYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA4ZHzM=
+B64;
+
+        $this->assertSame($expectedPublicKey, Base64::encode($pk->getBytes()));
+        $this->assertSame(2420, strlen(Base64::decode($expectedSignature)));
+        $this->assertTrue($pk->verify(Base64::decode($expectedSignature), $expectedSignatureBase));
+
+        $httpSignature = new HttpSignature();
+        $request = new Request('GET', '/foo?param=Value&Pet=dog', [
+            'Host' => 'example.com',
+            'Date' => 'Mon, 06 Jul 2026 20:00:00 GMT',
+        ]);
+        $signed = $httpSignature->sign(
+            $sk,
+            $request,
+            ['@method', '@path', 'host', 'date'],
+            'test-key-mldsa44',
+            1783368000
+        );
+
+        $this->assertSame($expectedSignatureInput, $signed->getHeaderLine('Signature-Input'));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws MLDSAInternalException
      * @throws PQCryptoCompatException
      * @throws RandomException
      * @throws SodiumException
@@ -1713,6 +1786,43 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
+    public function testVerifyAcceptsLegacyMldsa44Algorithm(): void
+    {
+        $sk = self::skFromSeed('legacy mldsa44 http alg', SigningAlgorithm::MLDSA44);
+        $pk = $sk->getPublicKey();
+        $created = time();
+        $signatureInput = 'sig1=("@method" "host");alg="mldsa44";keyid="key";created=' . $created;
+        $signatureBase = implode("\n", [
+            '"@method": post',
+            '"host": example.com',
+            '"@signature-params": ("@method" "host");alg="mldsa44";keyid="key";created=' . $created,
+        ]);
+        $signature = Base64::encode($sk->sign($signatureBase));
+
+        $request = new Request(
+            'POST',
+            '/foo',
+            [
+                'Host' => 'example.com',
+                'Signature-Input' => $signatureInput,
+                'Signature' => 'sig1=:' . $signature . ':',
+            ],
+            'body'
+        );
+
+        $httpSignature = new HttpSignature();
+        $this->assertTrue($httpSignature->verify($pk, $request));
+    }
+
+    /**
+     * @throws CryptoException
+     * @throws HttpSignatureException
+     * @throws MLDSAInternalException
+     * @throws NotImplementedException
+     * @throws PQCryptoCompatException
+     * @throws RandomException
+     * @throws SodiumException
+     */
     public function testVerifyEmptyCoveredComponents(): void
     {
         $sk = self::skFromSeed('empty components', SigningAlgorithm::ED25519);
@@ -1744,7 +1854,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("ed25519OnlyProvider")]
+    #[DataProvider("signingAlgorithmProvider")]
     public function testSignEmptyCoveredThrows(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('sign rejects empty covered', $alg);
@@ -1767,7 +1877,7 @@ class HttpSignatureTest extends TestCase
      * @throws RandomException
      * @throws SodiumException
      */
-    #[DataProvider("ed25519OnlyProvider")]
+    #[DataProvider("signingAlgorithmProvider")]
     public function testSignAndVerifyStatusOnResponse(SigningAlgorithm $alg): void
     {
         $sk = self::skFromSeed('status component', $alg);

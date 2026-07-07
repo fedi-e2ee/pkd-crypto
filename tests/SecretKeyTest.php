@@ -157,7 +157,7 @@ class SecretKeyTest extends TestCase
     public function testMldsa44(): void
     {
         $sk = SecretKey::generate(SigningAlgorithm::MLDSA44);
-        $this->assertSame('mldsa44', $sk->getAlgo()->value);
+        $this->assertSame('ml-dsa-44', $sk->getAlgo()->value);
         $this->assertSame(32, strlen($sk->getBytes()));
 
         // Test with deterministic inputs
@@ -177,7 +177,7 @@ class SecretKeyTest extends TestCase
             hash('sha256', $pk2->getBytes())
         );
         $this->assertSame(
-            '28e4b0f9dc0d5ed51167e8e6edb5c83d96afcd6c585e936e214c1650c547b0f2',
+            '4f39ee83d3fd86a55757e5ede6b70c006ed6002e819c962eb9187c282736eb36',
             hash('sha256', $pk2->toString())
         );
         $this->assertSame(
