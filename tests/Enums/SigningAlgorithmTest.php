@@ -11,12 +11,16 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(SigningAlgorithm::class)]
 class SigningAlgorithmTest extends TestCase
 {
+    /**
+     * @throws CryptoException
+     */
     public function testFromString(): void
     {
         $ed = SigningAlgorithm::fromString('ed25519');
         $ml = SigningAlgorithm::fromString('mldsa44');
         $this->assertSame('ed25519', $ed->value);
-        $this->assertSame('mldsa44', $ml->value);
+        $this->assertSame('ml-dsa-44', $ml->value);
+        $this->assertSame($ml, SigningAlgorithm::fromString('ml-dsa-44'));
         $this->expectException(CryptoException::class);
         $this->expectExceptionCode(0);
         SigningAlgorithm::fromString('rsa');

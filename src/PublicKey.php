@@ -50,10 +50,10 @@ final class PublicKey
     public function __construct(
         #[SensitiveParameter]
         string $bytes,
-        SigningAlgorithm|string $algo = 'mldsa44'
+        SigningAlgorithm|string $algo = SigningAlgorithm::MLDSA44
     ) {
         if (is_string($algo)) {
-            $algo = SigningAlgorithm::from($algo);
+            $algo = SigningAlgorithm::fromString($algo);
         }
         $expectedLength = $algo->publicKeyLength();
         if (strlen($bytes) !== $expectedLength) {
@@ -139,15 +139,15 @@ final class PublicKey
      *
      * @throws CryptoException
      */
-    public static function importPem(string $pem, SigningAlgorithm|string $algo = 'mldsa44'): PublicKey
+    public static function importPem(string $pem, SigningAlgorithm|string $algo = SigningAlgorithm::MLDSA44): PublicKey
     {
         if (is_string($algo)) {
-            $algo = SigningAlgorithm::from($algo);
+            $algo = SigningAlgorithm::fromString($algo);
         }
         $prefix = match($algo) {
             SigningAlgorithm::ED25519 => Hex::decode(self::PEM_PREFIX_ED25519),
             SigningAlgorithm::MLDSA44 => Hex::decode(self::PEM_PREFIX_ML_DSA_44),
-            default => throw new CryptoException('Only ed25519 and mldsa44 keys are supported')
+            default => throw new CryptoException('Only ed25519 and ml-dsa-44 keys are supported')
         };
         $formattedKey = str_replace('-----BEGIN PUBLIC KEY-----', '', $pem);
         $formattedKey = str_replace('-----END PUBLIC KEY-----', '', $formattedKey);

@@ -192,6 +192,14 @@ final class HttpSignature
             }
             return false;
         }
+        if ($alg !== $publicKey->getAlgo()) {
+            if ($throwIfInvalid) {
+                throw new HttpSignatureException(
+                    'Signature algorithm does not match public key: ' . $params['alg']
+                );
+            }
+            return false;
+        }
         if (!isset($params['created']) || !is_numeric($params['created'])) {
             if ($throwIfInvalid) {
                 throw new HttpSignatureException('Invalid or missing "created" parameter');
@@ -268,7 +276,7 @@ final class HttpSignature
     {
         return match ($algParam) {
             '"ed25519"' => SigningAlgorithm::ED25519,
-            '"mldsa-44"', '"mldsa44"' => SigningAlgorithm::MLDSA44,
+            '"ml-dsa-44"', '"mldsa-44"', '"mldsa44"' => SigningAlgorithm::MLDSA44,
             default => throw new HttpSignatureException("Unknown algorithm: {$algParam}"),
         };
     }

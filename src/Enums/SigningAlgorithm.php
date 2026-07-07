@@ -9,7 +9,7 @@ use ValueError;
 enum SigningAlgorithm: string
 {
     case ED25519 = 'ed25519';
-    case MLDSA44 = 'mldsa44';
+    case MLDSA44 = 'ml-dsa-44';
 
     public function signingKeyLength(): int
     {
@@ -36,6 +36,9 @@ enum SigningAlgorithm: string
 
     public static function fromString(string $value): static
     {
+        if ($value === 'mldsa44') {
+            return self::MLDSA44;
+        }
         try {
             return static::from($value);
         } catch (ValueError $error) {

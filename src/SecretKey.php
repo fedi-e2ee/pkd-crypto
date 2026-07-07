@@ -42,7 +42,7 @@ final class SecretKey
     public function __construct(
         #[SensitiveParameter]
         string $bytes,
-        SigningAlgorithm|string $algo = 'mldsa44'
+        SigningAlgorithm|string $algo = SigningAlgorithm::MLDSA44
     ) {
         if (is_string($algo)) {
             $algo = SigningAlgorithm::fromString($algo);
@@ -66,7 +66,7 @@ final class SecretKey
      * @throws RandomException
      * @throws SodiumException
      */
-    public static function generate(SigningAlgorithm|string $algo = 'mldsa44'): self
+    public static function generate(SigningAlgorithm|string $algo = SigningAlgorithm::MLDSA44): self
     {
         if (is_string($algo)) {
             $algo = SigningAlgorithm::fromString($algo);
@@ -117,14 +117,14 @@ final class SecretKey
      * @throws CryptoException
      * @throws SodiumException
      */
-    public static function importPem(string $pem, SigningAlgorithm|string $algo = 'mldsa44'): SecretKey
+    public static function importPem(string $pem, SigningAlgorithm|string $algo = SigningAlgorithm::MLDSA44): SecretKey
     {
         if (is_string($algo)) {
             $algo = SigningAlgorithm::fromString($algo);
         }
-        $prefix = match($algo->value) {
-            'ed25519' => Hex::decode(self::PEM_PREFIX_ED25519),
-            'mldsa44' => Hex::decode(self::PEM_PREFIX_ML_DSA_44_SEED),
+        $prefix = match($algo) {
+            SigningAlgorithm::ED25519 => Hex::decode(self::PEM_PREFIX_ED25519),
+            SigningAlgorithm::MLDSA44 => Hex::decode(self::PEM_PREFIX_ML_DSA_44_SEED),
         };
         $formattedKey = str_replace('-----BEGIN PRIVATE KEY-----', '', $pem);
         $formattedKey = str_replace('-----END PRIVATE KEY-----', '', $formattedKey);
@@ -141,9 +141,9 @@ final class SecretKey
             throw new CryptoException('Invalid PEM prefix');
         }
         $seed = substr($key, strlen($prefix));
-        return match ($algo->value) {
-            'ed25519' => self::secretKeyFromSeedEd25519($seed),
-            'mldsa44' => new SecretKey($seed, $algo),
+        return match ($algo) {
+            SigningAlgorithm::ED25519 => self::secretKeyFromSeedEd25519($seed),
+            SigningAlgorithm::MLDSA44 => new SecretKey($seed, $algo),
         };
     }
 
