@@ -17,7 +17,6 @@ use ParagonIE\Certainty\{
 use SodiumException;
 use function array_key_exists,
     dirname,
-    explode,
     extension_loaded,
     filter_var,
     http_build_query,
@@ -32,7 +31,9 @@ use function array_key_exists,
     preg_match,
     property_exists,
     str_contains,
-    str_replace;
+    str_replace,
+    strpos,
+    substr;
 
 class WebFinger
 {
@@ -71,6 +72,36 @@ class WebFinger
     }
 
     /**
+     * @return array{username: string, domain: string}
+     * @throws InputException
+     */
+    private function parseActorHandle(string $actorUsernameOrUrl): array
+    {
+        $actorUsernameOrUrl = ltrim($actorUsernameOrUrl, '@');
+        $separator = strpos($actorUsernameOrUrl, '@');
+        if ($separator === false) {
+            throw new InputException('Actor handle must contain exactly one @');
+        }
+        if (strpos($actorUsernameOrUrl, '@', $separator + 1) !== false) {
+            throw new InputException('Parse error: domain contains @');
+        }
+
+        $username = substr($actorUsernameOrUrl, 0, $separator);
+        $domain = substr($actorUsernameOrUrl, $separator + 1);
+        if ($username === '' || $domain === '') {
+            throw new InputException('Invalid actor handle format: empty components');
+        }
+        if (str_contains($username, '://')) {
+            throw new InputException('Parse error: username contains ://');
+        }
+
+        return [
+            'username' => $username,
+            'domain' => $domain,
+        ];
+    }
+
+    /**
      * Canonicalize an ActivityPub user handle (@user@domain or user@domain) into the Actor ID
      * (e.g., https://domain/users/username)
      *
@@ -99,22 +130,7 @@ class WebFinger
             // Normalize to HTTPS if possible
             return str_replace(['http://', 'HTTP://'], 'https://', $url);
         }
-        $actorUsernameOrUrl = ltrim($actorUsernameOrUrl, '@');
-        if (!str_contains($actorUsernameOrUrl, '@')) {
-            throw new InputException('Actor handle must contain exactly one @');
-        }
-        $parts = explode('@', $actorUsernameOrUrl, 2);
-        $username = $parts[0];
-        $domain = $parts[1] ?? '';
-        if (empty($username) || empty($domain)) {
-            throw new InputException('Invalid actor handle format');
-        }
-        if (str_contains($domain, '@')) {
-            throw new InputException('Parse error: domain contains @');
-        }
-        if (str_contains($username, '://')) {
-            throw new InputException('Parse error: username contains ://');
-        }
+        ['username' => $username, 'domain' => $domain] = $this->parseActorHandle($actorUsernameOrUrl);
 
         // Optional: Support internationalized domain names
         if (extension_loaded('intl')) {
